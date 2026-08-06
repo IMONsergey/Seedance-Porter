@@ -2,7 +2,7 @@
 
 Production toolkit for getting the maximum practical value from ByteDance Seedance.
 
-Seedance Porter is not a model-weight repository and does not pretend Seedance can run locally. It is a provider-neutral production layer for cloud Seedance surfaces: prompt/shot compilation, multimodal reference mapping, repeatable generation manifests, provider routing, evaluation, project continuity, CLI automation, MCP access and a local browser Studio.
+Seedance Porter is not a model-weight repository and does not pretend Seedance can run locally. It is a provider-neutral production layer for cloud Seedance surfaces: prompt/shot compilation, multimodal reference mapping, repeatable generation manifests, provider routing, production memory, evaluation, project continuity, CLI automation, MCP access and a local browser Studio.
 
 ## Current target
 
@@ -17,9 +17,10 @@ Seedance Porter is not a model-weight repository and does not pretend Seedance c
 3. Compile long ideas into short shot contracts and continuity-aware clips.
 4. Preserve provenance: every output gets a machine-readable manifest.
 5. Make retakes surgical: change one variable, keep everything else locked.
-6. Separate model facts from creative guidance and date-source technical claims.
-7. Make the same core usable from terminal, agents, CI, local HTTP automation and the Studio UI.
-8. Never depend on fake “official” GitHub clients or unverified local installers.
+6. Continue from what the accepted footage actually produced, not what the previous prompt intended.
+7. Separate model facts from creative guidance and date-source technical claims.
+8. Make the same core usable from terminal, agents, CI, local HTTP automation and the Studio UI.
+9. Never depend on fake “official” GitHub clients or unverified local installers.
 
 ## Architecture
 
@@ -31,7 +32,9 @@ Seedance-Porter/
 │   ├── models/                # model/capability registry
 │   ├── providers/             # BytePlus, fal.ai, MuAPI adapters
 │   ├── prompt/                # director read, shot planner, prompt compiler
-│   ├── eval/                  # take scoring and retake diagnosis
+│   ├── eval/                  # take scoring + persistent review
+│   ├── projects/              # ledger, continuity, seed variants
+│   ├── media/                 # ffmpeg production helpers
 │   ├── mcp/                   # MCP server for agent-driven production
 │   └── server/                # local Studio + HTTP automation API
 ├── studio/                    # browser UI
@@ -40,7 +43,7 @@ Seedance-Porter/
 ├── knowledge/                 # camera/reference/prompt production knowledge
 ├── examples/                  # project briefs and benchmark scenarios
 ├── skills/                    # agent skill package
-├── docs/                      # setup, providers, prompting, evaluation, security
+├── docs/                      # setup, providers, workflow, security, memory
 └── AGENTS.md                  # operating contract for Codex/agents
 ```
 
@@ -62,6 +65,36 @@ Configure a provider key in `.env`, replace the example media URLs with real ref
 npm run porter -- generate examples/product-film.json --provider byteplus
 ```
 
+### Review → accept → continue
+
+After generation, score and persist a take:
+
+```bash
+npm run porter -- review outputs/.../take.porter.json examples/scorecard.json \
+  --decision accept \
+  --end-state "Describe the actual final visual/physical state" \
+  --extract-frame
+```
+
+Then compile the next clip from that accepted take:
+
+```bash
+npm run porter -- continue examples/continuation-shot.json \
+  --from outputs/.../take.porter.json
+```
+
+Add `--generate` only when you want to render the continuation. See `docs/PRODUCTION-MEMORY.md`.
+
+### Bounded seed variants
+
+Plan without spending credits:
+
+```bash
+npm run porter -- variants examples/product-film.json --count 3
+```
+
+Add `--generate` to render. A single sweep is hard-limited to eight variants.
+
 ### Local Studio
 
 ```bash
@@ -76,7 +109,7 @@ Open `http://127.0.0.1:4173`. The Studio lets you edit a project, inspect the mo
 npm run mcp
 ```
 
-Use `examples/mcp-config.json` as a starting point. The MCP surface separates zero-cost compilation from the paid generation tool.
+Use `examples/mcp-config.json` as a starting point. MCP exposes model lookup, compile, explicit paid generation, scoring, persistent take review, continuity preparation, ledger lookup and zero-cost variant planning.
 
 ## Provider strategy
 
@@ -92,8 +125,12 @@ Provider details live in `docs/PROVIDERS.md`; model facts live in `src/models/re
 - First/last-frame planning.
 - Sequence continuity locks for multi-clip films.
 - One-variable retake protocol and weighted take scorecard.
-- Deterministic-request duplicate protection against accidental paid retries.
-- Sidecar `.porter.json` manifests for generated outputs.
+- Persistent accept/retake/reject project ledger.
+- Actual observed end-state memory and ffmpeg final-frame extraction.
+- Continuation compilation from accepted footage.
+- Bounded deterministic seed sweeps.
+- Duplicate paid-request protection against accidental retries.
+- Sidecar `.porter.json` manifests with normalized source project + task/output metadata.
 - Provider/model capability registry with verification dates and source references.
 - Agent-friendly CLI, MCP tools and local HTTP API.
 - Browser Studio for hands-on work.
@@ -110,9 +147,11 @@ Do not run random `curl | bash` installers from repositories that impersonate By
 
 ## Status
 
-**v0.1 production foundation is implemented:** provider adapters, compiler, continuity/reference system, CLI, MCP, Studio/API, evaluation, examples, tests and CI configuration are in the repository. Live provider generation still requires your own API credentials and paid credits; no claim is made that every route has been exercised against your accounts yet.
+**v0.2 production core is implemented:** provider adapters, model registry, director/shot/reference compiler, CLI, MCP, Studio/API, evaluation, persistent take ledger, final-frame extraction, accepted-take continuation, bounded seed variants, examples, tests and CI configuration are in the repository.
 
-See `ROADMAP.md` for the next stages: persistent production memory, automated last-frame extraction, cost ledger, batch A/B testing, visual take comparison and vision-assisted evaluation.
+Live provider generation still requires your own API credentials and paid credits. The current environment cannot reach npm/GitHub over the network, and GitHub Actions has not surfaced a run yet, so the repository does **not** falsely claim a green dependency/typecheck run or live generation against your accounts.
+
+See `ROADMAP.md` for the remaining higher-order layers: cost accounting, queue controls, reusable controlled reference storage, richer visual review UI and vision-assisted evaluation.
 
 ## License
 
