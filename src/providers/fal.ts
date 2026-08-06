@@ -34,7 +34,7 @@ export class FalProvider implements SeedanceProvider {
       prompt: request.prompt,
       resolution: request.resolution,
       duration: String(request.duration),
-      aspect_ratio: request.aspectRatio,
+      aspect_ratio: request.aspectRatio === "adaptive" ? "auto" : request.aspectRatio,
       generate_audio: request.generateAudio,
     };
     if (request.seed !== undefined) input.seed = request.seed;
