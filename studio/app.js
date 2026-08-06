@@ -3,6 +3,7 @@ const project = $("project");
 const result = $("result");
 const video = $("video");
 const provider = $("provider");
+const token = $("token");
 
 const sample = {
   project: "studio-demo",
@@ -29,12 +30,13 @@ const sample = {
 };
 
 project.value = JSON.stringify(sample, null, 2);
+token.value = sessionStorage.getItem("porterStudioToken") || "";
+token.addEventListener("input", () => sessionStorage.setItem("porterStudioToken", token.value));
 
 async function api(path, options = {}) {
-  const response = await fetch(path, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) }
-  });
+  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  if (token.value) headers.Authorization = `Bearer ${token.value}`;
+  const response = await fetch(path, { ...options, headers });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || data.message || `HTTP ${response.status}`);
   return data;
@@ -70,4 +72,4 @@ $("generate").onclick = () => {
   run("Generating", () => api("/api/generate", { method: "POST", body: JSON.stringify({ project: parsedProject(), provider: provider.value, wait: true }) }));
 };
 
-api("/api/health").then(() => { $("health").textContent = "local API online"; }).catch(() => { $("health").textContent = "API unavailable"; });
+api("/api/health").then(() => { $("health").textContent = "local API online"; }).catch(() => { $("health").textContent = token.value ? "API unavailable / token rejected" : "API unavailable / token may be required"; });
