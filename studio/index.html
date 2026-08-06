@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seedance Porter Studio</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <p class="eyebrow">SEEDANCE PORTER</p>
+        <h1>Production Studio</h1>
+        <p class="sub">Compile first. Spend credits second. Keep every reference and retake accountable.</p>
+      </div>
+      <div class="status" id="health">checking…</div>
+    </header>
+
+    <section class="toolbar panel">
+      <label>Provider
+        <select id="provider">
+          <option value="byteplus">BytePlus</option>
+          <option value="fal">fal.ai</option>
+          <option value="muapi">MuAPI / 2.5 preview</option>
+        </select>
+      </label>
+      <button id="example">Load example</button>
+      <button id="models">Models</button>
+      <button id="compile" class="primary">Compile</button>
+      <button id="generate" class="danger">Generate</button>
+    </section>
+
+    <section class="grid">
+      <div class="panel editor-panel">
+        <div class="panel-title">Project JSON</div>
+        <textarea id="project" spellcheck="false"></textarea>
+      </div>
+      <div class="panel result-panel">
+        <div class="panel-title">Result</div>
+        <pre id="result">Ready.</pre>
+        <video id="video" controls playsinline hidden></video>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

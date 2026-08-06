@@ -10,7 +10,8 @@
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "porter": "tsx src/cli.ts",
-    "mcp": "tsx src/mcp/server.ts"
+    "mcp": "tsx src/mcp/server.ts",
+    "studio": "tsx src/server/http.ts"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",
