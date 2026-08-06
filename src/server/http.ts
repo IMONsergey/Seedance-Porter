@@ -2,7 +2,6 @@ import "dotenv/config";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
-import { fileURLToPath } from "node:url";
 import { listModels } from "../models/registry.js";
 import { compileProject } from "../prompt/compiler.js";
 import { generateProject } from "../core/generate.js";
@@ -13,7 +12,9 @@ import type { ProviderName } from "../core/types.js";
 const host = process.env.PORTER_HOST ?? "127.0.0.1";
 const port = Number.parseInt(process.env.PORTER_PORT ?? "4173", 10);
 const token = process.env.PORTER_STUDIO_TOKEN;
-const root = join(fileURLToPath(new URL("../../", import.meta.url)), "studio");
+// Use the project working directory so the Studio is served correctly both
+// through tsx source execution and from compiled JavaScript.
+const root = join(process.cwd(), "studio");
 
 const mime: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
