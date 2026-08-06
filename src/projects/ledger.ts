@@ -64,7 +64,17 @@ export async function recordReview(manifestPath: string, manifest: PorterManifes
   if (existing >= 0) ledger.takes[existing] = take;
   else ledger.takes.push(take);
   ledger.updatedAt = new Date().toISOString();
-  if (review.decision === "accept") ledger.acceptedTakeId = manifest.task.id;
+
+  if (review.decision === "accept") {
+    ledger.acceptedTakeId = manifest.task.id;
+  } else if (ledger.acceptedTakeId === manifest.task.id) {
+    const replacement = [...ledger.takes]
+      .reverse()
+      .find((item) => item.taskId !== manifest.task.id && item.decision === "accept");
+    if (replacement) ledger.acceptedTakeId = replacement.taskId;
+    else delete ledger.acceptedTakeId;
+  }
+
   await writeJson(ledgerPath(project), ledger);
   return ledger;
 }
@@ -72,5 +82,5 @@ export async function recordReview(manifestPath: string, manifest: PorterManifes
 export async function getAcceptedTake(project: string): Promise<LedgerTake | undefined> {
   const ledger = await loadLedger(project);
   if (!ledger.acceptedTakeId) return undefined;
-  return ledger.takes.find((take) => take.taskId === ledger.acceptedTakeId);
+  return ledger.takes.find((take) => take.taskId === ledger.acceptedTakeId && take.decision === "accept");
 }
