@@ -1,6 +1,6 @@
 # Roadmap
 
-## v0.1 — foundation (current)
+## v0.1 — foundation
 
 - [x] Provider-neutral model registry.
 - [x] Direct BytePlus ModelArk adapter.
@@ -15,24 +15,27 @@
 - [x] CLI and MCP server.
 - [x] Take scorecard and one-variable retake logic.
 - [x] Benchmark/project examples.
+- [x] Local Studio + HTTP API.
 
-## v0.2 — production memory
+## v0.2 — production memory (implemented core)
 
-- [ ] Project ledger: accepted/rejected takes and observed end states.
-- [ ] Automatic last-frame extraction with ffmpeg.
-- [ ] Continuation compiler that reads the accepted clip ledger.
+- [x] Normalized project spec persisted in each generation manifest.
+- [x] Persistent accepted/rejected take ledger.
+- [x] Review command + weighted score persisted to manifests.
+- [x] Actual final-frame extraction with ffmpeg.
+- [x] Continuation compiler anchored to an accepted take's observed final state.
+- [x] Bounded 1-8 seed variant planning/generation.
 - [ ] Cost ledger per provider/model/project.
-- [ ] Batch seed sweeps and A/B variants with spend caps.
-- [ ] Reference asset library with checksums and reusable IDs.
 - [ ] Provider queue concurrency controls.
+- [ ] Reusable reference asset library with checksums and controlled remote storage.
 
-## v0.3 — visual studio
+## v0.3 — visual review studio
 
-- [ ] Local web UI for project briefs, references and shot cards.
-- [ ] Drag/drop reference role assignment.
+- [ ] Structured forms in addition to raw project JSON.
+- [ ] Drag/drop reference role assignment and local media upload.
 - [ ] Video review + frame-accurate annotations.
 - [ ] Side-by-side take comparison.
-- [ ] Scorecard UI and retake button.
+- [ ] Scorecard UI and review/accept controls.
 - [ ] Project timeline / continuity board.
 
 ## v0.4 — intelligence layer
