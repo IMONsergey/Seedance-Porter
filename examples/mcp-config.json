@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "seedance-porter": {
+      "command": "npm",
+      "args": ["run", "mcp"],
+      "cwd": "/absolute/path/to/Seedance-Porter"
+    }
+  }
+}

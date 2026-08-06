@@ -1,0 +1,42 @@
+{
+  "project": "porter-story-demo",
+  "label": "clip-02",
+  "model": "seedance-2.0",
+  "duration": 6,
+  "resolution": "720p",
+  "aspectRatio": "16:9",
+  "generateAudio": true,
+  "brief": {
+    "objective": "Continue an accepted previous clip without resetting character or space.",
+    "subject": "The same woman from the identity reference",
+    "action": "She notices the envelope on the table, reaches toward it once, then stops before touching it",
+    "environment": "The same small kitchen as the accepted previous clip",
+    "camera": "Medium close-up at eye level, slow restrained push-in that stops when her hand stops",
+    "lighting": "Same soft overcast window light from frame-left",
+    "sound": "Quiet room tone, fabric movement, chair creak; no music",
+    "endpoint": "Her hand remains suspended two centimeters above the envelope",
+    "constraints": ["same wardrobe", "same table layout", "screen direction remains consistent"]
+  },
+  "director": {
+    "sceneFunction": "Delay the reveal and make hesitation visible rather than verbal.",
+    "objective": "Reach for the envelope while trying not to commit to opening it.",
+    "suppressedBehavior": "She almost pulls her hand back twice but keeps it hovering.",
+    "specificDetail": "Her thumb presses lightly against her index finger when she freezes."
+  },
+  "continuity": {
+    "lockedSubject": "same face, dark bob haircut, charcoal knit sweater",
+    "lockedWardrobe": "charcoal knit sweater and silver watch",
+    "lockedEnvironment": "small pale kitchen, envelope at right edge of wooden table",
+    "lockedLighting": "soft window light from frame-left",
+    "observedStartState": "Previous accepted clip ends with her seated, looking down-right toward the unopened envelope.",
+    "requiredEndState": "Her right hand is hovering immediately above the envelope; envelope is still unopened."
+  },
+  "references": [
+    {
+      "kind": "image",
+      "url": "https://example.com/character-reference.jpg",
+      "role": "identity",
+      "note": "Character identity and wardrobe lock."
+    }
+  ]
+}

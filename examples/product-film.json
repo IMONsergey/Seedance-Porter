@@ -1,0 +1,37 @@
+{
+  "project": "porter-product-demo",
+  "label": "hero-orbit",
+  "provider": "byteplus",
+  "model": "seedance-2.0",
+  "mode": "image-to-video",
+  "duration": 7,
+  "resolution": "720p",
+  "aspectRatio": "16:9",
+  "generateAudio": true,
+  "seed": 42,
+  "brief": {
+    "objective": "Create a premium product hero shot that can receive exact logo and copy in post-production.",
+    "subject": "A matte dark-green aluminum bottle matching the product reference exactly",
+    "action": "Condensation slowly travels down the bottle while it rises 2 centimeters and then becomes completely still",
+    "environment": "Minimal dark-green studio with a warm beige stone plinth",
+    "camera": "85mm product feel, controlled 25-degree clockwise orbit with a subtle push-in, settling centered",
+    "lighting": "Large soft source from camera-left, weak warm edge light, restrained reflections on the matte surface",
+    "sound": "Low restrained cinematic pulse, subtle condensation texture, one soft impact exactly when the bottle settles",
+    "endpoint": "Bottle perfectly upright and centered in a stable three-quarter view",
+    "style": "Contemporary premium commercial photography, matte materials, realistic condensation, no glossy CGI look",
+    "constraints": [
+      "product proportions remain identical to the reference",
+      "frame remains free of generated typography",
+      "background stays minimal with no additional props"
+    ]
+  },
+  "references": [
+    {
+      "id": "product-master",
+      "kind": "image",
+      "url": "https://example.com/product-master.png",
+      "role": "product",
+      "note": "This is the exact product geometry and material reference; do not redesign it."
+    }
+  ]
+}

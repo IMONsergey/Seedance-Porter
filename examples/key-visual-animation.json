@@ -1,0 +1,38 @@
+{
+  "project": "porter-kv-demo",
+  "label": "kv-motion",
+  "model": "seedance-2.0",
+  "mode": "reference-to-video",
+  "duration": 6,
+  "resolution": "720p",
+  "aspectRatio": "16:9",
+  "generateAudio": false,
+  "brief": {
+    "objective": "Animate an existing campaign key visual without redesigning its core composition.",
+    "subject": "The campaign key visual from @Image1",
+    "action": "Only the atmospheric particles, fabric accents and foreground light move while the central object remains structurally locked",
+    "environment": "Use the exact environment and palette of the key visual",
+    "camera": "Very slow 5 percent push-in, otherwise locked composition",
+    "lighting": "Preserve the original light direction; add only a subtle moving highlight",
+    "endpoint": "Composition finishes almost identical to the source image but feels alive",
+    "constraints": [
+      "central object geometry stays unchanged",
+      "brand palette stays unchanged",
+      "frame stays text-free for later compositing"
+    ]
+  },
+  "references": [
+    {
+      "kind": "image",
+      "url": "https://example.com/key-visual.jpg",
+      "role": "environment",
+      "note": "Master composition, palette and spatial layout."
+    },
+    {
+      "kind": "video",
+      "url": "https://example.com/subtle-camera-reference.mp4",
+      "role": "camera",
+      "note": "Use only the restrained push-in speed; ignore subjects and color."
+    }
+  ]
+}

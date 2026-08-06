@@ -1,0 +1,9 @@
+{
+  "identityOrProductFidelity": 4.5,
+  "motionPhysics": 3.5,
+  "cameraComposition": 4,
+  "temporalContinuity": 3,
+  "audioSync": 4,
+  "artifactControl": 3.5,
+  "briefMatch": 4.5
+}

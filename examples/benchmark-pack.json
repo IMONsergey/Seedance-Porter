@@ -1,0 +1,28 @@
+{
+  "version": "2026-08-06",
+  "purpose": "Compare Seedance models/providers on production-relevant failure modes using unchanged briefs.",
+  "scenarios": [
+    { "id": "product-orbit", "tests": ["hard-surface fidelity", "material response", "controlled camera", "brand-color stability"] },
+    { "id": "human-turn", "tests": ["identity", "face profile", "hair motion", "lighting continuity"] },
+    { "id": "two-person-handoff", "tests": ["identity separation", "hand contact", "object ownership", "screen direction"] },
+    { "id": "fluid-pour", "tests": ["physics", "container geometry", "contact", "temporal stability"] },
+    { "id": "sports-action", "tests": ["fast body mechanics", "motion blur", "camera tracking", "limb integrity"] },
+    { "id": "first-last-frame", "tests": ["endpoint accuracy", "transition plausibility", "geometry consistency"] },
+    { "id": "camera-reference", "tests": ["motion transfer", "style isolation", "subject preservation"] },
+    { "id": "native-audio-event", "tests": ["event sync", "ambience", "dialogue/lip sync", "audio artifacts"] },
+    { "id": "multi-shot-10s", "tests": ["shot transition", "identity continuity", "story comprehension", "late-clip drift"] },
+    { "id": "kv-animation", "tests": ["composition lock", "subtle motion", "palette preservation", "artifact control"] }
+  ],
+  "scoreDimensions": [
+    "identityOrProductFidelity",
+    "motionPhysics",
+    "cameraComposition",
+    "temporalContinuity",
+    "audioSync",
+    "artifactControl",
+    "briefMatch",
+    "latencySeconds",
+    "estimatedCost"
+  ],
+  "rule": "Do not change the creative brief between model/provider runs. Provider-specific syntax translation is allowed; production intent is not."
+}

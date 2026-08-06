@@ -1,0 +1,102 @@
+export const PROVIDERS = ["byteplus", "fal", "muapi"] as const;
+export type ProviderName = (typeof PROVIDERS)[number];
+
+export const MODES = [
+  "text-to-video",
+  "image-to-video",
+  "reference-to-video",
+  "first-last-frame",
+] as const;
+export type GenerationMode = (typeof MODES)[number];
+
+export type Resolution = "480p" | "720p" | "1080p" | "4k";
+export type AspectRatio = "adaptive" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16" | "9:21";
+export type ReferenceKind = "image" | "video" | "audio";
+export type ReferenceRole =
+  | "identity"
+  | "product"
+  | "environment"
+  | "motion"
+  | "camera"
+  | "style"
+  | "audio"
+  | "first_frame"
+  | "last_frame"
+  | "endpoint";
+
+export interface ReferenceAsset {
+  id: string;
+  kind: ReferenceKind;
+  url: string;
+  role: ReferenceRole;
+  note?: string;
+  token?: string;
+}
+
+export interface ReferenceLimits {
+  images: number;
+  videos: number;
+  audios: number;
+}
+
+export interface ProviderRoute {
+  provider: ProviderName;
+  officialApi: boolean;
+  modelId?: string;
+  endpoints?: Partial<Record<GenerationMode, string>>;
+  resolutions: Resolution[];
+  modes: GenerationMode[];
+  notes?: string[];
+}
+
+export interface ModelDefinition {
+  key: string;
+  displayName: string;
+  family: "seedance";
+  lifecycle: "production" | "preview" | "experimental" | "deprecated";
+  lastVerified: string;
+  duration: { min: number; max: number; auto?: boolean };
+  aspectRatios: AspectRatio[];
+  referenceLimits: ReferenceLimits;
+  nativeAudio: boolean;
+  supportsSeed: boolean;
+  routes: Partial<Record<ProviderName, ProviderRoute>>;
+  sources: string[];
+  notes: string[];
+}
+
+export interface GenerationRequest {
+  project: string;
+  label?: string;
+  provider: ProviderName;
+  modelKey: string;
+  modelId?: string;
+  mode: GenerationMode;
+  prompt: string;
+  references: ReferenceAsset[];
+  duration: number;
+  resolution: Resolution;
+  aspectRatio: AspectRatio;
+  generateAudio: boolean;
+  seed?: number;
+  watermark?: boolean;
+}
+
+export type TaskStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled" | "expired";
+
+export interface GenerationTask {
+  id: string;
+  provider: ProviderName;
+  modelKey: string;
+  status: TaskStatus;
+  videoUrl?: string;
+  lastFrameUrl?: string;
+  raw?: unknown;
+  error?: { code?: string; message: string };
+}
+
+export interface CompiledProject {
+  request: GenerationRequest;
+  referenceMap: Array<{ id: string; token: string; role: ReferenceRole; note?: string }>;
+  warnings: string[];
+}
