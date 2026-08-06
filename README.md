@@ -2,7 +2,7 @@
 
 Production toolkit for getting the maximum practical value from ByteDance Seedance.
 
-Seedance Porter is not a model-weight repository and does not pretend Seedance can run locally. It is a provider-neutral production layer for cloud Seedance surfaces: prompt/shot compilation, multimodal reference mapping, repeatable generation manifests, provider routing, evaluation, project continuity, CLI automation and MCP access for Codex/Cursor/Claude-compatible clients.
+Seedance Porter is not a model-weight repository and does not pretend Seedance can run locally. It is a provider-neutral production layer for cloud Seedance surfaces: prompt/shot compilation, multimodal reference mapping, repeatable generation manifests, provider routing, evaluation, project continuity, CLI automation, MCP access and a local browser Studio.
 
 ## Current target
 
@@ -18,7 +18,7 @@ Seedance Porter is not a model-weight repository and does not pretend Seedance c
 4. Preserve provenance: every output gets a machine-readable manifest.
 5. Make retakes surgical: change one variable, keep everything else locked.
 6. Separate model facts from creative guidance and date-source technical claims.
-7. Make the same core usable from terminal, agents, CI and a future studio UI.
+7. Make the same core usable from terminal, agents, CI, local HTTP automation and the Studio UI.
 8. Never depend on fake “official” GitHub clients or unverified local installers.
 
 ## Architecture
@@ -32,10 +32,14 @@ Seedance-Porter/
 │   ├── providers/             # BytePlus, fal.ai, MuAPI adapters
 │   ├── prompt/                # director read, shot planner, prompt compiler
 │   ├── eval/                  # take scoring and retake diagnosis
-│   └── mcp/                   # MCP server for agent-driven video production
+│   ├── mcp/                   # MCP server for agent-driven production
+│   └── server/                # local Studio + HTTP automation API
+├── studio/                    # browser UI
+├── integrations/              # ComfyUI / n8n integration guidance
 ├── recipes/                   # reusable production recipes
 ├── knowledge/                 # camera/reference/prompt production knowledge
 ├── examples/                  # project briefs and benchmark scenarios
+├── skills/                    # agent skill package
 ├── docs/                      # setup, providers, prompting, evaluation, security
 └── AGENTS.md                  # operating contract for Codex/agents
 ```
@@ -45,22 +49,34 @@ Seedance-Porter/
 ```bash
 npm install
 cp .env.example .env
-npm run build
+npm run check
+npm test
+npm run porter -- doctor
 npm run porter -- models
 npm run porter -- compile examples/product-film.json
 ```
 
-Generate after configuring a provider key:
+Configure a provider key in `.env`, replace the example media URLs with real references, then generate:
 
 ```bash
-npm run porter -- generate examples/product-film.json --provider fal --wait
+npm run porter -- generate examples/product-film.json --provider byteplus
 ```
 
-Or expose the toolkit to an MCP-compatible agent:
+### Local Studio
+
+```bash
+npm run studio
+```
+
+Open `http://127.0.0.1:4173`. The Studio lets you edit a project, inspect the model registry, compile without spending credits, explicitly confirm a paid generation, inspect JSON results and preview returned video.
+
+### MCP for Codex / Cursor / compatible agents
 
 ```bash
 npm run mcp
 ```
+
+Use `examples/mcp-config.json` as a starting point. The MCP surface separates zero-cost compilation from the paid generation tool.
 
 ## Provider strategy
 
@@ -72,23 +88,31 @@ Provider details live in `docs/PROVIDERS.md`; model facts live in `src/models/re
 
 - Director's Read before narrative/performance prompts.
 - Shot contracts with one dominant action per beat.
-- Reference-role binding (`identity`, `product`, `environment`, `motion`, `camera`, `style`, `audio`, `endpoint`).
+- Reference-role binding (`identity`, `product`, `environment`, `motion`, `camera`, `style`, `audio`, `first_frame`, `last_frame`, `endpoint`).
 - First/last-frame planning.
-- Sequence continuity ledger for multi-clip films.
-- One-variable retake protocol.
-- Batch variants and deterministic seed tracking when supported.
-- Sidecar `.porter.json` manifests for every accepted generation.
-- Provider cost/limit normalization.
-- Agent-friendly JSON output and MCP tools.
-- Benchmark scenarios for comparing models/providers as they change.
+- Sequence continuity locks for multi-clip films.
+- One-variable retake protocol and weighted take scorecard.
+- Deterministic-request duplicate protection against accidental paid retries.
+- Sidecar `.porter.json` manifests for generated outputs.
+- Provider/model capability registry with verification dates and source references.
+- Agent-friendly CLI, MCP tools and local HTTP API.
+- Browser Studio for hands-on work.
+- Benchmark scenarios for comparing new models/providers without moving the goalposts.
+- ComfyUI and n8n integration strategy without depending on random provider-specific community nodes.
+
+## Benchmark philosophy
+
+“Newest” and “default” are intentionally different concepts. When a newer Seedance route appears, add it to the registry and run the fixed benchmark pack. Promote it only after it wins enough real production categories and its latency, cost and error semantics are understood. See `docs/MODEL-UPGRADE-PROTOCOL.md` and `examples/benchmark-pack.json`.
 
 ## Security and provenance
 
-Do not run random `curl | bash` installers from repositories that impersonate ByteDance. Seedance Porter uses ordinary package-manager dependencies and documented HTTP APIs only. Secrets are read from environment variables; output manifests never store raw API keys.
+Do not run random `curl | bash` installers from repositories that impersonate ByteDance. Seedance Porter uses ordinary package-manager dependencies and documented HTTP APIs only. Secrets are read from environment variables; output manifests never store raw API keys. The Studio binds to localhost by default and supports an optional bearer token if deliberately exposed beyond localhost.
 
 ## Status
 
-Initial production foundation. See `ROADMAP.md` for the next build stages and `docs/RESEARCH-NOTES.md` for the source-informed design decisions behind the architecture.
+**v0.1 production foundation is implemented:** provider adapters, compiler, continuity/reference system, CLI, MCP, Studio/API, evaluation, examples, tests and CI configuration are in the repository. Live provider generation still requires your own API credentials and paid credits; no claim is made that every route has been exercised against your accounts yet.
+
+See `ROADMAP.md` for the next stages: persistent production memory, automated last-frame extraction, cost ledger, batch A/B testing, visual take comparison and vision-assisted evaluation.
 
 ## License
 
