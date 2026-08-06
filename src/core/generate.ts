@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { compileProject } from "../prompt/compiler.js";
+import { ProjectSchema } from "./schema.js";
 import type { ProviderName, GenerationTask } from "./types.js";
 import { createProvider } from "../providers/index.js";
 import { loadConfig } from "./config.js";
@@ -18,7 +19,8 @@ export async function generateProject(input: unknown, options: {
   force?: boolean;
   onStatus?: (task: GenerationTask) => void;
 } = {}) {
-  const compiled = compileProject(input, options.provider);
+  const projectSpec = ProjectSchema.parse(input);
+  const compiled = compileProject(projectSpec, options.provider);
   const cfg = loadConfig();
   const provider = createProvider(compiled.request.provider);
   const release = await acquireGenerationGuard(compiled.request, options.force);
@@ -50,6 +52,7 @@ export async function generateProject(input: unknown, options: {
         schema: "seedance-porter.v1",
         source: "generate",
         createdAt: new Date().toISOString(),
+        projectSpec,
         request: compiled.request,
         task,
         output: { path: videoPath, videoUrl: task.videoUrl, lastFrameUrl: task.lastFrameUrl },

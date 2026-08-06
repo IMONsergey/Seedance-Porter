@@ -5,15 +5,17 @@ import { extname, join, normalize } from "node:path";
 import { listModels } from "../models/registry.js";
 import { compileProject } from "../prompt/compiler.js";
 import { generateProject } from "../core/generate.js";
-import { scoreTake } from "../eval/scorer.js";
+import { scoreTake, TakeScoreSchema } from "../eval/scorer.js";
+import { reviewTake } from "../eval/review.js";
+import { prepareContinuation } from "../projects/continuation.js";
+import { loadLedger } from "../projects/ledger.js";
+import { planVariants } from "../projects/variants.js";
 import { doctorSnapshot } from "../core/config.js";
 import type { ProviderName } from "../core/types.js";
 
 const host = process.env.PORTER_HOST ?? "127.0.0.1";
 const port = Number.parseInt(process.env.PORTER_PORT ?? "4173", 10);
 const token = process.env.PORTER_STUDIO_TOKEN;
-// Use the project working directory so the Studio is served correctly both
-// through tsx source execution and from compiled JavaScript.
 const root = join(process.cwd(), "studio");
 
 const mime: Record<string, string> = {
@@ -58,6 +60,28 @@ async function api(req: IncomingMessage, res: ServerResponse, pathname: string) 
   if (req.method === "POST" && pathname === "/api/score") {
     const input = await body(req);
     return json(res, 200, scoreTake(input.scores ?? input));
+  }
+  if (req.method === "POST" && pathname === "/api/review") {
+    const input = await body(req);
+    const scores = TakeScoreSchema.parse(input.scores);
+    return json(res, 200, await reviewTake(input.manifestPath, scores, {
+      decision: input.decision,
+      observedEndState: input.observedEndState,
+      notes: input.notes,
+      extractFrame: input.extractFrame,
+    }));
+  }
+  if (req.method === "POST" && pathname === "/api/continuation") {
+    const input = await body(req);
+    return json(res, 200, await prepareContinuation(input.project, input.fromManifestPath, input.provider as ProviderName | undefined));
+  }
+  if (req.method === "POST" && pathname === "/api/ledger") {
+    const input = await body(req);
+    return json(res, 200, await loadLedger(input.project));
+  }
+  if (req.method === "POST" && pathname === "/api/variants/plan") {
+    const input = await body(req);
+    return json(res, 200, planVariants(input.project, { count: input.count ?? 3, seedStart: input.seedStart, provider: input.provider as ProviderName | undefined }));
   }
   if (req.method === "POST" && pathname === "/api/generate") {
     const input = await body(req);
