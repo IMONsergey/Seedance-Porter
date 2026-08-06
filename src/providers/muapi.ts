@@ -22,7 +22,7 @@ export class MuApiProvider implements SeedanceProvider {
     if (!this.key) throw new PorterError("CONFIG", "Missing MUAPI_API_KEY");
     const bytes = await readFile(source);
     const form = new FormData();
-    form.append("file", new Blob([bytes]), basename(source));
+    form.append("file", new Blob([new Uint8Array(bytes)]), basename(source));
     const response = await fetch(`${this.cfg.muapiBaseUrl}/upload_file`, { method: "POST", headers: { "x-api-key": this.key }, body: form });
     const data = (await assertOk(response)) as any;
     const url = data.url ?? data.file_url ?? data.data?.url;
