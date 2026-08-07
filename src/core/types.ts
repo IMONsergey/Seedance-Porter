@@ -12,7 +12,9 @@ export type GenerationMode = (typeof MODES)[number];
 export type Resolution = "480p" | "720p" | "1080p" | "4k";
 export type AspectRatio = "adaptive" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16" | "9:21";
 export type ReferenceKind = "image" | "video" | "audio";
-export type IdentitySource = "synthetic" | "modelark-trusted-output" | "preset-digital-character" | "authorized-real-person" | "non-human";
+export type FaceSource = "none" | "synthetic" | "modelark-trusted-output" | "preset-digital-character" | "authorized-real-person" | "non-human";
+/** @deprecated Use faceSource. Kept for compatibility with early v0.3 project files. */
+export type IdentitySource = Exclude<FaceSource, "none">;
 export type ReferenceRole =
   | "identity"
   | "product"
@@ -33,6 +35,8 @@ export interface ReferenceAsset {
   role: ReferenceRole;
   note?: string;
   anchors?: string[];
+  faceSource?: FaceSource;
+  /** @deprecated Use faceSource. */
   identitySource?: IdentitySource;
   token?: string;
 }
@@ -113,7 +117,7 @@ export interface OfficialComplianceSummary {
 
 export interface CompiledProject {
   request: GenerationRequest;
-  referenceMap: Array<{ id: string; token: string; role: ReferenceRole; note?: string; anchors?: string[]; identitySource?: IdentitySource }>;
+  referenceMap: Array<{ id: string; token: string; role: ReferenceRole; note?: string; anchors?: string[]; faceSource?: FaceSource; identitySource?: IdentitySource }>;
   warnings: string[];
   officialCompliance: OfficialComplianceSummary;
 }
