@@ -45,12 +45,13 @@
       "kind": "image",
       "url": "https://example.com/character-reference.jpg",
       "role": "identity",
+      "identitySource": "synthetic",
       "anchors": [
         "dark chin-length bob haircut",
         "charcoal knit sweater",
         "silver watch on her wrist"
       ],
-      "note": "Use this image as the exact identity and wardrobe source for the same woman from the accepted previous clip."
+      "note": "Use this synthetic character image as the exact identity and wardrobe source for the same woman from the accepted previous clip."
     }
   ],
   "shots": []
