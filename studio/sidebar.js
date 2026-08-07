@@ -1,5 +1,6 @@
 import './experience.js';
 import './experience-stability.js';
+import './case-translation-runtime.js';
 
 const sidebarState = document.querySelector('#sidebarState');
 const sidebarToggle = document.querySelector('#sidebarToggle');
