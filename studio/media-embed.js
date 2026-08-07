@@ -10,9 +10,7 @@ function aspectFor(item) {
 
 function directVideoDescriptor(item) {
   const explicit = String(item?.sourceVideoUrl || '').trim();
-  if (explicit) {
-    return { type: 'direct-video', title: t('media.sourceVideo'), src: explicit, aspect: aspectFor(item) };
-  }
+  if (explicit) return { type: 'direct-video', title: t('media.sourceVideo'), src: explicit, aspect: aspectFor(item) };
   const candidates = [item?.sourceUrl, item?.previewUrl].filter(Boolean).map(String);
   const direct = candidates.find(value => /(?:\.mp4|\.webm|\.m4v|\.mov)(?:$|[?#])/i.test(value) || /video\.twimg\.com\//i.test(value));
   return direct ? { type: 'direct-video', title: t('media.sourceVideo'), src: direct, aspect: aspectFor(item) } : null;
@@ -27,15 +25,8 @@ function cloudflareDescriptor(item, autoplay = false) {
     const params = new URLSearchParams();
     params.set('preload', 'metadata');
     if (autoplay) params.set('autoplay', 'true');
-    return {
-      type: 'cloudflare-stream',
-      title: t('media.sourceVideo'),
-      src: `${url.origin}/${videoId}/iframe?${params.toString()}`,
-      aspect: aspectFor(item)
-    };
-  } catch {
-    return null;
-  }
+    return { type: 'cloudflare-stream', title: t('media.sourceVideo'), src: `${url.origin}/${videoId}/iframe?${params.toString()}`, aspect: aspectFor(item) };
+  } catch { return null; }
 }
 
 function youtubeDescriptor(item) {
@@ -44,9 +35,7 @@ function youtubeDescriptor(item) {
     const url = new URL(raw);
     let id = '';
     if (/youtu\.be$/i.test(url.hostname)) id = url.pathname.split('/').filter(Boolean)[0] || '';
-    if (/youtube\.com$/i.test(url.hostname) || /youtube-nocookie\.com$/i.test(url.hostname)) {
-      id = url.searchParams.get('v') || url.pathname.match(/\/(?:shorts|embed)\/([^/?]+)/i)?.[1] || '';
-    }
+    if (/youtube\.com$/i.test(url.hostname) || /youtube-nocookie\.com$/i.test(url.hostname)) id = url.searchParams.get('v') || url.pathname.match(/\/(?:shorts|embed)\/([^/?]+)/i)?.[1] || '';
     if (!id) return null;
     return { type: 'youtube', title: t('media.sourceVideo'), src: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?rel=0`, aspect: aspectFor(item) };
   } catch { return null; }
@@ -73,12 +62,7 @@ function xDescriptor(item) {
 export function getMediaEmbed(item, options = {}) {
   const autoplay = Boolean(options.autoplay);
   if (item?.embedUrl) return { type: 'custom', title: t('media.sourceVideo'), src: item.embedUrl, aspect: item.aspect || '16 / 9' };
-  return directVideoDescriptor(item)
-    || cloudflareDescriptor(item, autoplay)
-    || youtubeDescriptor(item)
-    || vimeoDescriptor(item)
-    || xDescriptor(item)
-    || null;
+  return directVideoDescriptor(item) || cloudflareDescriptor(item, autoplay) || youtubeDescriptor(item) || vimeoDescriptor(item) || xDescriptor(item) || null;
 }
 
 export function mediaEmbedHtml(item, options = {}) {
@@ -89,7 +73,7 @@ export function mediaEmbedHtml(item, options = {}) {
   }
   const aspectStyle = descriptor.aspect ? `style="aspect-ratio:${descriptor.aspect}"` : '';
   if (descriptor.type === 'direct-video') {
-    return `<div class="source-media-shell" data-media-type="direct-video"><video class="source-media-video" ${aspectStyle} src="${escapeAttr(descriptor.src)}" controls preload="metadata" playsinline crossorigin="anonymous"></video></div>`;
+    return `<div class="source-media-shell" data-media-type="direct-video"><video class="source-media-video" ${aspectStyle} src="${escapeAttr(descriptor.src)}" controls preload="metadata" playsinline></video></div>`;
   }
   const className = descriptor.type === 'x-post' ? 'source-media-frame is-x' : 'source-media-frame';
   return `<div class="source-media-shell" data-media-type="${escapeAttr(descriptor.type)}"><iframe class="${className}" ${aspectStyle} src="${escapeAttr(descriptor.src)}" title="${escapeAttr(descriptor.title)}" loading="eager" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
