@@ -52,12 +52,6 @@ function countCameraMoves(camera?: string): number {
   return cameraMovePatterns.reduce((count, pattern) => count + (pattern.test(camera) ? 1 : 0), 0);
 }
 
-function hasStableReferenceDescription(ref: ReferenceAsset): boolean {
-  if (!ref.note) return false;
-  const words = ref.note.trim().split(/\s+/).filter(Boolean);
-  return words.length >= 5;
-}
-
 function isComplex(spec: ProjectSpec): boolean {
   return spec.shots.length > 1 || spec.brief.beats.length > 1 || spec.duration >= 10;
 }
@@ -96,11 +90,17 @@ export function validateOfficialCompliance(spec: ProjectSpec, refs: ReferenceAss
 
   if (!spec.brief.subject.trim()) findings.push({ rule: "BOS-01", severity: "error", path: "brief.subject", message: "A precise core subject is required." });
   for (const ref of refs.filter((item) => item.role === "identity" || item.role === "product" || item.role === "logo")) {
-    if (!hasStableReferenceDescription(ref)) findings.push({
+    if (!ref.note?.trim()) findings.push({
       rule: "BOS-01",
       severity: "error",
       path: `references.${ref.id}.note`,
-      message: `${ref.role} reference ${ref.id} needs a concise note describing stable identifying features and exactly what must be preserved.`,
+      message: `${ref.role} reference ${ref.id} needs an explicit source/job note describing exactly what this reference controls.`,
+    });
+    if (!ref.anchors || ref.anchors.length < 2 || ref.anchors.length > 3) findings.push({
+      rule: "BOS-01",
+      severity: "error",
+      path: `references.${ref.id}.anchors`,
+      message: `${ref.role} reference ${ref.id} must declare exactly 2–3 stable identifying anchors, matching the official subject-definition method.`,
     });
   }
 
