@@ -15,6 +15,7 @@ export type ReferenceKind = "image" | "video" | "audio";
 export type ReferenceRole =
   | "identity"
   | "product"
+  | "logo"
   | "environment"
   | "motion"
   | "camera"
