@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Seedance Porter Review Media Evidence",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "candidateId", "playback", "markers", "exportedAt", "evidenceBoundary"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "seedance-porter-review-media-evidence" },
+    "candidateId": { "type": "string", "minLength": 1 },
+    "sourceVideoUrl": { "type": "string" },
+    "playback": {
+      "type": "object",
+      "required": ["duration", "playedRanges", "coveragePercent", "lastTime"],
+      "properties": {
+        "duration": { "type": "number", "minimum": 0 },
+        "playedRanges": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              { "type": "number", "minimum": 0 },
+              { "type": "number", "minimum": 0 }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "coveragePercent": { "type": "number", "minimum": 0, "maximum": 100 },
+        "lastTime": { "type": "number", "minimum": 0 },
+        "updatedAt": { "type": ["string", "null"] }
+      }
+    },
+    "markers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "timeSeconds", "timecode", "note", "createdAt"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "type": { "enum": ["shot-boundary", "transition", "artifact", "continuity", "signature-move", "note"] },
+          "timeSeconds": { "type": ["number", "null"], "minimum": 0 },
+          "timecode": { "type": "string" },
+          "note": { "type": "string", "minLength": 1 },
+          "createdAt": { "type": "string" }
+        }
+      }
+    },
+    "exportedAt": { "type": "string" },
+    "evidenceBoundary": { "type": "string", "minLength": 40 }
+  }
+}
