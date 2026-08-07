@@ -1,0 +1,65 @@
+name: Refresh Case Intelligence Corpus
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Candidate corpus size (500-1000)'
+        required: false
+        default: '750'
+  schedule:
+    - cron: '17 3 * * 1'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/import-case-candidates.mjs'
+      - 'scripts/build-case-review-queue.mjs'
+      - 'studio/case-intelligence-data.js'
+      - '.github/workflows/case-corpus.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: case-corpus-refresh
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Import balanced source candidates
+        env:
+          CORPUS_LIMIT: ${{ inputs.limit || '750' }}
+        run: node scripts/import-case-candidates.mjs --limit "$CORPUS_LIMIT" --min 500 --concurrency 10 --output studio/case-candidates.json
+
+      - name: Build deep-review queue
+        run: node scripts/build-case-review-queue.mjs --input studio/case-candidates.json --limit 90 --output studio/case-review-queue.json
+
+      - name: Report corpus coverage
+        run: |
+          node -e "const d=require('./studio/case-candidates.json'); console.log(JSON.stringify(d.stats,null,2)); if(d.stats.candidates<500) process.exit(2)"
+
+      - name: Commit refreshed corpus snapshot
+        run: |
+          if git diff --quiet -- studio/case-candidates.json studio/case-review-queue.json; then
+            echo 'Corpus snapshot unchanged.'
+            exit 0
+          fi
+          git config user.name 'seedance-porter-bot'
+          git config user.email 'seedance-porter-bot@users.noreply.github.com'
+          git add studio/case-candidates.json studio/case-review-queue.json
+          git commit -m 'data: refresh Case Intelligence corpus'
+          git push origin HEAD:main
