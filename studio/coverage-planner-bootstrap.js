@@ -8,3 +8,23 @@ if (!existing) {
 }
 
 await import('./coverage-planner-ui.js');
+
+function placePlannerAfterAudit() {
+  const sourceView = document.querySelector('#sourceView');
+  const audit = sourceView?.querySelector('#coverageAudit');
+  const planner = sourceView?.querySelector('#coveragePlanner');
+  if (!sourceView || !audit || !planner) return false;
+  if (audit.nextElementSibling !== planner) audit.insertAdjacentElement('afterend', planner);
+  return true;
+}
+
+if (!placePlannerAfterAudit()) {
+  const sourceView = document.querySelector('#sourceView');
+  if (sourceView) {
+    const observer = new MutationObserver(() => {
+      if (!placePlannerAfterAudit()) return;
+      observer.disconnect();
+    });
+    observer.observe(sourceView, { childList: true, subtree: false });
+  }
+}
