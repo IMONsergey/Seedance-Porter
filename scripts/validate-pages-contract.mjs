@@ -66,6 +66,7 @@ async function visit(modulePath, parent = null) {
 for (const root of roots) await visit(root);
 
 for (const required of [
+  'workspace-router.js',
   'case-corpus-ui.js',
   'case-corpus.css',
   'deep-review-bootstrap.js',
@@ -75,6 +76,10 @@ for (const required of [
   'promotion-engine.js',
   'promotion-ui.js',
   'promotion.css',
+  'coverage-planner-bootstrap.js',
+  'coverage-planner-engine.js',
+  'coverage-planner-ui.js',
+  'coverage-planner.css',
   'unified-curated-ui.js',
   'multi-source-index.js'
 ]) {
@@ -82,10 +87,10 @@ for (const required of [
 }
 
 if (!workflow.includes('npm run case:refresh')) {
-  fail('Pages build must attempt to generate a Research Corpus snapshot for the deployed artifact');
+  fail('Pages build must attempt to generate Research Corpus, strategic review queue and Coverage Planner snapshots');
 }
 if (!workflow.includes('continue-on-error: true')) {
-  fail('Research Corpus generation must not take the curated live site down when an external source is unavailable');
+  fail('External research generation must not take the curated live site down when an upstream source is unavailable');
 }
 if (!workflow.includes('case-candidates.json _site/case-candidates.json')) {
   fail('Pages workflow must publish case-candidates.json when generated');
@@ -93,11 +98,17 @@ if (!workflow.includes('case-candidates.json _site/case-candidates.json')) {
 if (!workflow.includes('case-review-queue.json _site/case-review-queue.json')) {
   fail('Pages workflow must publish case-review-queue.json when generated');
 }
+if (!workflow.includes('coverage-plan.json _site/coverage-plan.json')) {
+  fail('Pages workflow must publish machine-readable coverage-plan.json when generated');
+}
 if (!workflow.includes('node scripts/validate-deep-review-workspace.mjs')) {
   fail('Pages build must validate the Deep Review evidence gate before deployment');
 }
 if (!workflow.includes('node scripts/validate-promotion-workspace.mjs')) {
   fail('Pages build must validate Promotion Workspace curation gates before deployment');
+}
+if (!workflow.includes('node scripts/validate-coverage-planner.mjs')) {
+  fail('Pages build must validate Coverage Planner strategy before deployment');
 }
 
 if (failures.length) {
@@ -114,6 +125,9 @@ console.log(JSON.stringify({
   researchSnapshotBuild: 'best-effort',
   deepReviewWorkspace: 'validated-and-published',
   promotionWorkspace: 'validated-and-published',
+  coveragePlanner: 'validated-and-published',
+  workspaceRouter: 'production-critical',
+  machineReadablePlan: 'coverage-plan.json',
   autoCuratedDigestMutation: false,
-  curatedSiteFailureMode: 'deploy remains available if external corpus generation fails'
+  curatedSiteFailureMode: 'deploy remains available if external research generation fails'
 }, null, 2));
