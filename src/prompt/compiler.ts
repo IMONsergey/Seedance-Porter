@@ -1,10 +1,13 @@
 import { ProjectSchema, type ProjectSpec } from "../core/schema.js";
-import type { CompiledProject, GenerationMode, ProviderName } from "../core/types.js";
+import type { CompiledProject, GenerationMode, ProviderName, ReferenceAsset } from "../core/types.js";
 import { PorterError } from "../core/errors.js";
 import { getModel, getRoute } from "../models/registry.js";
 import { mapReferences, referenceContract } from "./referenceMapper.js";
 import { planShots, renderShots } from "./shotPlanner.js";
 import { renderDirectorRead, resolveDirectorRead } from "./directorRead.js";
+import { validateOfficialCompliance } from "./officialCompliance.js";
+
+const DEFAULT_IMAGE_QUALITY = "HD, rich details, stable structure, natural colors, coherent material texture";
 
 function inferMode(spec: ProjectSpec): GenerationMode {
   if (spec.mode !== "auto") return spec.mode;
@@ -31,24 +34,48 @@ function continuityLines(spec: ProjectSpec): string[] {
   return lines;
 }
 
-function productionLocks(spec: ProjectSpec): string[] {
+function productionLocks(spec: ProjectSpec, refs: ReferenceAsset[]): string[] {
   const locks = spec.brief.constraints.map((value) => {
     const trimmed = value.trim();
     if (/^no\s+/i.test(trimmed)) return `Keep the result free of ${trimmed.replace(/^no\s+/i, "")}.`;
-    if (/^do not\s+/i.test(trimmed)) return `Production lock: ${trimmed.replace(/^do not\s+/i, "Avoid ")}.`;
-    return `Production lock: ${trimmed}.`;
+    if (/^do not\s+/i.test(trimmed)) return `Constraint: ${trimmed}.`;
+    return `Constraint: ${trimmed}.`;
   });
-  return locks;
+
+  if (spec.outputPolicy.generatedText === "forbid") {
+    locks.push("Keep it subtitle-free. Avoid generating any unrequested text or subtitles.");
+  }
+  if (spec.outputPolicy.generatedLogo === "forbid") {
+    locks.push("Do not generate a logo or invented brand mark.");
+  } else if (spec.outputPolicy.generatedLogo === "reference-only") {
+    locks.push("Use only the explicitly supplied logo reference; preserve its geometry and do not invent or redesign the mark.");
+  }
+  if (spec.outputPolicy.generatedWatermark === "forbid") {
+    locks.push("Do not generate a watermark.");
+  }
+
+  const identities = refs.filter((ref) => ref.role === "identity");
+  if (identities.length > 1) {
+    locks.push("Keep exactly one instance of each defined character in the same frame. Do not duplicate characters or create twin copies with identical appearance, clothing or accessories.");
+  }
+  if (refs.some((ref) => ref.role === "product")) {
+    locks.push("Preserve the referenced product's geometry, construction, materials and identifying details throughout the video.");
+  }
+
+  locks.push("Keep subject identity, object ownership, spatial direction and material properties consistent through the generated sequence.");
+  return [...new Set(locks)];
 }
 
 function lintPrompt(prompt: string, spec: ProjectSpec): string[] {
   const warnings: string[] = [];
   const words = prompt.trim().split(/\s+/).filter(Boolean).length;
-  if (words < 30) warnings.push(`Prompt is only ${words} words; complex scenes may be underspecified.`);
-  if (words > 260) warnings.push(`Prompt is ${words} words; detail dropout risk is high. Consider splitting the shot.`);
-  if (spec.shots.length > 4) warnings.push("More than four shots in one generation is fragile; prefer multiple clips and edit them together.");
-  if (spec.duration > 10 && (spec.brief.beats.length > 2 || spec.shots.length > 2)) warnings.push("Long multi-beat generations drift more often; consider 4-8 second clips.");
-  if (/logo|packaging|label|interface|ui|text/i.test(`${spec.brief.subject} ${spec.brief.objective}`)) warnings.push("Critical typography/logos should be replaced or composited in post even when a reference is provided.");
+  if (words < 30) warnings.push(`Porter advisory: prompt is only ${words} words; complex scenes may be underspecified.`);
+  if (words > 350) warnings.push(`Porter advisory: prompt is ${words} words; although the official ceiling is below 1000 words, detail dropout risk may improve by splitting the scene.`);
+  if (spec.shots.length > 4) warnings.push("Porter advisory: more than four shots in one generation is fragile; prefer multiple clips and edit them together.");
+  if (spec.duration > 10 && (spec.brief.beats.length > 2 || spec.shots.length > 2)) warnings.push("Porter advisory: long multi-beat generations can drift; consider separate clips at story/action turning points.");
+  if (spec.outputPolicy.generatedText === "allow" && /exact|precise|pixel|brand typography|font/i.test(`${spec.brief.subject} ${spec.brief.objective}`)) {
+    warnings.push("Porter advisory: Seedance supports text generation, but exact brand typography should still be quality-checked and may be safer to composite in post.");
+  }
   return warnings;
 }
 
@@ -70,22 +97,37 @@ export function compileProject(input: unknown, providerOverride?: ProviderName):
   const refs = mapReferences(spec, model);
   const shots = planShots(spec);
   const read = resolveDirectorRead(spec);
+  const imageQuality = spec.brief.imageQuality ?? DEFAULT_IMAGE_QUALITY;
 
-  const sections = [
-    `${spec.brief.subject}. ${spec.brief.action}. ${spec.brief.environment}.`,
-    ...referenceContract(refs),
-    ...renderDirectorRead(read),
-    ...continuityLines(spec),
-    ...renderShots(shots),
-  ];
-  if (spec.brief.style) sections.push(`Visual language: ${spec.brief.style}.`);
-  if (spec.brief.camera && shots.every((s) => !s.camera)) sections.push(`Camera: ${spec.brief.camera}.`);
-  if (spec.brief.lighting && shots.every((s) => !s.lighting)) sections.push(`Light: ${spec.brief.lighting}.`);
-  if (spec.brief.sound && shots.every((s) => !s.sound)) sections.push(`Audio: ${spec.brief.sound}.`);
-  sections.push(...productionLocks(spec));
-  sections.push("Keep subject geometry, object ownership, spatial direction and material identity temporally consistent across the shot.");
+  // The ordering below intentionally follows the official BytePlus advanced
+  // prompt formula: precise subject -> action/storyboard -> scene/environment ->
+  // lighting/color -> camera inside each Shot N -> style -> quality -> constraints.
+  const sections: string[] = [];
+  sections.push(`Objective: ${spec.brief.objective}.`);
+  sections.push(`Core subject: ${spec.brief.subject}.`);
+  if (refs.length) sections.push("Reference definitions:", ...referenceContract(refs));
+  sections.push(`Core action intent: ${spec.brief.action}.`);
+  sections.push(`Scene/environment: ${spec.brief.environment}.`);
+
+  const lightColor = [spec.brief.lighting, spec.brief.colorTone].filter(Boolean).join(" Color tone: ");
+  if (lightColor) sections.push(`Lighting and color tone: ${lightColor}.`);
+
+  const directorLines = renderDirectorRead(read);
+  if (directorLines.length) sections.push("Director context:", ...directorLines);
+  const continuity = continuityLines(spec);
+  if (continuity.length) sections.push("Continuity:", ...continuity);
+
+  sections.push("Ordered storyboard:", ...renderShots(shots));
+  if (spec.brief.style) sections.push(`Visual style: ${spec.brief.style}.`);
+  sections.push(`Image quality: ${imageQuality}.`);
+  sections.push("Constraints:", ...productionLocks(spec, refs));
 
   const prompt = sections.filter(Boolean).join("\n");
+  const officialCompliance = validateOfficialCompliance(spec, refs, shots, prompt);
+  const officialWarnings = officialCompliance.findings
+    .filter((finding) => finding.severity !== "error")
+    .map((finding) => `${finding.rule}: ${finding.message}`);
+
   return {
     request: {
       project: spec.project,
@@ -104,6 +146,7 @@ export function compileProject(input: unknown, providerOverride?: ProviderName):
       watermark: spec.watermark,
     },
     referenceMap: refs.map((r) => ({ id: r.id, token: r.token!, role: r.role, note: r.note })),
-    warnings: lintPrompt(prompt, spec),
+    warnings: [...lintPrompt(prompt, spec), ...officialWarnings],
+    officialCompliance,
   };
 }
