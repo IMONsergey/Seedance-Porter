@@ -23,7 +23,7 @@ Current first-party ModelArk contract encoded by Porter:
 - direct Seedance 2.0 ModelArk route: `seed` is currently marked unsupported;
 - strict first/last interpolation is kept separate from multimodal reference generation;
 - multimodal image/video/audio entries are translated to `reference_image`, `reference_video`, `reference_audio` API roles;
-- identity references declare provenance so arbitrary direct real-face uploads are not treated as normal supported ModelArk identity references.
+- every BytePlus image/video reference declares `faceSource`, and ModelArk-managed identity assets follow the supported asset/trust flow rather than being treated as arbitrary uploads.
 
 Set `BYTEPLUS_API_KEY` (or compatibility aliases `SEEDANCE_API_KEY` / `ARK_API_KEY`). See `docs/BYTEDANCE-OFFICIAL-GUIDE.md` for the source-dated prompt and request standard.
 
