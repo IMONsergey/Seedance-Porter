@@ -10,14 +10,14 @@ import { prepareContinuation } from "../projects/continuation.js";
 import { loadLedger } from "../projects/ledger.js";
 import { planVariants } from "../projects/variants.js";
 
-const server = new McpServer({ name: "seedance-porter", version: "0.2.0" });
+const server = new McpServer({ name: "seedance-porter", version: "0.3.0" });
 const text = (value: unknown) => ({ content: [{ type: "text" as const, text: JSON.stringify(value, null, 2) }] });
 
 server.tool("seedance_models", "List current dated Seedance model/provider capabilities", {}, async () => text(listModels()));
 
 server.tool(
   "seedance_compile",
-  "Compile a structured project into a production-ready Seedance prompt and reference map without spending credits",
+  "Compile a structured project into an official-guide-aligned Seedance prompt, reference map and compliance report without spending credits",
   {
     project: z.any().describe("Porter project JSON object"),
     provider: z.enum(["byteplus", "fal", "muapi"]).optional(),
@@ -26,8 +26,18 @@ server.tool(
 );
 
 server.tool(
+  "seedance_validate_official",
+  "Validate a project against Porter's source-dated official ByteDance/BytePlus Seedance prompting standard without spending credits",
+  {
+    project: z.any().describe("Porter project JSON object"),
+    provider: z.enum(["byteplus", "fal", "muapi"]).optional(),
+  },
+  async ({ project, provider }) => text(compileProject(project, provider).officialCompliance),
+);
+
+server.tool(
   "seedance_generate",
-  "Compile and generate a Seedance clip. This can spend provider credits; use only when explicitly requested.",
+  "Validate official compliance and generate a Seedance clip. This can spend provider credits; the call is blocked before provider submission when official compliance fails.",
   {
     project: z.any().describe("Porter project JSON object"),
     provider: z.enum(["byteplus", "fal", "muapi"]).optional(),
@@ -88,7 +98,7 @@ server.tool(
 
 server.tool(
   "seedance_plan_variants",
-  "Plan a bounded 1-8 seed sweep without spending credits",
+  "Plan a bounded 1-8 seed sweep without spending credits. Each compiled variant includes official compliance; paid generation later uses the hard gate.",
   {
     project: z.any(),
     count: z.number().int().min(1).max(8).default(3),
