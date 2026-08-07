@@ -31,7 +31,7 @@ The source methodology is documented in [`docs/BYTEDANCE-OFFICIAL-GUIDE.md`](doc
 
 - precise subject definition;
 - `identity`, `product` and `logo` references require exactly **2–3 stable `anchors`** plus a clear reference job;
-- BytePlus identity references require explicit `identitySource` provenance and supported ModelArk asset/trust flow for real-person use;
+- every BytePlus image/video reference requires explicit `faceSource` provenance so arbitrary real-face uploads are not silently treated as supported; registered real-person/preset-character inputs use ModelArk's asset/trust flow;
 - complex prompts compile as ordered **`Shot 1`, `Shot 2`, ...**, not rigid per-shot second ranges;
 - one camera movement type per shot;
 - physical/action-specific motion language and visible emotional behavior;
@@ -94,7 +94,7 @@ If official compliance fails, generation stops before provider submission.
 
 ## Project shape
 
-A production project explicitly carries output intent and reference anchors. Identity references on BytePlus also declare provenance.
+A production project explicitly carries output intent, reference anchors and visual face provenance for BytePlus media.
 
 ```json
 {
@@ -114,6 +114,7 @@ A production project explicitly carries output intent and reference anchors. Ide
     {
       "kind": "image",
       "role": "product",
+      "faceSource": "none",
       "anchors": [
         "tall cylindrical dark-green aluminum body",
         "short neck with unchanged cap proportions",
@@ -125,7 +126,7 @@ A production project explicitly carries output intent and reference anchors. Ide
 }
 ```
 
-For a character identity on BytePlus, add for example `"identitySource": "synthetic"`, `"modelark-trusted-output"`, `"preset-digital-character"`, `"authorized-real-person"` or `"non-human"`. Registered authorized-real-person/preset-character inputs use the ModelArk asset flow.
+For every BytePlus image/video reference use one of: `"faceSource": "none"`, `"synthetic"`, `"non-human"`, `"modelark-trusted-output"`, `"preset-digital-character"` or `"authorized-real-person"`. Registered authorized-real-person/preset-character inputs use the ModelArk asset flow. The earlier `identitySource` field is accepted only as a compatibility alias for early v0.3 identity files; new projects should use `faceSource`.
 
 ## Review → accept → continue
 
@@ -185,7 +186,7 @@ Provider details live in `docs/PROVIDERS.md`; model facts live in `src/models/re
 - paid-generation hard gate;
 - Director's Read for narrative/performance work;
 - official `Shot N` storyboard compiler;
-- structured stable reference anchors, identity provenance and explicit roles;
+- structured stable reference anchors, visual face provenance and explicit roles;
 - first/last-frame planning with API-mode separation;
 - sequence continuity locks;
 - one-variable retake protocol and weighted take scorecard;
@@ -210,7 +211,7 @@ Do not run random `curl | bash` installers from repositories that impersonate By
 
 ## Status
 
-**v0.3 official-guidance release:** provider adapters, model registry, official ByteDance compliance layer, official-order prompt compiler, structured subject anchors, identity provenance, output intent policy, API-mode validation, route-specific parameter validation, CLI validation/hard generation gate, MCP, Studio/API, production memory, evaluation, continuation, variants, examples and regression tests are implemented.
+**v0.3 official-guidance release:** provider adapters, model registry, official ByteDance compliance layer, official-order prompt compiler, structured subject anchors, visual face provenance, output intent policy, API-mode validation, route-specific parameter validation, CLI validation/hard generation gate, MCP, Studio/API, production memory, evaluation, continuation, variants, examples and regression tests are implemented.
 
 Live provider generation still requires your own credentials and paid credits. Do not interpret repository-level compliance as a guarantee that a stochastic model will always follow every instruction; it guarantees that Porter structures and validates requests against the verified first-party methodology and provider contract before submission.
 
