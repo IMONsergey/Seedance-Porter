@@ -1,6 +1,6 @@
 import { INDUSTRY_DIGEST, DIGEST_META } from '../studio/digest-data.js';
 import { PROMPTS, SOURCES, LIBRARY_STATS } from '../studio/library-data.js';
-import { CASE_INTELLIGENCE, COLLECTION_GROUPS } from '../studio/case-intelligence.js';
+import { CASE_INTELLIGENCE, COLLECTION_GROUPS } from '../studio/case-intelligence-runtime.js';
 
 const fail = (message) => {
   console.error(`library validation failed: ${message}`);
@@ -24,7 +24,7 @@ for (const item of INDUSTRY_DIGEST) {
   if (excerptWords > 25) fail(`${item.id} source excerpt is ${excerptWords} words; keep digest excerpts <=25 words and link the full original`);
   if (excerptWords < 6) fail(`${item.id} source excerpt is too small to be useful`);
   if (words(item.porterPrompt) < 55) fail(`${item.id} Porter Adaptation is too thin to be production-useful`);
-  if (!/(Shot\s+1:|Clip\s+[A-Z0-9]+:|Camera:|Core motion:)/i.test(item.porterPrompt)) fail(`${item.id} adaptation lacks an explicit shot/clip/camera/motion production instruction`);
+  if (!/(Shot\s+1:|Clip\s+[A-Z0-9]+:|Camera:|Core motion:|Continuous action:)/i.test(item.porterPrompt)) fail(`${item.id} adaptation lacks an explicit shot/clip/camera/motion production instruction`);
   if (!item.variables || !Object.keys(item.variables).length) fail(`${item.id} has no remix variables`);
   if (item.designScore < 1 || item.designScore > 5) fail(`${item.id} designScore must be 1-5`);
 }
