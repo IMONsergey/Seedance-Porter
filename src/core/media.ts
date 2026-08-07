@@ -4,7 +4,11 @@ import { PorterError } from "./errors.js";
 import type { ReferenceKind } from "./types.js";
 
 export function isRemoteSource(value: string): boolean {
-  return /^https?:\/\//i.test(value) || /^data:/i.test(value) || /^asset:\/\//i.test(value);
+  return /^https?:\/\//i.test(value) || /^data:/i.test(value);
+}
+
+function isBytePlusAssetSource(value: string): boolean {
+  return /^asset:\/\//i.test(value);
 }
 
 function mimeFor(path: string, kind: ReferenceKind): string {
@@ -22,7 +26,7 @@ function mimeFor(path: string, kind: ReferenceKind): string {
 }
 
 export async function resolveBytePlusSource(source: string, kind: ReferenceKind): Promise<string> {
-  if (isRemoteSource(source)) return source;
+  if (isRemoteSource(source) || isBytePlusAssetSource(source)) return source;
   if (kind === "video") throw new PorterError("UNSUPPORTED", "BytePlus reference videos must currently be reachable by URL/asset reference; upload the local video to controlled storage or ModelArk assets first.");
   const bytes = await readFile(source);
   return `data:${mimeFor(source, kind)};base64,${bytes.toString("base64")}`;
