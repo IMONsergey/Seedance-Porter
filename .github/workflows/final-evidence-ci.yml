@@ -1,0 +1,46 @@
+name: final-evidence-ci
+
+on:
+  pull_request:
+    paths:
+      - 'studio/evidence-package-engine.js'
+      - 'schemas/final-evidence-package.schema.json'
+      - 'scripts/build-final-evidence-package.mjs'
+      - 'scripts/verify-final-evidence-package.mjs'
+      - 'scripts/validate-final-evidence-package.mjs'
+      - 'docs/FINAL-EVIDENCE-PACKAGE.md'
+      - '.github/workflows/final-evidence-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/evidence-package-engine.js'
+      - 'schemas/final-evidence-package.schema.json'
+      - 'scripts/build-final-evidence-package.mjs'
+      - 'scripts/verify-final-evidence-package.mjs'
+      - 'scripts/validate-final-evidence-package.mjs'
+      - '.github/workflows/final-evidence-ci.yml'
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate Final Evidence Package integrity and evidence binding
+        run: node scripts/validate-final-evidence-package.mjs
+      - name: Validate protected exact-100 browser contract
+        run: npm run validate:render
+      - name: Syntax-check evidence package modules
+        run: |
+          node --check studio/evidence-package-engine.js
+          node --check scripts/build-final-evidence-package.mjs
+          node --check scripts/verify-final-evidence-package.mjs
+          node --check scripts/validate-final-evidence-package.mjs
