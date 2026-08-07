@@ -21,3 +21,5 @@ jobs:
       - run: npm test
       - name: Validate official Seedance project standard
         run: npm run porter -- validate examples/product-film.json
+      - name: Validate attributed prompt digest and Porter Originals
+        run: node scripts/validate-library.mjs

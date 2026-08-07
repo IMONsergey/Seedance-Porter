@@ -105,7 +105,7 @@ export interface GenerationTask {
 }
 
 export interface OfficialComplianceSummary {
-  standard: string;
+  standard: "BOS-2026-07-17";
   verifiedAt: string;
   sourceUpdatedAt: string;
   passed: boolean;

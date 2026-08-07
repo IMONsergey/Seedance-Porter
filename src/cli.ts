@@ -16,7 +16,7 @@ import type { TakeDecision } from "./core/manifest.js";
 import { PorterError } from "./core/errors.js";
 
 const program = new Command();
-program.name("porter").description("Production control layer for ByteDance Seedance").version("0.3.0");
+program.name("porter").description("Production control layer for ByteDance Seedance").version("0.4.0");
 
 program.command("models")
   .description("List model/provider capabilities from Porter's dated registry")
@@ -29,7 +29,7 @@ program.command("doctor")
 program.command("compile")
   .argument("<project>", "Path to a Porter project JSON file")
   .option("-p, --provider <provider>", "byteplus | fal | muapi")
-  .description("Compile a project into the official-guide-aligned Seedance prompt plus compliance report")
+  .description("Compile a project brief into a provider-ready Seedance prompt")
   .action(async (path, options) => {
     const input = await readJson(path);
     const result = compileProject(input, options.provider as ProviderName | undefined);
@@ -39,7 +39,7 @@ program.command("compile")
 program.command("validate")
   .argument("<project>", "Path to a Porter project JSON file")
   .option("-p, --provider <provider>", "byteplus | fal | muapi")
-  .description("Validate a project against the source-dated official ByteDance/BytePlus Seedance prompting standard without spending credits")
+  .description("Validate a project against the source-dated official ByteDance/BytePlus standard without spending credits")
   .action(async (path, options) => {
     const input = await readJson(path);
     const result = compileProject(input, options.provider as ProviderName | undefined);
@@ -53,7 +53,7 @@ program.command("generate")
   .option("-o, --output-dir <path>", "Output root directory")
   .option("--no-wait", "Submit and return without polling when the provider supports tasks")
   .option("--force", "Bypass the 10-minute duplicate paid-request guard")
-  .description("Validate official compliance, submit, poll, download and write a .porter.json sidecar")
+  .description("Compile, validate, submit, poll, download and write a .porter.json sidecar")
   .action(async (path, options) => {
     const input = await readJson(path);
     const result = await generateProject(input, {
@@ -107,13 +107,13 @@ program.command("continue")
   });
 
 program.command("variants")
-  .argument("<project>", "Project JSON to sweep across seeds")
+  .argument("<project>", "Project JSON to sweep across seeds on routes that explicitly support seed control")
   .option("-n, --count <number>", "Number of variants, maximum 8", (value) => Number.parseInt(value, 10), 3)
   .option("--seed-start <number>", "First seed", (value) => Number.parseInt(value, 10))
   .option("-p, --provider <provider>", "byteplus | fal | muapi")
   .option("--generate", "Actually spend credits and render the planned variants")
   .option("-o, --output-dir <path>", "Output root directory")
-  .description("Plan or sequentially generate a bounded seed sweep")
+  .description("Plan or sequentially generate a bounded provider-supported seed sweep")
   .action(async (path, options) => {
     const input = await readJson(path);
     const args = { count: options.count, seedStart: options.seedStart, provider: options.provider as ProviderName | undefined };
