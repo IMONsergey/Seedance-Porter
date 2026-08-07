@@ -6,16 +6,25 @@
   "resolution": "720p",
   "aspectRatio": "16:9",
   "generateAudio": true,
+  "outputPolicy": {
+    "generatedText": "forbid",
+    "generatedLogo": "forbid",
+    "generatedWatermark": "forbid"
+  },
   "brief": {
     "objective": "Continue an accepted previous clip without resetting character or space.",
     "subject": "The same woman from the identity reference",
-    "action": "She notices the envelope on the table, reaches toward it once, then stops before touching it",
-    "environment": "The same small kitchen as the accepted previous clip",
-    "camera": "Medium close-up at eye level, slow restrained push-in that stops when her hand stops",
+    "action": "She notices the envelope on the table, slowly extends her right hand toward it, then stops two centimeters before touching it",
+    "environment": "The same small pale kitchen as the accepted previous clip, with the envelope at the right edge of the wooden table",
+    "camera": "Medium close-up at eye level with one slow restrained push-in that stops when her hand stops",
     "lighting": "Same soft overcast window light from frame-left",
-    "sound": "Quiet room tone, fabric movement, chair creak; no music",
-    "endpoint": "Her hand remains suspended two centimeters above the envelope",
-    "constraints": ["same wardrobe", "same table layout", "screen direction remains consistent"]
+    "colorTone": "Muted natural kitchen tones with neutral skin color and soft cool daylight",
+    "sound": "Quiet room tone, fabric movement and one chair creak; no music",
+    "endpoint": "Her right hand remains suspended two centimeters above the unopened envelope",
+    "style": "Naturalistic contemporary drama, restrained performance, realistic domestic photography, no melodramatic visual treatment",
+    "imageQuality": "HD, natural skin detail, stable face and hands, coherent table geometry, clean temporal continuity",
+    "constraints": ["same wardrobe", "same table layout", "screen direction remains consistent"],
+    "beats": []
   },
   "director": {
     "sceneFunction": "Delay the reveal and make hesitation visible rather than verbal.",
@@ -36,7 +45,8 @@
       "kind": "image",
       "url": "https://example.com/character-reference.jpg",
       "role": "identity",
-      "note": "Character identity and wardrobe lock."
+      "note": "Same woman: dark chin-length bob haircut, charcoal knit sweater, silver watch and unchanged facial identity."
     }
-  ]
+  ],
+  "shots": []
 }
