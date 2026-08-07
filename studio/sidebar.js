@@ -26,3 +26,9 @@ document.addEventListener('keydown', (event) => {
 window.addEventListener('resize', () => {
   if (window.innerWidth > 980) closeSidebar();
 });
+
+// Keep Case Intelligence isolated from the core prompt library runtime.
+// If this layer fails, the base library remains usable.
+import('./case-intelligence-ui.js').catch((error) => {
+  console.warn('Case Intelligence UI did not load', error);
+});
