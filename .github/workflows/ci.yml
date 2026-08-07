@@ -19,7 +19,15 @@ jobs:
       - run: npm install
       - run: npm run check
       - run: npm test
+      - name: Validate Case Intelligence JavaScript syntax
+        run: |
+          node --check studio/case-intelligence-data.js
+          node --check studio/case-intelligence-ui.js
+          node --check studio/case-corpus-ui.js
+          node --check studio/pattern-builder.js
+          node --check scripts/import-case-candidates.mjs
+          node --check scripts/build-case-review-queue.mjs
       - name: Validate official Seedance project standard
         run: npm run porter -- validate examples/product-film.json
-      - name: Validate attributed prompt digest and Porter Originals
+      - name: Validate attributed prompt digest, Collections and Case Intelligence
         run: node scripts/validate-library.mjs
