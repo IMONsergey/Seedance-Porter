@@ -41,6 +41,7 @@ jobs:
           cp studio/case-intelligence.js _site/case-intelligence.js
           cp studio/case-intelligence-runtime.js _site/case-intelligence-runtime.js
           cp studio/experience.js _site/experience.js
+          cp studio/experience-stability.js _site/experience-stability.js
           cp studio/i18n.js _site/i18n.js
           cp studio/media-embed.js _site/media-embed.js
           cp studio/library-data.js _site/library-data.js
