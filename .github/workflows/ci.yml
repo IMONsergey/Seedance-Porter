@@ -23,3 +23,5 @@ jobs:
         run: npm run porter -- validate examples/product-film.json
       - name: Validate attributed prompt digest and Porter Originals
         run: node scripts/validate-library.mjs
+      - name: Validate prompt library browser DOM contract
+        run: node scripts/validate-ui-contract.mjs
