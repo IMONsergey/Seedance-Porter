@@ -8,7 +8,8 @@
   <link rel="stylesheet" href="/library.css" />
   <link rel="stylesheet" href="/digest.css" />
 </head>
-<body data-view="digest">
+<body>
+  <input class="sidebar-state" type="checkbox" id="sidebarState" aria-hidden="true" tabindex="-1" />
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Library navigation and filters">
       <div class="sidebar-header">
@@ -16,7 +17,7 @@
           <span class="brand-mark">SP</span>
           <span><strong>Seedance Porter</strong><small>Prompt Library</small></span>
         </a>
-        <button class="icon-button sidebar-close" id="sidebarClose" aria-label="Close sidebar">×</button>
+        <label class="icon-button sidebar-close" for="sidebarState" aria-label="Close sidebar">×</label>
       </div>
 
       <nav class="sidebar-nav" aria-label="Library views">
@@ -77,11 +78,11 @@
       </div>
     </aside>
 
-    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+    <label class="sidebar-backdrop" for="sidebarState" aria-label="Close sidebar"></label>
 
     <div class="main-shell">
       <header class="mobile-topbar">
-        <button class="icon-button" id="sidebarToggle" aria-label="Open sidebar">☰</button>
+        <label class="icon-button" for="sidebarState" aria-label="Open sidebar">☰</label>
         <div class="mobile-brand"><strong>Seedance Porter</strong><span>Prompt Library</span></div>
       </header>
 
