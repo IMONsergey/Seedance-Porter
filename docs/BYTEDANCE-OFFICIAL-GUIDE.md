@@ -52,6 +52,7 @@ Example:
 ```json
 {
   "role": "product",
+  "faceSource": "none",
   "anchors": [
     "tall dark-green cylindrical body",
     "short neck with unchanged cap proportions",
@@ -185,7 +186,7 @@ The ModelArk create-task documentation recommends prompts below **1000 words** b
 
 The same official contract currently marks `seed` as **unsupported for Seedance 2.0 models** on the direct ModelArk route. Therefore Porter does not allow deterministic seed sweeps on verified BytePlus Seedance 2.0 routes. Seed variants remain available only on provider routes that explicitly advertise seed control.
 
-### BOS-13 — Identity provenance follows ModelArk's supported face/asset flow
+### BOS-13 — Every BytePlus visual reference declares face provenance
 
 The official tutorial states that direct reference inputs containing real human faces are not treated like arbitrary normal reference uploads. ModelArk exposes supported paths such as:
 
@@ -193,23 +194,30 @@ The official tutorial states that direct reference inputs containing real human 
 - preset digital characters;
 - registered/authorized real-person assets.
 
-Porter therefore requires `identitySource` for every `identity` reference when the provider is BytePlus:
+Because a real face can appear in an identity image, scene image, first/last frame or reference video, Porter requires `faceSource` for **every image/video reference** when the provider is BytePlus. This is intentionally stricter than checking only `role: identity`; it prevents accidental unsupported real-face inputs from being hidden inside another reference role.
 
-```json
-{
-  "identitySource": "synthetic"
-}
-```
+Allowed declarations:
 
-Allowed values are:
-
-- `synthetic`;
+- `none` — no human face in the asset;
+- `synthetic` — synthetic human-like character, not a real-person reference;
 - `non-human`;
 - `modelark-trusted-output`;
 - `preset-digital-character`;
 - `authorized-real-person`.
 
-`preset-digital-character` and `authorized-real-person` must use the registered ModelArk asset flow (`asset://...`). A trusted output declaration is still subject to provider-side account/eligibility/trust-window validation.
+Example:
+
+```json
+{
+  "kind": "image",
+  "role": "environment",
+  "faceSource": "none"
+}
+```
+
+`preset-digital-character` and `authorized-real-person` must use the registered ModelArk asset flow (`asset://...`). A `modelark-trusted-output` declaration is still subject to provider-side account/eligibility/trust-window validation.
+
+The earlier `identitySource` field remains only as a compatibility alias for early v0.3 identity files; new projects use `faceSource`.
 
 ### BOS-14 — Keep first/last-frame and multimodal reference API scenarios separate
 
