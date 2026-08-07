@@ -6,6 +6,7 @@ on:
     paths:
       - 'studio/**'
       - 'schemas/case-review.schema.json'
+      - 'schemas/review-media-evidence.schema.json'
       - 'schemas/curation-draft.schema.json'
       - 'scripts/import-case-candidates.mjs'
       - 'scripts/augment-case-candidates.mjs'
@@ -20,6 +21,7 @@ on:
       - 'scripts/build-curation-draft.mjs'
       - 'scripts/validate-pages-contract.mjs'
       - 'scripts/validate-deep-review-workspace.mjs'
+      - 'scripts/validate-review-player.mjs'
       - 'scripts/validate-promotion-workspace.mjs'
       - 'scripts/validate-coverage-planner.mjs'
       - 'scripts/validate-source-adapters.mjs'
@@ -60,6 +62,9 @@ jobs:
       - name: Validate Deep Review Workspace contract
         run: node scripts/validate-deep-review-workspace.mjs
 
+      - name: Validate Review Player evidence boundary
+        run: node scripts/validate-review-player.mjs
+
       - name: Validate Promotion Workspace contract
         run: node scripts/validate-promotion-workspace.mjs
 
@@ -84,6 +89,7 @@ jobs:
           cp studio/case-intelligence.css _site/case-intelligence.css
           cp studio/case-corpus.css _site/case-corpus.css
           cp studio/deep-review.css _site/deep-review.css
+          cp studio/deep-review-player.css _site/deep-review-player.css
           cp studio/promotion.css _site/promotion.css
           cp studio/coverage-planner.css _site/coverage-planner.css
           cp studio/source-health.css _site/source-health.css
@@ -97,6 +103,8 @@ jobs:
           cp studio/case-corpus-ui.js _site/case-corpus-ui.js
           cp studio/deep-review-bootstrap.js _site/deep-review-bootstrap.js
           cp studio/deep-review-ui.js _site/deep-review-ui.js
+          cp studio/deep-review-player-bootstrap.js _site/deep-review-player-bootstrap.js
+          cp studio/deep-review-player.js _site/deep-review-player.js
           cp studio/promotion-bootstrap.js _site/promotion-bootstrap.js
           cp studio/promotion-engine.js _site/promotion-engine.js
           cp studio/promotion-ui.js _site/promotion-ui.js
