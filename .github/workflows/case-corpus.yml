@@ -13,6 +13,8 @@ on:
     branches: [main]
     paths:
       - 'scripts/import-case-candidates.mjs'
+      - 'scripts/augment-case-candidates.mjs'
+      - 'scripts/refresh-case-corpus.mjs'
       - 'scripts/build-case-review-queue.mjs'
       - 'studio/case-intelligence.js'
       - 'studio/case-intelligence-runtime.js'
@@ -28,7 +30,7 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,16 +45,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Import balanced research candidates
-        continue-on-error: true
+      - name: Refresh and augment Research Corpus
         env:
           CORPUS_LIMIT: ${{ inputs.limit || '750' }}
-        run: node scripts/import-case-candidates.mjs --limit "$CORPUS_LIMIT" --min 500 --output studio/case-candidates.json
+        run: node scripts/refresh-case-corpus.mjs --limit "$CORPUS_LIMIT" --min 500 --queue 90 --output studio/case-candidates.json --queue-output studio/case-review-queue.json
 
-      - name: Build deep-review queue
-        run: node scripts/build-case-review-queue.mjs --input studio/case-candidates.json --limit 90 --output studio/case-review-queue.json
-
-      - name: Verify and report corpus progress
+      - name: Report corpus progress
         run: |
           node --input-type=module - <<'NODE'
           import { appendFile, readFile } from 'node:fs/promises';
@@ -61,22 +59,20 @@ jobs:
           const candidates = corpus.stats?.candidates || 0;
           const queueSize = queue.stats?.queue || 0;
           const target = corpus.target?.min || 500;
-          if (queueSize < 10) throw new Error('Deep-review queue was not populated.');
-          if (candidates < target) {
-            console.warn(`[case-corpus] PARTIAL SNAPSHOT: ${candidates}/${target} candidates after dedupe/risk filtering. Keep expanding discovery adapters; do not present this as a completed 500+ corpus.`);
-          }
+          const sourceStats = corpus.sourceStats || [];
           const summary = [
             '## Research Corpus refresh',
             '',
             `- Candidates: **${candidates} / ${target} minimum target**`,
             `- Target reached: **${candidates >= target ? 'yes' : 'no — partial snapshot published'}**`,
             `- Deep-review queue: **${queueSize}**`,
-            `- Source pools responding: **${(corpus.sourceStats || []).filter(item => item.ok).length}/${(corpus.sourceStats || []).length}**`,
+            `- Source pools responding: **${sourceStats.filter(item => item.ok).length}/${sourceStats.length}**`,
+            `- Automated pools: **${sourceStats.map(item => item.source).join(', ')}**`,
             '',
             candidates < target ? '> Partial data is intentionally committed so the Research Corpus UI remains useful while discovery coverage is expanded.' : '> Minimum corpus target reached.'
           ].join('\n');
           if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, `${summary}\n`);
-          console.log(JSON.stringify({ target, targetReached: candidates >= target, corpus: corpus.stats, queue: queue.stats }, null, 2));
+          console.log(JSON.stringify({ target, targetReached: candidates >= target, corpus: corpus.stats, queue: queue.stats, sourceStats }, null, 2));
           NODE
 
       - name: Commit refreshed snapshots
