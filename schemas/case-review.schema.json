@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Seedance Porter Deep Case Review",
+  "type": "object",
+  "required": ["candidateId", "reviewStatus", "promptAnatomy", "visualReview", "transfer"],
+  "properties": {
+    "candidateId": { "type": "string", "minLength": 1 },
+    "reviewStatus": { "const": "deep-reviewed" },
+    "reviewedAt": { "type": "string", "format": "date-time" },
+    "sourceVideoUrl": { "type": "string", "format": "uri" },
+    "promptAnatomy": {
+      "type": "object",
+      "required": ["thesis", "signatureMove", "shotBreakdown", "causalMechanics", "referenceStrategy", "motionLanguage", "failureRisks"],
+      "properties": {
+        "thesis": { "type": "string", "minLength": 20 },
+        "signatureMove": { "type": "string", "minLength": 10 },
+        "shotBreakdown": { "type": "array", "minItems": 1 },
+        "causalMechanics": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+        "referenceStrategy": { "type": "string" },
+        "motionLanguage": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "failureRisks": { "type": "array", "minItems": 2, "items": { "type": "string" } }
+      }
+    },
+    "visualReview": {
+      "type": "object",
+      "required": ["observedShots", "observedTransitions", "observedMotion", "observedArtifacts", "observedContinuity", "verifiedSignatureMove"],
+      "properties": {
+        "observedShots": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["n", "observedFraming", "observedCamera", "observedAction", "promptMatch", "attentionMechanic"],
+            "properties": {
+              "n": { "type": "integer", "minimum": 1 },
+              "observedFraming": { "type": "string" },
+              "observedCamera": { "type": "string" },
+              "observedAction": { "type": "string" },
+              "promptMatch": { "enum": ["strong", "partial", "weak", "invented"] },
+              "attentionMechanic": { "type": "string" },
+              "notes": { "type": "string" }
+            }
+          }
+        },
+        "observedTransitions": { "type": "array", "items": { "type": "string" } },
+        "observedMotion": { "type": "array", "items": { "type": "string" } },
+        "observedArtifacts": { "type": "array", "items": { "type": "string" } },
+        "observedContinuity": { "type": "array", "items": { "type": "string" } },
+        "verifiedSignatureMove": { "type": "string", "minLength": 10 },
+        "whyItWorked": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+        "whatDidNotWork": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "transfer": {
+      "type": "object",
+      "required": ["transferablePattern", "doTransfer", "doNotTransfer"],
+      "properties": {
+        "transferablePattern": { "type": "string", "minLength": 20 },
+        "doTransfer": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "doNotTransfer": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "bestFor": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
