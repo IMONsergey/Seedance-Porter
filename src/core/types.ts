@@ -31,6 +31,7 @@ export interface ReferenceAsset {
   url: string;
   role: ReferenceRole;
   note?: string;
+  anchors?: string[];
   token?: string;
 }
 
@@ -109,7 +110,7 @@ export interface OfficialComplianceSummary {
 
 export interface CompiledProject {
   request: GenerationRequest;
-  referenceMap: Array<{ id: string; token: string; role: ReferenceRole; note?: string }>;
+  referenceMap: Array<{ id: string; token: string; role: ReferenceRole; note?: string; anchors?: string[] }>;
   warnings: string[];
   officialCompliance: OfficialComplianceSummary;
 }
