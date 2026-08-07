@@ -7,6 +7,7 @@
   <meta name="description" content="A source-first Seedance prompt library with industry examples, Porter adaptations and reusable production patterns." />
   <link rel="stylesheet" href="/library.css" />
   <link rel="stylesheet" href="/digest.css" />
+  <link rel="stylesheet" href="/case-intelligence.css" />
 </head>
 <body>
   <input class="sidebar-state" type="checkbox" id="sidebarState" aria-hidden="true" tabindex="-1" />
@@ -92,13 +93,13 @@
             <div>
               <div class="view-kicker">Source-first prompt intelligence</div>
               <h1>Industry Digest</h1>
-              <p>Real creator examples, source previews and independently rewritten Porter adaptations.</p>
+              <p>Real creator examples, source previews, shot-by-shot production analysis and independently rewritten Porter adaptations.</p>
             </div>
           </header>
 
           <div class="digest-note">
-            <div><strong>Digest, not a mirror.</strong><span>Short creator excerpt, direct source link and an independent adaptation.</span></div>
-            <a href="https://github.com/YouMind-OpenLab/awesome-seedance-2-prompts" target="_blank" rel="noopener">Corpus attribution ↗</a>
+            <div><strong>Case Intelligence.</strong><span>Source + creator + prompt pattern + shot anatomy + reusable production logic.</span></div>
+            <a href="https://github.com/IMONsergey/Seedance-Porter/blob/main/docs/CASE-INTELLIGENCE-SPEC.md" target="_blank" rel="noopener">Analysis standard ↗</a>
           </div>
 
           <div class="results-meta">
@@ -107,7 +108,7 @@
           </div>
 
           <div id="digestGrid" class="prompt-grid digest-grid" aria-live="polite"></div>
-          <div id="digestEmpty" class="empty" hidden><strong>No results.</strong><span>Change filters in the sidebar.</span></div>
+          <div id="digestEmpty" class="empty" hidden><strong>No results.</strong><span>Change filters or Collections in the sidebar.</span></div>
         </section>
 
         <section id="promptView" class="library-view" hidden>
@@ -149,5 +150,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script type="module" src="/library.js"></script>
   <script type="module" src="/sidebar.js"></script>
+  <script type="module" src="/case-ui.js"></script>
 </body>
 </html>
