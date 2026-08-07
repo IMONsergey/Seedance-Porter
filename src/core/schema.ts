@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+const FaceSourceSchema = z.enum([
+  "none",
+  "synthetic",
+  "modelark-trusted-output",
+  "preset-digital-character",
+  "authorized-real-person",
+  "non-human",
+]);
+
 export const ReferenceSchema = z.object({
   id: z.string().min(1).optional(),
   kind: z.enum(["image", "video", "audio"]),
@@ -19,13 +28,14 @@ export const ReferenceSchema = z.object({
   ]),
   note: z.string().min(1).optional(),
   anchors: z.array(z.string().min(1)).min(2).max(3).optional().describe("Two or three stable identifying features. Required by Porter official compliance for identity/product/logo anchors."),
+  faceSource: FaceSourceSchema.optional().describe("Required by Porter for every visual reference on BytePlus: declare whether it contains no human face, a synthetic/non-human face, a trusted ModelArk output, preset digital character, or authorized real-person asset."),
   identitySource: z.enum([
     "synthetic",
     "modelark-trusted-output",
     "preset-digital-character",
     "authorized-real-person",
     "non-human",
-  ]).optional().describe("Identity provenance. Required by Porter for BytePlus identity references so real-person inputs follow ModelArk's supported asset/trust flow."),
+  ]).optional().describe("Deprecated v0.3 compatibility alias for faceSource on early identity project files."),
 });
 
 export const ShotSchema = z.object({
