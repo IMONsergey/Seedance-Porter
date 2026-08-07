@@ -31,6 +31,10 @@ jobs:
         run: node scripts/validate-experience.mjs
       - name: Validate rendered 100-card browser contract
         run: npm run validate:render
+      - name: Syntax-check research corpus scripts
+        run: |
+          node --check scripts/import-case-candidates.mjs
+          node --check scripts/build-case-review-queue.mjs
       - name: Syntax-check browser modules
         run: |
           node --check studio/i18n.js
