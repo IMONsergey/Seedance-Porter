@@ -51,11 +51,16 @@ async function body(req: IncomingMessage): Promise<any> {
 
 async function api(req: IncomingMessage, res: ServerResponse, pathname: string) {
   if (!authorized(req)) return json(res, 401, { ok: false, error: "Unauthorized" });
-  if (req.method === "GET" && pathname === "/api/health") return json(res, 200, { ok: true, service: "seedance-porter", ...doctorSnapshot() });
+  if (req.method === "GET" && pathname === "/api/health") return json(res, 200, { ok: true, service: "seedance-porter", version: "0.3.0", ...doctorSnapshot() });
   if (req.method === "GET" && pathname === "/api/models") return json(res, 200, listModels());
   if (req.method === "POST" && pathname === "/api/compile") {
     const input = await body(req);
     return json(res, 200, compileProject(input.project ?? input, input.provider as ProviderName | undefined));
+  }
+  if (req.method === "POST" && pathname === "/api/validate") {
+    const input = await body(req);
+    const compiled = compileProject(input.project ?? input, input.provider as ProviderName | undefined);
+    return json(res, compiled.officialCompliance.passed ? 200 : 422, compiled.officialCompliance);
   }
   if (req.method === "POST" && pathname === "/api/score") {
     const input = await body(req);
@@ -119,7 +124,8 @@ const server = createServer(async (req, res) => {
     else await staticFile(res, url.pathname);
   } catch (error) {
     const anyError = error as any;
-    json(res, 500, { ok: false, code: anyError?.code, error: anyError?.message ?? String(error), details: anyError?.details });
+    const status = anyError?.code === "INVALID_INPUT" ? 422 : 500;
+    json(res, status, { ok: false, code: anyError?.code, error: anyError?.message ?? String(error), details: anyError?.details });
   }
 });
 
