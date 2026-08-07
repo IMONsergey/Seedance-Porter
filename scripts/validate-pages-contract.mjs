@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFile } from 'node:fs/promises';
-import { dirname, join, normalize, posix } from 'node:path';
+import { join, normalize, posix } from 'node:path';
 
 const WORKFLOW_PATH = '.github/workflows/pages.yml';
 const workflow = await readFile(WORKFLOW_PATH, 'utf8');
@@ -46,7 +46,7 @@ async function visit(modulePath, parent = null) {
   let source;
   try {
     source = await readFile(join('studio', clean), 'utf8');
-  } catch (error) {
+  } catch {
     fail(`Browser module is referenced but missing from studio/: ${clean}`);
     return;
   }
@@ -65,7 +65,15 @@ async function visit(modulePath, parent = null) {
 
 for (const root of roots) await visit(root);
 
-for (const required of ['case-corpus-ui.js', 'case-corpus.css', 'unified-curated-ui.js', 'multi-source-index.js']) {
+for (const required of [
+  'case-corpus-ui.js',
+  'case-corpus.css',
+  'deep-review-bootstrap.js',
+  'deep-review-ui.js',
+  'deep-review.css',
+  'unified-curated-ui.js',
+  'multi-source-index.js'
+]) {
   if (!copied.has(required)) fail(`Critical production asset missing from Pages artifact: ${required}`);
 }
 
@@ -81,6 +89,9 @@ if (!workflow.includes('case-candidates.json _site/case-candidates.json')) {
 if (!workflow.includes('case-review-queue.json _site/case-review-queue.json')) {
   fail('Pages workflow must publish case-review-queue.json when generated');
 }
+if (!workflow.includes('node scripts/validate-deep-review-workspace.mjs')) {
+  fail('Pages build must validate the Deep Review evidence gate before deployment');
+}
 
 if (failures.length) {
   console.error('GitHub Pages production contract failed:\n' + failures.map(item => `- ${item}`).join('\n'));
@@ -94,5 +105,6 @@ console.log(JSON.stringify({
   htmlAssets,
   roots,
   researchSnapshotBuild: 'best-effort',
+  deepReviewWorkspace: 'validated-and-published',
   curatedSiteFailureMode: 'deploy remains available if external corpus generation fails'
 }, null, 2));
