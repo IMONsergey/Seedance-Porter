@@ -80,7 +80,7 @@ async function run(label, fn) {
 
 $("example").onclick = () => { project.value = JSON.stringify(sample, null, 2); };
 $("models").onclick = () => run("Loading models", () => api("/api/models"));
-$("validate").onclick = () => run("Validating against BOS-2026-07-31", async () => {
+$("validate").onclick = () => run("Validating against BOS-2026-07-17", async () => {
   const compiled = await api("/api/compile", { method: "POST", body: JSON.stringify({ project: parsedProject(), provider: provider.value }) });
   return compiled.officialCompliance;
 });
