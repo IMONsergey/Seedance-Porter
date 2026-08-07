@@ -7,18 +7,18 @@ Source of truth for Porter prompt generation and project validation.
 1. BytePlus ModelArk — **Dreamina Seedance 2.0 series prompt guide**
    - https://docs.byteplus.com/en/docs/ModelArk/2222480
    - Official prompt methodology and troubleshooting guide.
-   - Porter source snapshot checked: 2026-08-07. The English page surfaced an update timestamp of 2026-07-31.
+   - Porter source snapshot checked: 2026-08-07. The official page currently shows **Last updated: 2026-07-17**.
 2. BytePlus ModelArk — **Dreamina Seedance 2.0 series tutorial**
    - https://docs.byteplus.com/en/docs/ModelArk/2291680
-   - Official capability/workflow tutorial.
+   - Official capability/workflow tutorial, including reference asset and identity/real-person usage rules.
 3. BytePlus ModelArk — **Create a video generation task**
-   - https://docs.byteplus.com/en/docs/modelark/1520757
-   - Official API contract; recommends prompts below 1000 words and points back to the Seedance 2.0 prompt guide.
+   - https://docs.byteplus.com/en/docs/ModelArk/1520757
+   - Official API contract: request modes, media roles/limits, prompt length guidance, output resolution rules and provider-specific parameter support.
 4. ByteDance Seed — **Seedance 2.0 Official Launch**
    - https://seed.bytedance.com/en/blog/seedance-2-0-official-launch
    - Official model capability statement and first-party prompt examples.
 
-No dedicated official BytePlus/ByteDance Seed prompt guide for Seedance 2.5 was found during the 2026-08-07 verification. Porter therefore applies the latest verified Seedance 2.0 first-party methodology as the conservative baseline to preview 2.5 routes until ByteDance publishes model-specific guidance.
+No dedicated official BytePlus/ByteDance Seed prompt guide for Seedance 2.5 was verified during the 2026-08-07 research pass. Porter therefore applies the latest verified Seedance 2.0 first-party methodology as the conservative baseline to preview 2.5 routes until ByteDance publishes model-specific guidance.
 
 ## The official mental model
 
@@ -30,7 +30,7 @@ Official advanced formula:
 
 Porter compiles projects in that order and validates each dimension.
 
-## Porter Official Standard (BOS-2026-07-31)
+## Porter Official Standard (BOS-2026-07-17)
 
 ### BOS-01 — Define subjects precisely
 
@@ -112,7 +112,7 @@ Official reference patterns:
 - video: use action, camera movement, style, special effects or sound from `Video N`;
 - audio: use timbre/rhythm/atmosphere from `Audio N`.
 
-Porter requires a role for every asset and renders an explicit reference contract. The canonical compiler uses human-readable `[Image 1]`, `[Video 1]`, `[Audio 1]` bindings; provider adapters translate the syntax only where a provider route requires another spelling.
+Porter requires a role for every asset and renders an explicit reference contract. The canonical compiler uses human-readable `[Image 1]`, `[Video 1]`, `[Audio 1]` bindings; provider adapters translate syntax only where a provider route requires another spelling.
 
 ### BOS-07 — Do not fill every reference slot by default
 
@@ -154,7 +154,7 @@ The guide recommends explicit information types:
 - dialogue: braces;
 - subtitles: dedicated subtitle notation.
 
-It also recommends keeping dialogue language consistent and avoiding unnecessary language mixing. Porter preserves authored dialogue rather than silently rewriting it; future dialogue-specific validators can extend this rule without changing the base project schema.
+It also recommends keeping dialogue language consistent and avoiding unnecessary language mixing. Porter preserves authored dialogue rather than silently rewriting it; dialogue-specific linting can evolve separately from the base project schema.
 
 ### BOS-10 — Choose extension vs segmented generation by story function
 
@@ -179,9 +179,49 @@ Porter surfaces or encodes mitigations for:
 
 These are a mix of compiler constraints, project workflow rules and troubleshooting guidance; not every failure mode can be detected statically before generation.
 
-### BOS-12 — Official prompt length ceiling
+### BOS-12 — Official prompt/API parameter boundaries
 
-The ModelArk API documentation recommends prompts below **1000 words** because long prompts scatter attention and can cause missing details. Porter uses this as an official hard ceiling and maintains a tighter internal advisory range for production efficiency.
+The ModelArk create-task documentation recommends prompts below **1000 words** because long prompts scatter attention and can cause missing details. Porter uses this as an official hard ceiling and maintains a tighter internal advisory range for production efficiency.
+
+The same official contract currently marks `seed` as **unsupported for Seedance 2.0 models** on the direct ModelArk route. Therefore Porter does not allow deterministic seed sweeps on verified BytePlus Seedance 2.0 routes. Seed variants remain available only on provider routes that explicitly advertise seed control.
+
+### BOS-13 — Identity provenance follows ModelArk's supported face/asset flow
+
+The official tutorial states that direct reference inputs containing real human faces are not treated like arbitrary normal reference uploads. ModelArk exposes supported paths such as:
+
+- trusted ModelArk-generated outputs;
+- preset digital characters;
+- registered/authorized real-person assets.
+
+Porter therefore requires `identitySource` for every `identity` reference when the provider is BytePlus:
+
+```json
+{
+  "identitySource": "synthetic"
+}
+```
+
+Allowed values are:
+
+- `synthetic`;
+- `non-human`;
+- `modelark-trusted-output`;
+- `preset-digital-character`;
+- `authorized-real-person`.
+
+`preset-digital-character` and `authorized-real-person` must use the registered ModelArk asset flow (`asset://...`). A trusted output declaration is still subject to provider-side account/eligibility/trust-window validation.
+
+### BOS-14 — Keep first/last-frame and multimodal reference API scenarios separate
+
+The official ModelArk API treats strict first/last-frame generation and multimodal reference generation as different request scenarios.
+
+Porter enforces:
+
+- strict `first-last-frame`: exactly one `first_frame` image + one `last_frame` image, with no video/audio package mixed in;
+- `image-to-video`: one starting image on the direct BytePlus route;
+- `reference-to-video`: multimodal/multi-image package, where image/video/audio media are sent with `reference_image`, `reference_video`, `reference_audio` API roles while the prompt carries their semantic jobs.
+
+If a creative wants a semantic endpoint image together with other references, Porter uses reference-to-video rather than falsely sending that package as strict first/last interpolation.
 
 ## Enforcement
 
