@@ -12,7 +12,8 @@
     "porter": "tsx src/cli.ts",
     "mcp": "tsx src/mcp/server.ts",
     "studio": "tsx src/server/http.ts",
-    "validate:library": "node scripts/validate-library.mjs"
+    "validate:library": "node scripts/validate-library.mjs",
+    "validate:render": "node scripts/validate-render-contract.mjs"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.2.0",
+    "jsdom": "^26.1.0",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
