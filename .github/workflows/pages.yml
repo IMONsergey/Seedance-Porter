@@ -50,9 +50,12 @@ jobs:
           cp studio/source-universe.js _site/source-universe.js
           cp studio/multi-source-cases.js _site/multi-source-cases.js
           cp studio/multi-source-cases-batch2.js _site/multi-source-cases-batch2.js
+          cp studio/multi-source-cases-batch3.js _site/multi-source-cases-batch3.js
           cp studio/multi-source-index.js _site/multi-source-index.js
           cp studio/multi-source-ui.js _site/multi-source-ui.js
+          cp studio/multi-source-batch-runtime.js _site/multi-source-batch-runtime.js
           cp studio/multi-source-batch2-ui.js _site/multi-source-batch2-ui.js
+          cp studio/multi-source-batch3-ui.js _site/multi-source-batch3-ui.js
           cp studio/multi-source-polish.js _site/multi-source-polish.js
           cp studio/library-data.js _site/library-data.js
           cp studio/digest-data.js _site/digest-data.js
