@@ -6,6 +6,13 @@ import type { GenerationRequest, GenerationTask } from "../core/types.js";
 import { getRoute } from "../models/registry.js";
 import type { SeedanceProvider } from "./provider.js";
 
+function falPrompt(prompt: string): string {
+  return prompt
+    .replace(/\[Image\s+(\d+)\]/gi, "@Image$1")
+    .replace(/\[Video\s+(\d+)\]/gi, "@Video$1")
+    .replace(/\[Audio\s+(\d+)\]/gi, "@Audio$1");
+}
+
 export class FalProvider implements SeedanceProvider {
   readonly name = "fal" as const;
   private completed = new Map<string, GenerationTask>();
@@ -31,7 +38,7 @@ export class FalProvider implements SeedanceProvider {
     const last = request.references.find((r) => r.role === "last_frame" || r.role === "endpoint");
 
     const input: Record<string, unknown> = {
-      prompt: request.prompt,
+      prompt: falPrompt(request.prompt),
       resolution: request.resolution,
       duration: String(request.duration),
       aspect_ratio: request.aspectRatio === "adaptive" ? "auto" : request.aspectRatio,
