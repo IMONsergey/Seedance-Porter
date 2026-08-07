@@ -70,13 +70,27 @@ function pillList(values, className = '') {
   return `<div class="intelligence-pills ${className}">${values.map(value => `<span>${esc(value)}</span>`).join('')}</div>`;
 }
 
+function parseReferenceLines(value) {
+  return String(value || '').split(/\n+/).map(line => line.trim()).filter(Boolean);
+}
+
+function parseAnchors(value, subject) {
+  const values = String(value || '').split(/[,;\n]+/).map(x => x.trim()).filter(Boolean).slice(0, 3);
+  if (values.length >= 2) return values;
+  return [`exact overall geometry / identity of ${subject}`, `stable material, color and proportion system of ${subject}`];
+}
+
 function buildPatternDraft(item, form) {
   const intelligence = item.intelligence;
   const projectType = form.elements.projectType.value.trim() || 'brand campaign';
   const brand = form.elements.brand.value.trim() || 'my brand';
   const subject = form.elements.subject.value.trim() || 'my product or interface';
   const objective = form.elements.objective.value.trim() || `adapt the production pattern for ${projectType}`;
-  const referenceNotes = form.elements.references.value.trim();
+  const exactLocks = form.elements.exactLocks.value.trim();
+  const referenceRole = form.elements.referenceRole.value;
+  const faceSource = form.elements.faceSource.value;
+  const referenceLines = parseReferenceLines(form.elements.referenceUrls.value);
+  const anchors = parseAnchors(exactLocks, subject);
   const firstShot = intelligence.shotBreakdown[0]?.action || 'Establish the subject and core visual rule.';
   const beats = intelligence.shotBreakdown.map((shot, index) => `Shot ${index + 1}: ${shot.action}`);
   const prompt = [
@@ -85,48 +99,62 @@ function buildPatternDraft(item, form) {
     `Core subject: ${subject}.`,
     `Pattern logic: ${intelligence.transferablePattern}`,
     `Signature move: ${intelligence.signatureMove}`,
+    intelligence.rhythm ? `Rhythm: ${intelligence.rhythm}` : '',
     ...beats,
     `Reference strategy: ${intelligence.referenceStrategy.join(' ')}`,
-    `Camera: ${intelligence.cameraLanguage.join(' ')}`,
-    `Continuity: preserve subject identity, product/interface geometry, material language and lighting direction across all shots.`,
+    `Camera / motion language: ${(intelligence.motionLanguage || intelligence.cameraLanguage).join(' ')}`,
+    `Continuity: preserve ${exactLocks || 'subject identity, product/interface geometry, material language and lighting direction'} across all shots.`,
     `Post-production: ${intelligence.postProductionExpectation}`,
-    `Constraints: no unrequested text, no invented logos, no duplicate subject, no compound camera moves.`,
-    referenceNotes ? `Reference notes supplied by user: ${referenceNotes}` : ''
+    `Constraints: no unrequested text, no invented logos, no duplicate subject, no compound camera moves; do not reproduce the source case subject matter, trademarks, characters, location or wording.`
   ].filter(Boolean).join('\n');
 
-  const isInterface = /ui|website|app|dashboard|saas/i.test(projectType);
-  const reference = referenceNotes ? {
-    id: 'primary-reference',
-    kind: 'image',
-    url: '<replace-with-reference-url>',
-    role: isInterface ? 'environment' : 'product',
-    faceSource: 'none',
-    note: referenceNotes,
-    ...(isInterface ? {} : { anchors: [`exact overall geometry of ${subject}`, `stable material and color system of ${subject}`] })
-  } : null;
+  const references = referenceLines.map((url, index) => {
+    const role = index === 0 ? referenceRole : 'environment';
+    const reference = {
+      id: `reference-${index + 1}`,
+      kind: 'image',
+      url,
+      role,
+      faceSource: role === 'identity' ? faceSource : 'none',
+      note: index === 0 ? `Primary exact ${role} reference for the transferred pattern.` : 'Supporting environment reference; use only for this declared role.'
+    };
+    if (['identity','product','logo'].includes(role)) reference.anchors = anchors;
+    return reference;
+  });
 
+  const mode = references.length > 1 ? 'reference-to-video' : references.length === 1 ? 'image-to-video' : 'text-to-video';
   return {
     project: `pattern-${item.id.replace(/^digest-/, '')}`,
     label: `${brand} / ${item.title}`,
     model: 'seedance-2.0',
-    mode: reference ? 'image-to-video' : 'text-to-video',
+    mode,
     duration: Math.min(15, Math.max(6, intelligence.shotBreakdown.length * 3)),
     resolution: '720p',
     aspectRatio: item.aspect || '16:9',
     generateAudio: /audio|sound|music|voice|dialogue|ambience/i.test(item.porterPrompt),
-    outputPolicy: { generatedText: 'forbid', generatedLogo: 'forbid', generatedWatermark: 'forbid' },
+    outputPolicy: {
+      generatedText: 'forbid',
+      generatedLogo: referenceRole === 'logo' && references.length ? 'reference-only' : 'forbid',
+      generatedWatermark: 'forbid'
+    },
     brief: {
       objective,
       subject,
       action: firstShot,
-      environment: `Adapt the environment to ${projectType} while preserving the source pattern's spatial logic.`,
-      camera: intelligence.cameraLanguage.join(' '),
+      environment: `Adapt the environment to ${projectType} while preserving the source pattern's spatial / information logic.`,
+      camera: (intelligence.motionLanguage || intelligence.cameraLanguage).join(' '),
       style: `Independent adaptation of the production logic from “${item.title}”; do not copy original subject matter or distinctive wording.`,
       imageQuality: 'HD, stable geometry, coherent materials, natural motion, clean edges',
-      constraints: ['preserve reference identity and geometry','one dominant camera movement per shot','no unrequested text or logos','composite exact typography/UI/branding in post when required'],
+      constraints: [
+        `preserve ${exactLocks || 'approved reference identity, geometry and material system'}`,
+        'one dominant camera movement per shot',
+        'no unrequested text or invented logos',
+        'no source-specific characters, products, trademarks, locations or wording',
+        'composite exact typography/UI/branding in post when required'
+      ],
       beats
     },
-    references: reference ? [reference] : [],
+    references,
     shots: [],
     library: {
       kind: 'case-intelligence-pattern-adaptation',
@@ -135,6 +163,7 @@ function buildPatternDraft(item, form) {
       sourceAuthor: item.author,
       collections: intelligence.collections,
       signatureMove: intelligence.signatureMove,
+      reviewStatus: intelligence.reviewStatus || 'prompt-reviewed',
       evidenceLevel: intelligence.evidenceLevel,
       draftPrompt: prompt,
       validationRequired: 'Run through Porter BOS-2026-07-17 validator before paid generation.'
@@ -148,13 +177,18 @@ function adapterHtml() {
       <div><span>Pattern adapter</span><h3>Use this pattern for my project</h3></div>
       <span class="evidence-badge">BOS draft</span>
     </div>
-    <p class="intelligence-copy">Keep the production logic, replace the original subject matter. This static Pages tool creates a Porter project draft; run the real Porter validator before generation.</p>
+    <p class="intelligence-copy">Keep shot function, camera logic and causal structure; replace the original subject matter. Reference URLs/local paths are written into the Porter project, but the authoritative BOS validation still happens in local Porter Studio before generation.</p>
     <form class="pattern-form">
       <label>Project type<input name="projectType" placeholder="Website hero, SaaS launch, beauty campaign…" /></label>
       <label>Brand / project<input name="brand" placeholder="Your brand or project" /></label>
       <label>Subject / product<input name="subject" placeholder="What should the video be about?" /></label>
       <label>Objective<textarea name="objective" rows="2" placeholder="What should this video achieve?"></textarea></label>
-      <label>References<textarea name="references" rows="2" placeholder="Describe the images/video/audio you will use and what each one should control."></textarea></label>
+      <label>What must stay exact?<textarea name="exactLocks" rows="2" placeholder="Geometry, face, product proportions, approved colors, logo shape…"></textarea></label>
+      <label>Reference URLs / local paths<textarea name="referenceUrls" rows="3" placeholder="One image URL or local path per line. First line is the primary exact reference."></textarea></label>
+      <div class="pattern-form-split">
+        <label>Primary reference role<select name="referenceRole"><option value="product">Product</option><option value="environment">Environment / UI</option><option value="identity">Identity</option><option value="logo">Logo</option></select></label>
+        <label>Face provenance<select name="faceSource"><option value="none">No real face</option><option value="synthetic">Synthetic person</option><option value="non-human">Non-human</option><option value="modelark-trusted-output">ModelArk trusted output</option><option value="preset-digital-character">Preset digital character</option><option value="authorized-real-person">Authorized real person</option></select></label>
+      </div>
       <div class="pattern-actions"><button class="button primary" type="submit">Build Porter draft</button><button class="button" type="button" data-pattern-copy hidden>Copy project JSON</button></div>
     </form>
     <pre class="pattern-output" data-pattern-output hidden></pre>
@@ -163,14 +197,19 @@ function adapterHtml() {
 
 function intelligenceHtml(item) {
   const intel = item.intelligence;
+  const deep = intel.reviewStatus === 'deep-reviewed';
+  const evidenceTitle = deep ? 'Why this video works' : 'Why this prompt is structured this way';
+  const evidenceLabel = deep ? 'Deep reviewed' : 'Prompt reviewed';
   return `<div class="case-intelligence-block" data-case-intelligence>
     <section class="intelligence-summary">
       <div class="intelligence-section-head">
-        <div><span>Case Intelligence</span><h3>Why this video works</h3></div>
-        <span class="evidence-badge">Evidence ${esc(intel.evidenceLevel)}</span>
+        <div><span>Case Intelligence</span><h3>${evidenceTitle}</h3></div>
+        <span class="evidence-badge ${deep ? 'deep-reviewed' : ''}">${evidenceLabel}</span>
       </div>
       <p class="intelligence-lead">${esc(intel.whyItWorks)}</p>
+      ${!deep ? `<div class="evidence-note"><strong>Evidence boundary.</strong> ${esc(intel.evidence?.note || 'This analysis comes from the published prompt/source material and preview; full-video visual observation is still pending.')}</div>` : ''}
       <div class="signature-move"><span>Signature move</span><strong>${esc(intel.signatureMove)}</strong></div>
+      ${intel.rhythm ? `<div class="signature-move rhythm-move"><span>Rhythm</span><strong>${esc(intel.rhythm)}</strong></div>` : ''}
       ${pillList(intel.collections, 'collections-pills')}
     </section>
 
@@ -180,9 +219,9 @@ function intelligenceHtml(item) {
     </section>
 
     <section class="intelligence-grid">
-      <article><span>Prompt mechanics</span>${intel.promptMechanics.map(x => `<p>${esc(x)}</p>`).join('')}</article>
+      <article><span>Causal mechanics</span>${(intel.causalMechanics || intel.promptMechanics).map(x => `<p>${esc(x)}</p>`).join('')}</article>
       <article><span>Reference strategy</span>${intel.referenceStrategy.map(x => `<p>${esc(x)}</p>`).join('')}</article>
-      <article><span>Camera language</span>${intel.cameraLanguage.map(x => `<p>${esc(x)}</p>`).join('')}</article>
+      <article><span>Camera / motion language</span>${(intel.motionLanguage || intel.cameraLanguage).map(x => `<p>${esc(x)}</p>`).join('')}</article>
       <article><span>Transition language</span>${intel.transitionLanguage.map(x => `<p>${esc(x)}</p>`).join('')}</article>
       <article><span>Material logic</span>${intel.materialLanguage.map(x => `<p>${esc(x)}</p>`).join('')}</article>
       <article><span>Audio role</span><p>${esc(intel.audioRole)}</p></article>
