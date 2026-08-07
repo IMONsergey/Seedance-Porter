@@ -1,9 +1,9 @@
 {
   "name": "seedance-porter",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
-  "description": "Production toolkit and prompt intelligence layer for ByteDance Seedance",
+  "description": "Production toolkit, prompt intelligence and case-pattern research layer for ByteDance Seedance",
   "engines": { "node": ">=20" },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -12,7 +12,9 @@
     "porter": "tsx src/cli.ts",
     "mcp": "tsx src/mcp/server.ts",
     "studio": "tsx src/server/http.ts",
-    "validate:library": "node scripts/validate-library.mjs"
+    "validate:library": "node scripts/validate-library.mjs",
+    "case:import": "node scripts/import-case-candidates.mjs --limit 750 --min 500 --output studio/case-candidates.json",
+    "case:queue": "node scripts/build-case-review-queue.mjs --input studio/case-candidates.json --limit 90 --output studio/case-review-queue.json"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",
