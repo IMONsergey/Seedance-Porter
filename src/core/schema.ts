@@ -18,6 +18,7 @@ export const ReferenceSchema = z.object({
     "endpoint",
   ]),
   note: z.string().min(1).optional(),
+  anchors: z.array(z.string().min(1)).min(2).max(3).optional().describe("Two or three stable identifying features. Required by Porter official compliance for identity/product/logo anchors."),
 });
 
 export const ShotSchema = z.object({
