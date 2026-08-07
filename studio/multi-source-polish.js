@@ -1,4 +1,4 @@
-import { MULTI_SOURCE_CASES } from './multi-source-cases.js';
+import { MULTI_SOURCE_CASES } from './multi-source-index.js';
 import { getLanguage } from './i18n.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
