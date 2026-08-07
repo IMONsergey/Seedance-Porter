@@ -1,5 +1,6 @@
 import type { ProjectSpec, ShotSpec } from "../core/schema.js";
 import type { ReferenceAsset } from "../core/types.js";
+import { PorterError } from "../core/errors.js";
 
 export const BYTEDANCE_OFFICIAL_STANDARD = {
   id: "BOS-2026-07-31",
@@ -61,9 +62,14 @@ function isComplex(spec: ProjectSpec): boolean {
   return spec.shots.length > 1 || spec.brief.beats.length > 1 || spec.duration >= 10;
 }
 
-function isLikelyGeneratedTextIntent(spec: ProjectSpec): boolean {
+function generatedTextIntent(spec: ProjectSpec): boolean {
+  const haystack = `${spec.brief.objective} ${spec.brief.action} ${spec.brief.beats.join(" ")} ${spec.brief.constraints.join(" ")}`.toLowerCase();
+  return /generate (?:text|subtitle|caption)|show (?:text|subtitle|caption)|speech bubble|on-screen text|title card/.test(haystack);
+}
+
+function generatedLogoIntent(spec: ProjectSpec): boolean {
   const haystack = `${spec.brief.objective} ${spec.brief.action} ${spec.brief.constraints.join(" ")}`.toLowerCase();
-  return /generate (?:text|subtitle|caption|logo)|show (?:text|subtitle|caption)|speech bubble|on-screen text/.test(haystack);
+  return /generate (?:a )?logo|show (?:the )?logo|logo appears|brand mark appears/.test(haystack);
 }
 
 function needsTwinGuard(spec: ProjectSpec): boolean {
@@ -89,16 +95,23 @@ export function validateOfficialCompliance(spec: ProjectSpec, refs: ReferenceAss
   ];
 
   if (!spec.brief.subject.trim()) findings.push({ rule: "BOS-01", severity: "error", path: "brief.subject", message: "A precise core subject is required." });
-  for (const ref of refs.filter((item) => item.role === "identity" || item.role === "product")) {
+  for (const ref of refs.filter((item) => item.role === "identity" || item.role === "product" || item.role === "logo")) {
     if (!hasStableReferenceDescription(ref)) findings.push({
       rule: "BOS-01",
       severity: "error",
       path: `references.${ref.id}.note`,
-      message: `${ref.role} reference ${ref.id} needs a concise note describing stable identifying features/source responsibility.`,
+      message: `${ref.role} reference ${ref.id} needs a concise note describing stable identifying features and exactly what must be preserved.`,
     });
   }
 
   if (isComplex(spec) && shots.length < 2) findings.push({ rule: "BOS-02", severity: "warning", path: "shots", message: "This is a complex/long request but contains only one planned shot. Consider explicit Shot 1 / Shot 2 sequencing." });
+  const authored = `${spec.brief.action} ${spec.brief.beats.join(" ")} ${spec.shots.map((s) => s.action).join(" ")}`;
+  if (/\[?\d+(?:\.\d+)?\s*(?:s|sec|seconds?)\s*[-–—]\s*\d+/i.test(authored)) findings.push({
+    rule: "BOS-02",
+    severity: "warning",
+    path: "brief/shots",
+    message: "Exact per-shot timestamps were detected. The official Seedance 2.0 guide says precise timing constraints are unstable; prefer ordered Shot N sequencing.",
+  });
 
   shots.forEach((shot, index) => {
     const path = `shots.${index}`;
@@ -108,18 +121,15 @@ export function validateOfficialCompliance(spec: ProjectSpec, refs: ReferenceAss
       rule: "BOS-04",
       severity: "error",
       path: `${path}.camera`,
-      message: `Shot ${index + 1} appears to combine ${movements} camera movements. BytePlus recommends one camera movement type per shot.`,
+      message: `Shot ${index + 1} appears to combine ${movements} camera movements. BytePlus recommends one camera movement type per shot. Split the shot or choose the dominant movement.`,
     });
   });
 
   if (!spec.brief.environment.trim()) findings.push({ rule: "BOS-05", severity: "error", path: "brief.environment", message: "Scene/environment must be explicit." });
   if (!spec.brief.lighting?.trim()) findings.push({ rule: "BOS-05", severity: "warning", path: "brief.lighting", message: "Lighting/color tone is unspecified; the official advanced formula recommends explicit lighting and color control." });
   if (!spec.brief.style?.trim()) findings.push({ rule: "BOS-05", severity: "error", path: "brief.style", message: "Visual style must be explicit for production projects; Porter will not silently invent it." });
-  if (!spec.brief.imageQuality?.trim()) normalization.push("No imageQuality was supplied; Porter applies its official-guide-derived conservative quality default.");
+  if (!spec.brief.imageQuality?.trim()) normalization.push("No imageQuality was supplied; Porter applies an official-guide-derived conservative quality default.");
 
-  refs.forEach((ref) => {
-    if (!ref.role) findings.push({ rule: "BOS-06", severity: "error", path: `references.${ref.id}.role`, message: `Reference ${ref.id} needs an explicit functional role.` });
-  });
   if (refs.length > 5) findings.push({
     rule: "BOS-07",
     severity: "warning",
@@ -128,7 +138,24 @@ export function validateOfficialCompliance(spec: ProjectSpec, refs: ReferenceAss
   });
 
   if (!spec.brief.constraints.length) findings.push({ rule: "BOS-08", severity: "warning", path: "brief.constraints", message: "No project-specific constraints supplied; official guidance treats constraints as a core control dimension." });
-  if (!isLikelyGeneratedTextIntent(spec)) normalization.push("Default no-subtitle/no-unrequested-text/no-watermark constraints are appended unless the project explicitly asks for generated text.");
+
+  if (spec.outputPolicy.generatedText === "forbid") {
+    normalization.push("Default no-subtitle/no-unrequested-text constraint is appended.");
+    if (generatedTextIntent(spec)) findings.push({ rule: "BOS-08", severity: "error", path: "outputPolicy.generatedText", message: "The creative brief asks for generated text/subtitles but outputPolicy.generatedText is forbid. Make the intent explicit by setting it to allow." });
+  }
+
+  const logoRefs = refs.filter((ref) => ref.role === "logo");
+  if (spec.outputPolicy.generatedLogo === "forbid") {
+    normalization.push("Default no-generated-logo constraint is appended.");
+    if (generatedLogoIntent(spec) || logoRefs.length) findings.push({ rule: "BOS-08", severity: "error", path: "outputPolicy.generatedLogo", message: "Logo intent/reference conflicts with generatedLogo=forbid. Use reference-only with a dedicated logo reference when brand fidelity matters." });
+  } else if (spec.outputPolicy.generatedLogo === "reference-only") {
+    if (!logoRefs.length) findings.push({ rule: "BOS-08", severity: "error", path: "references", message: "generatedLogo=reference-only requires at least one reference with role=logo." });
+    normalization.push("Logo generation is limited to explicitly supplied logo reference assets.");
+  } else if (!logoRefs.length) {
+    findings.push({ rule: "BOS-08", severity: "warning", path: "references", message: "Generated logo is allowed without an exact logo reference. Official guidance recommends a reference when strict text/logo presentation matters." });
+  }
+
+  if (spec.outputPolicy.generatedWatermark === "forbid") normalization.push("Default no-generated-watermark constraint is appended.");
   if (needsTwinGuard(spec)) normalization.push("Multi-character identity references trigger an anti-duplicate/twin-character constraint.");
 
   if (prompt) {
@@ -156,8 +183,5 @@ export function assertOfficialCompliance(report: OfficialComplianceReport): void
   const blocking = report.findings.filter((f) => f.severity === "error");
   if (!blocking.length) return;
   const details = blocking.map((f) => `${f.rule}${f.path ? ` (${f.path})` : ""}: ${f.message}`).join("\n");
-  const error = new Error(`Project violates ${report.standard}:\n${details}`) as Error & { code?: string; details?: unknown };
-  error.code = "OFFICIAL_GUIDE_VIOLATION";
-  error.details = report;
-  throw error;
+  throw new PorterError("INVALID_INPUT", `Project violates ${report.standard}:\n${details}`, false, report);
 }
