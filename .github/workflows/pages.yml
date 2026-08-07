@@ -11,10 +11,12 @@ on:
       - 'scripts/augment-case-candidates.mjs'
       - 'scripts/refresh-case-corpus.mjs'
       - 'scripts/build-case-review-queue.mjs'
+      - 'scripts/build-coverage-plan.mjs'
       - 'scripts/build-curation-draft.mjs'
       - 'scripts/validate-pages-contract.mjs'
       - 'scripts/validate-deep-review-workspace.mjs'
       - 'scripts/validate-promotion-workspace.mjs'
+      - 'scripts/validate-coverage-planner.mjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -55,7 +57,10 @@ jobs:
       - name: Validate Promotion Workspace contract
         run: node scripts/validate-promotion-workspace.mjs
 
-      - name: Build Research Corpus snapshot for Pages
+      - name: Validate strategic Coverage Planner contract
+        run: node scripts/validate-coverage-planner.mjs
+
+      - name: Build Research Corpus + strategic snapshots for Pages
         continue-on-error: true
         run: npm run case:refresh
 
@@ -71,11 +76,13 @@ jobs:
           cp studio/case-corpus.css _site/case-corpus.css
           cp studio/deep-review.css _site/deep-review.css
           cp studio/promotion.css _site/promotion.css
+          cp studio/coverage-planner.css _site/coverage-planner.css
           cp studio/experience.css _site/experience.css
           cp studio/multi-source.css _site/multi-source.css
           cp studio/coverage-audit.css _site/coverage-audit.css
           cp studio/library.js _site/library.js
           cp studio/sidebar.js _site/sidebar.js
+          cp studio/workspace-router.js _site/workspace-router.js
           cp studio/case-ui.js _site/case-ui.js
           cp studio/case-corpus-ui.js _site/case-corpus-ui.js
           cp studio/deep-review-bootstrap.js _site/deep-review-bootstrap.js
@@ -83,6 +90,9 @@ jobs:
           cp studio/promotion-bootstrap.js _site/promotion-bootstrap.js
           cp studio/promotion-engine.js _site/promotion-engine.js
           cp studio/promotion-ui.js _site/promotion-ui.js
+          cp studio/coverage-planner-bootstrap.js _site/coverage-planner-bootstrap.js
+          cp studio/coverage-planner-engine.js _site/coverage-planner-engine.js
+          cp studio/coverage-planner-ui.js _site/coverage-planner-ui.js
           cp studio/case-intelligence.js _site/case-intelligence.js
           cp studio/case-intelligence-runtime.js _site/case-intelligence-runtime.js
           cp studio/case-analysis-curated.js _site/case-analysis-curated.js
@@ -107,14 +117,17 @@ jobs:
           cp studio/library-data.js _site/library-data.js
           cp studio/digest-data.js _site/digest-data.js
 
-          # Research snapshots are generated in the Pages workspace. If an upstream
-          # source is temporarily unavailable, deploy the curated app anyway and let
-          # Research Corpus / Deep Review / Promotion expose their explicit pending state.
+          # Research/planning snapshots are generated in the Pages workspace. If an
+          # upstream source is temporarily unavailable, deploy the curated app anyway
+          # and let research workspaces expose explicit pending/partial states.
           if [[ -f studio/case-candidates.json ]]; then
             cp studio/case-candidates.json _site/case-candidates.json
           fi
           if [[ -f studio/case-review-queue.json ]]; then
             cp studio/case-review-queue.json _site/case-review-queue.json
+          fi
+          if [[ -f studio/coverage-plan.json ]]; then
+            cp studio/coverage-plan.json _site/coverage-plan.json
           fi
 
           touch _site/.nojekyll
