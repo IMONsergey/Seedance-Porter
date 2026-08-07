@@ -38,6 +38,7 @@
       "kind": "image",
       "url": "https://example.com/product-master.png",
       "role": "product",
+      "faceSource": "none",
       "anchors": [
         "tall cylindrical dark-green aluminum body",
         "short neck with unchanged cap proportions",
