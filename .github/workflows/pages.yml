@@ -5,6 +5,13 @@ on:
     branches: [main]
     paths:
       - 'studio/**'
+      - 'scripts/import-case-candidates.mjs'
+      - 'scripts/augment-case-candidates.mjs'
+      - 'scripts/refresh-case-corpus.mjs'
+      - 'scripts/build-case-review-queue.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -21,9 +28,25 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate Pages production artifact contract
+        run: node scripts/validate-pages-contract.mjs
+
+      - name: Build Research Corpus snapshot for Pages
+        continue-on-error: true
+        run: npm run case:refresh
 
       - name: Prepare static Pages site
         shell: bash
@@ -34,14 +57,18 @@ jobs:
           cp studio/library.css _site/library.css
           cp studio/digest.css _site/digest.css
           cp studio/case-intelligence.css _site/case-intelligence.css
+          cp studio/case-corpus.css _site/case-corpus.css
           cp studio/experience.css _site/experience.css
           cp studio/multi-source.css _site/multi-source.css
           cp studio/coverage-audit.css _site/coverage-audit.css
           cp studio/library.js _site/library.js
           cp studio/sidebar.js _site/sidebar.js
           cp studio/case-ui.js _site/case-ui.js
+          cp studio/case-corpus-ui.js _site/case-corpus-ui.js
           cp studio/case-intelligence.js _site/case-intelligence.js
           cp studio/case-intelligence-runtime.js _site/case-intelligence-runtime.js
+          cp studio/case-analysis-curated.js _site/case-analysis-curated.js
+          cp studio/case-intelligence-locales.js _site/case-intelligence-locales.js
           cp studio/case-locales.js _site/case-locales.js
           cp studio/case-translation-runtime.js _site/case-translation-runtime.js
           cp studio/experience.js _site/experience.js
@@ -61,6 +88,17 @@ jobs:
           cp studio/coverage-audit.js _site/coverage-audit.js
           cp studio/library-data.js _site/library-data.js
           cp studio/digest-data.js _site/digest-data.js
+
+          # Research snapshots are generated in the Pages workspace. If an upstream
+          # source is temporarily unavailable, deploy the curated app anyway and let
+          # Research Corpus expose its explicit pending/partial state.
+          if [[ -f studio/case-candidates.json ]]; then
+            cp studio/case-candidates.json _site/case-candidates.json
+          fi
+          if [[ -f studio/case-review-queue.json ]]; then
+            cp studio/case-review-queue.json _site/case-review-queue.json
+          fi
+
           touch _site/.nojekyll
 
           # Project Pages is hosted under /Seedance-Porter/, so root-relative
@@ -68,6 +106,7 @@ jobs:
           sed -i 's|href="/library.css"|href="./library.css"|g' _site/index.html
           sed -i 's|href="/digest.css"|href="./digest.css"|g' _site/index.html
           sed -i 's|href="/case-intelligence.css"|href="./case-intelligence.css"|g' _site/index.html
+          sed -i 's|href="/case-corpus.css"|href="./case-corpus.css"|g' _site/index.html
           sed -i 's|src="/library.js"|src="./library.js"|g' _site/index.html
           sed -i 's|src="/sidebar.js"|src="./sidebar.js"|g' _site/index.html
           sed -i 's|src="/case-ui.js"|src="./case-ui.js"|g' _site/index.html

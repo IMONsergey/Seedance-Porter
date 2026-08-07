@@ -1,6 +1,7 @@
 import './experience.js';
 import './experience-stability.js';
 import './case-translation-runtime.js';
+import './case-intelligence-locales.js';
 import './unified-curated-ui.js';
 import './multi-source-polish.js';
 import './coverage-audit.js';
