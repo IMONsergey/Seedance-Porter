@@ -36,6 +36,8 @@ jobs:
       - name: Syntax-check research corpus scripts
         run: |
           node --check scripts/import-case-candidates.mjs
+          node --check scripts/augment-case-candidates.mjs
+          node --check scripts/refresh-case-corpus.mjs
           node --check scripts/build-case-review-queue.mjs
           node --check scripts/validate-corpus-ui.mjs
       - name: Syntax-check browser modules
