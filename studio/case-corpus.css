@@ -1,0 +1,39 @@
+/* Research Corpus — candidate layer, intentionally distinct from curated Digest */
+
+.app-shell:has(#corpusView:not([hidden])) [data-sidebar-view="corpus"] { display: grid; gap: 10px; }
+.app-shell:has(#corpusView:not([hidden])) .sidebar-actions { display: none; }
+.corpus-nav-count { margin-left: auto; color: var(--gray-400); font-size: 11px; font-variant-numeric: tabular-nums; }
+.corpus-summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; margin-bottom: 20px; }
+.corpus-stat { border: var(--hairline) solid var(--gray-100); border-radius: 10px; background: var(--gray-25); padding: 11px 12px; }
+.corpus-stat strong { display: block; color: var(--gray-900); font-size: 18px; line-height: 24px; font-weight: 600; }
+.corpus-stat span { display: block; margin-top: 2px; color: var(--gray-500); font-size: 11px; line-height: 16px; }
+.corpus-notice { margin-bottom: 16px; padding: 10px 12px; border: var(--hairline) solid var(--gray-100); border-radius: 9px; background: var(--gray-50); color: var(--gray-600); font-size: 12px; line-height: 18px; }
+.corpus-notice strong { color: var(--gray-800); }
+.corpus-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.corpus-card { min-width: 0; display: flex; flex-direction: column; border: var(--hairline) solid var(--gray-100); border-radius: 11px; background: #fff; overflow: hidden; }
+.corpus-preview { position: relative; aspect-ratio: 16/8.8; background: var(--gray-75); border-bottom: var(--hairline) solid var(--gray-100); }
+.corpus-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.corpus-placeholder { height: 100%; display: grid; place-items: center; color: var(--gray-400); font-size: 12px; }
+.corpus-score { position: absolute; top: 8px; right: 8px; min-height: 26px; display: inline-flex; align-items: center; border: var(--hairline) solid rgb(0 0 0 / 8%); border-radius: 999px; background: rgb(255 255 255 / 94%); padding: 0 8px; color: var(--gray-700); font-size: 11px; font-weight: 600; }
+.corpus-body { flex: 1; display: flex; flex-direction: column; padding: 12px; }
+.corpus-meta { color: var(--gray-500); font-size: 10.5px; line-height: 15px; }
+.corpus-card h3 { margin: 7px 0 5px; color: var(--gray-1000); font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -.012em; }
+.corpus-author { color: var(--gray-500); font-size: 11.5px; line-height: 17px; }
+.corpus-excerpt { min-height: 54px; margin: 9px 0 0; color: var(--gray-600); font-size: 12px; line-height: 18px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.corpus-collections { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.corpus-collections span { padding: 3px 6px; border-radius: 6px; background: var(--gray-50); color: var(--gray-500); font-size: 10px; line-height: 14px; }
+.corpus-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 12px; }
+.corpus-actions a { min-height: 32px; display: inline-flex; align-items: center; justify-content: center; border: var(--hairline) solid var(--gray-150); border-radius: 7px; padding: 0 9px; color: var(--gray-700); text-decoration: none; font-size: 11px; font-weight: 500; }
+.corpus-actions a:hover { background: var(--gray-75); }
+.corpus-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 22px; }
+.corpus-pagination button { min-width: 34px; min-height: 34px; border: var(--hairline) solid var(--gray-150); border-radius: 8px; background: #fff; color: var(--gray-700); cursor: pointer; }
+.corpus-pagination button:disabled { opacity: .35; cursor: default; }
+.corpus-page-label { color: var(--gray-500); font-size: 12px; }
+.corpus-loading { min-height: 360px; display: grid; place-items: center; color: var(--gray-500); font-size: 13px; }
+.corpus-gap-table { display: grid; gap: 3px; max-height: 220px; overflow: auto; }
+.corpus-gap-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; min-height: 28px; border-radius: 6px; padding: 0 7px; color: var(--gray-600); font-size: 11.5px; }
+.corpus-gap-row:hover { background: var(--gray-100); }
+.corpus-gap-row span:last-child { color: var(--gray-400); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 1180px) { .corpus-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 720px) { .corpus-summary { grid-template-columns: 1fr 1fr; }.corpus-grid { grid-template-columns: 1fr; } }
