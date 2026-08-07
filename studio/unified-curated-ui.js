@@ -4,9 +4,11 @@ import { getLanguage } from './i18n.js';
 import { mountCaseBatch } from './multi-source-batch-runtime.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
+const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const esc = (value = '') => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const ru = () => getLanguage() === 'ru';
 const ui = (en, ruText) => ru() ? ruText : en;
+let countSyncQueued = false;
 
 function ensurePlatformFilter() {
   const creator = $('#digestCreator');
@@ -55,11 +57,55 @@ function syncLanguage() {
   ensureSourceUniverseSummary();
 }
 
+function syncBasePlatformVisibility() {
+  const selected = $('#digestPlatform')?.value || 'all';
+  $$('#digestGrid [data-digest-id]').forEach(card => {
+    card.classList.toggle('source-platform-hidden', selected !== 'all' && selected !== 'x');
+  });
+}
+
+function syncDigestCount() {
+  countSyncQueued = false;
+  syncBasePlatformVisibility();
+  const cards = $$('#digestGrid .digest-card');
+  const visible = cards.filter(card =>
+    !card.hidden &&
+    !card.classList.contains('source-platform-hidden') &&
+    !card.classList.contains('multi-source-filtered')
+  ).length;
+  const count = $('#digestCount');
+  if (count && count.textContent !== String(visible)) count.textContent = String(visible);
+  const empty = $('#digestEmpty');
+  if (empty) empty.hidden = visible > 0;
+}
+
+function scheduleDigestCount() {
+  if (countSyncQueued) return;
+  countSyncQueued = true;
+  queueMicrotask(syncDigestCount);
+}
+
 ensurePlatformFilter();
 mountCaseBatch(MULTI_SOURCE_CASES, 'unified');
 ensureSourceUniverseSummary();
-window.addEventListener('porter-language-change', () => requestAnimationFrame(syncLanguage));
+
+const digestGrid = $('#digestGrid');
+if (digestGrid) {
+  new MutationObserver(scheduleDigestCount).observe(digestGrid, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class','hidden']
+  });
+}
+
+$('#digestPlatform')?.addEventListener('change', () => requestAnimationFrame(scheduleDigestCount));
+window.addEventListener('porter-language-change', () => requestAnimationFrame(() => {
+  syncLanguage();
+  scheduleDigestCount();
+}));
 queueMicrotask(() => {
   ensurePlatformFilter();
   ensureSourceUniverseSummary();
+  scheduleDigestCount();
 });
