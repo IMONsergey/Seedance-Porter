@@ -39,6 +39,13 @@ function overlayShots(overlay, fallback) {
   });
 }
 
+function strengthenTransfer(value) {
+  const text = String(value || '').trim();
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  if (wordCount >= 10) return text;
+  return `${text} Preserve the case's information hierarchy, camera logic and causal motion structure while replacing all source-specific subject matter.`.trim();
+}
+
 function normalize(item) {
   const base = getCaseIntelligence(item);
   const overlay = CURATED_CASE_ANALYSIS[item.id];
@@ -60,7 +67,7 @@ function normalize(item) {
     shotBreakdown,
     hook: shotBreakdown[0]?.action || base.hook,
     failureRisks: base.failureRisks,
-    transferablePattern: base.transferablePattern,
+    transferablePattern: strengthenTransfer(overlay.transferablePattern || base.transferablePattern),
   } : {
     ...base,
     reviewStatus: 'prompt-reviewed',
@@ -74,6 +81,7 @@ function normalize(item) {
     hook: base.hook || shotBreakdown[0]?.action,
     causalMechanics: base.promptMechanics,
     motionLanguage: base.cameraLanguage,
+    transferablePattern: strengthenTransfer(base.transferablePattern),
   };
 
   intelligence.productionScore = Math.max(1, Math.min(5, Math.round((item.designScore + (shotBreakdown.length >= 3 ? 5 : 4)) / 2)));
