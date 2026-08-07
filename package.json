@@ -15,8 +15,9 @@
     "validate:library": "node scripts/validate-library.mjs",
     "validate:render": "node scripts/validate-render-contract.mjs",
     "case:import": "node scripts/import-case-candidates.mjs --limit 750 --min 500 --output studio/case-candidates.json",
+    "case:augment": "node scripts/augment-case-candidates.mjs --input studio/case-candidates.json --output studio/case-candidates.json --limit 750",
     "case:queue": "node scripts/build-case-review-queue.mjs --input studio/case-candidates.json --limit 90 --output studio/case-review-queue.json",
-    "case:refresh": "npm run case:import && npm run case:queue"
+    "case:refresh": "node scripts/refresh-case-corpus.mjs --limit 750 --min 500 --queue 90"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",
