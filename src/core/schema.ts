@@ -7,6 +7,7 @@ export const ReferenceSchema = z.object({
   role: z.enum([
     "identity",
     "product",
+    "logo",
     "environment",
     "motion",
     "camera",
