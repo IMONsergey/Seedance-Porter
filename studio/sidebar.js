@@ -1,3 +1,5 @@
+import './experience.js';
+
 const sidebarState = document.querySelector('#sidebarState');
 const sidebarToggle = document.querySelector('#sidebarToggle');
 const sidebarClose = document.querySelector('#sidebarClose');
