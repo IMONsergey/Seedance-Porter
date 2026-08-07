@@ -48,7 +48,7 @@ describe("compileProject", () => {
       shots: []
     });
     expect(result.request.mode).toBe("reference-to-video");
-    expect(result.referenceMap[0].token).toBe("@Image1");
-    expect(result.referenceMap[1].token).toBe("@Video1");
+    expect(result.referenceMap[0].token).toBe("[Image 1]");
+    expect(result.referenceMap[1].token).toBe("[Video 1]");
   });
 });
