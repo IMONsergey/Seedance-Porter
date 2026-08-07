@@ -104,7 +104,7 @@ export const SOURCE_ADAPTERS = Object.freeze([
     enabled: true,
     upstream: 'https://github.com/astorie-ai/awesome-seedance-2-prompt',
     provenance: 'small source-verified set with original X posts and direct video links',
-    rights: 'no standalone LICENSE file verified; source metadata + <=25-word excerpt only',
+    rights: 'no standalone LICENSE file verified; source metadata + short excerpt (<=25 words) only',
     expectedEvidence: ['X source post', 'direct source video where published', 'preview image']
   }
 ]);
