@@ -23,6 +23,8 @@ jobs:
         run: npm run porter -- validate examples/product-film.json
       - name: Validate attributed prompt digest and Porter Originals
         run: node scripts/validate-library.mjs
+      - name: Validate multi-platform source universe
+        run: node scripts/validate-source-universe.mjs
       - name: Validate prompt library browser DOM contract
         run: node scripts/validate-ui-contract.mjs
       - name: Validate bilingual UI and source iframe coverage
@@ -35,4 +37,7 @@ jobs:
           node --check studio/experience-stability.js
           node --check studio/case-locales.js
           node --check studio/case-translation-runtime.js
+          node --check studio/source-universe.js
+          node --check studio/multi-source-cases.js
+          node --check studio/multi-source-ui.js
           node --check studio/sidebar.js
