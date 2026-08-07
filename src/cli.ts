@@ -16,7 +16,7 @@ import type { TakeDecision } from "./core/manifest.js";
 import { PorterError } from "./core/errors.js";
 
 const program = new Command();
-program.name("porter").description("Production control layer for ByteDance Seedance").version("0.2.0");
+program.name("porter").description("Production control layer for ByteDance Seedance").version("0.3.0");
 
 program.command("models")
   .description("List model/provider capabilities from Porter's dated registry")
@@ -29,11 +29,22 @@ program.command("doctor")
 program.command("compile")
   .argument("<project>", "Path to a Porter project JSON file")
   .option("-p, --provider <provider>", "byteplus | fal | muapi")
-  .description("Compile a project brief into a provider-ready Seedance prompt")
+  .description("Compile a project into the official-guide-aligned Seedance prompt plus compliance report")
   .action(async (path, options) => {
     const input = await readJson(path);
     const result = compileProject(input, options.provider as ProviderName | undefined);
     console.log(JSON.stringify(result, null, 2));
+  });
+
+program.command("validate")
+  .argument("<project>", "Path to a Porter project JSON file")
+  .option("-p, --provider <provider>", "byteplus | fal | muapi")
+  .description("Validate a project against the source-dated official ByteDance/BytePlus Seedance prompting standard without spending credits")
+  .action(async (path, options) => {
+    const input = await readJson(path);
+    const result = compileProject(input, options.provider as ProviderName | undefined);
+    console.log(JSON.stringify(result.officialCompliance, null, 2));
+    if (!result.officialCompliance.passed) process.exitCode = 2;
   });
 
 program.command("generate")
@@ -42,7 +53,7 @@ program.command("generate")
   .option("-o, --output-dir <path>", "Output root directory")
   .option("--no-wait", "Submit and return without polling when the provider supports tasks")
   .option("--force", "Bypass the 10-minute duplicate paid-request guard")
-  .description("Compile, submit, poll, download and write a .porter.json sidecar")
+  .description("Validate official compliance, submit, poll, download and write a .porter.json sidecar")
   .action(async (path, options) => {
     const input = await readJson(path);
     const result = await generateProject(input, {
