@@ -1,3 +1,4 @@
+import './workspace-router.js';
 import './experience.js';
 import './experience-stability.js';
 import './case-translation-runtime.js';
