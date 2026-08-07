@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { compileProject } from "../prompt/compiler.js";
+import { assertOfficialCompliance } from "../prompt/officialCompliance.js";
 import { ProjectSchema } from "./schema.js";
 import type { ProviderName, GenerationTask } from "./types.js";
 import { createProvider } from "../providers/index.js";
@@ -21,6 +22,11 @@ export async function generateProject(input: unknown, options: {
 } = {}) {
   const projectSpec = ProjectSchema.parse(input);
   const compiled = compileProject(projectSpec, options.provider);
+
+  // Paid generation is never attempted while the project violates the current
+  // source-dated ByteDance/BytePlus official prompting standard.
+  assertOfficialCompliance(compiled.officialCompliance);
+
   const cfg = loadConfig();
   const provider = createProvider(compiled.request.provider);
   const release = await acquireGenerationGuard(compiled.request, options.force);
@@ -55,6 +61,7 @@ export async function generateProject(input: unknown, options: {
         projectSpec,
         request: compiled.request,
         task,
+        officialCompliance: compiled.officialCompliance,
         output: { path: videoPath, videoUrl: task.videoUrl, lastFrameUrl: task.lastFrameUrl },
       });
     }
