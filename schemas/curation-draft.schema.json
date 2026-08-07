@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Seedance Porter Curated Case Implementation Draft",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "status", "createdAt", "candidateId", "source", "evidence", "research", "curation", "editorial", "verifiedPattern", "adaptationBrief", "implementationNote"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "kind": { "const": "seedance-porter-curated-case-draft" },
+    "status": { "const": "ready-for-curated-implementation" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "candidateId": { "type": "string", "minLength": 1 },
+    "source": {
+      "type": "object",
+      "required": ["title", "author", "sourceUrl"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "author": { "type": "string", "minLength": 1 },
+        "authorUrl": { "type": "string" },
+        "sourceUrl": { "type": "string", "format": "uri" },
+        "archiveUrl": { "type": "string" },
+        "previewUrl": { "type": "string" },
+        "sourcePool": { "type": "string" },
+        "sourcePoolLabel": { "type": "string" },
+        "license": { "type": "string" },
+        "published": { "type": "string" },
+        "excerpt": { "type": "string" }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["reviewedAt", "sourceVideoUrl", "attestation", "observedShotCount", "promptMatch", "observedWhyItWorked", "observedCompromises", "observedArtifacts", "observedContinuity"],
+      "properties": {
+        "reviewedAt": { "type": "string", "format": "date-time" },
+        "sourceVideoUrl": { "type": "string", "format": "uri" },
+        "attestation": {
+          "type": "object",
+          "required": ["completeVideoWatched", "attestedAt", "method"],
+          "properties": {
+            "completeVideoWatched": { "const": true },
+            "attestedAt": { "type": "string", "format": "date-time" },
+            "method": { "const": "manual-complete-video-review" }
+          }
+        },
+        "observedShotCount": { "type": "integer", "minimum": 1 },
+        "promptMatch": { "type": "object" },
+        "observedWhyItWorked": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+        "observedCompromises": { "type": "array", "items": { "type": "string" } },
+        "observedArtifacts": { "type": "array", "items": { "type": "string" } },
+        "observedContinuity": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      }
+    },
+    "research": {
+      "type": "object",
+      "required": ["score", "metrics", "collections", "riskFlags"],
+      "properties": {
+        "score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "metrics": { "type": "object" },
+        "collections": { "type": "array", "items": { "type": "string" } },
+        "riskFlags": { "type": "array", "maxItems": 0 }
+      }
+    },
+    "curation": {
+      "type": "object",
+      "required": ["readinessScore", "readinessTier", "advisories", "editorialChecks"],
+      "properties": {
+        "readinessScore": { "type": "number", "minimum": 70, "maximum": 100 },
+        "readinessTier": { "enum": ["editorial-review", "strong-editorial-candidate"] },
+        "advisories": { "type": "array", "items": { "type": "string" } },
+        "editorialChecks": {
+          "type": "object",
+          "required": ["attributionVerified", "sourceRightsChecked", "previewVerified", "namedIpRiskCleared", "independentAdaptationConfirmed", "sourceWordingNotCopied"],
+          "properties": {
+            "attributionVerified": { "const": true },
+            "sourceRightsChecked": { "const": true },
+            "previewVerified": { "const": true },
+            "namedIpRiskCleared": { "const": true },
+            "independentAdaptationConfirmed": { "const": true },
+            "sourceWordingNotCopied": { "const": true }
+          }
+        }
+      }
+    },
+    "editorial": {
+      "type": "object",
+      "required": ["title", "titleRu", "category", "subcategory", "collections", "tags", "whyItWorks", "porterAdaptation", "notes"],
+      "properties": {
+        "title": { "type": "string", "minLength": 4 },
+        "titleRu": { "type": "string" },
+        "category": { "type": "string", "minLength": 3 },
+        "subcategory": { "type": "string", "minLength": 3 },
+        "collections": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "whyItWorks": { "type": "string", "minLength": 80 },
+        "porterAdaptation": { "type": "string", "minLength": 120 },
+        "notes": { "type": "string" }
+      }
+    },
+    "verifiedPattern": { "type": "object" },
+    "adaptationBrief": {
+      "type": "object",
+      "required": ["objective", "beatStructure", "movementLanguage", "referenceStrategy", "constraints"],
+      "properties": {
+        "objective": { "type": "string", "minLength": 20 },
+        "beatStructure": { "type": "array", "minItems": 1 },
+        "movementLanguage": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "referenceStrategy": { "type": "string" },
+        "constraints": { "type": "array", "minItems": 3, "items": { "type": "string" } }
+      }
+    },
+    "implementationNote": { "type": "string", "minLength": 30 }
+  }
+}

@@ -71,6 +71,10 @@ for (const required of [
   'deep-review-bootstrap.js',
   'deep-review-ui.js',
   'deep-review.css',
+  'promotion-bootstrap.js',
+  'promotion-engine.js',
+  'promotion-ui.js',
+  'promotion.css',
   'unified-curated-ui.js',
   'multi-source-index.js'
 ]) {
@@ -92,6 +96,9 @@ if (!workflow.includes('case-review-queue.json _site/case-review-queue.json')) {
 if (!workflow.includes('node scripts/validate-deep-review-workspace.mjs')) {
   fail('Pages build must validate the Deep Review evidence gate before deployment');
 }
+if (!workflow.includes('node scripts/validate-promotion-workspace.mjs')) {
+  fail('Pages build must validate Promotion Workspace curation gates before deployment');
+}
 
 if (failures.length) {
   console.error('GitHub Pages production contract failed:\n' + failures.map(item => `- ${item}`).join('\n'));
@@ -106,5 +113,7 @@ console.log(JSON.stringify({
   roots,
   researchSnapshotBuild: 'best-effort',
   deepReviewWorkspace: 'validated-and-published',
+  promotionWorkspace: 'validated-and-published',
+  autoCuratedDigestMutation: false,
   curatedSiteFailureMode: 'deploy remains available if external corpus generation fails'
 }, null, 2));

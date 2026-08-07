@@ -6,12 +6,15 @@ on:
     paths:
       - 'studio/**'
       - 'schemas/case-review.schema.json'
+      - 'schemas/curation-draft.schema.json'
       - 'scripts/import-case-candidates.mjs'
       - 'scripts/augment-case-candidates.mjs'
       - 'scripts/refresh-case-corpus.mjs'
       - 'scripts/build-case-review-queue.mjs'
+      - 'scripts/build-curation-draft.mjs'
       - 'scripts/validate-pages-contract.mjs'
       - 'scripts/validate-deep-review-workspace.mjs'
+      - 'scripts/validate-promotion-workspace.mjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -49,6 +52,9 @@ jobs:
       - name: Validate Deep Review Workspace contract
         run: node scripts/validate-deep-review-workspace.mjs
 
+      - name: Validate Promotion Workspace contract
+        run: node scripts/validate-promotion-workspace.mjs
+
       - name: Build Research Corpus snapshot for Pages
         continue-on-error: true
         run: npm run case:refresh
@@ -64,6 +70,7 @@ jobs:
           cp studio/case-intelligence.css _site/case-intelligence.css
           cp studio/case-corpus.css _site/case-corpus.css
           cp studio/deep-review.css _site/deep-review.css
+          cp studio/promotion.css _site/promotion.css
           cp studio/experience.css _site/experience.css
           cp studio/multi-source.css _site/multi-source.css
           cp studio/coverage-audit.css _site/coverage-audit.css
@@ -73,6 +80,9 @@ jobs:
           cp studio/case-corpus-ui.js _site/case-corpus-ui.js
           cp studio/deep-review-bootstrap.js _site/deep-review-bootstrap.js
           cp studio/deep-review-ui.js _site/deep-review-ui.js
+          cp studio/promotion-bootstrap.js _site/promotion-bootstrap.js
+          cp studio/promotion-engine.js _site/promotion-engine.js
+          cp studio/promotion-ui.js _site/promotion-ui.js
           cp studio/case-intelligence.js _site/case-intelligence.js
           cp studio/case-intelligence-runtime.js _site/case-intelligence-runtime.js
           cp studio/case-analysis-curated.js _site/case-analysis-curated.js
@@ -99,7 +109,7 @@ jobs:
 
           # Research snapshots are generated in the Pages workspace. If an upstream
           # source is temporarily unavailable, deploy the curated app anyway and let
-          # Research Corpus / Deep Review expose their explicit pending state.
+          # Research Corpus / Deep Review / Promotion expose their explicit pending state.
           if [[ -f studio/case-candidates.json ]]; then
             cp studio/case-candidates.json _site/case-candidates.json
           fi
