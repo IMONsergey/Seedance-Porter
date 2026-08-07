@@ -33,4 +33,6 @@ jobs:
           node --check studio/media-embed.js
           node --check studio/experience.js
           node --check studio/experience-stability.js
+          node --check studio/case-locales.js
+          node --check studio/case-translation-runtime.js
           node --check studio/sidebar.js
