@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seedance Porter — Prompt Library</title>
+  <meta name="description" content="Design-first Seedance prompt library with 192 reusable prompt cards, concept previews, source provenance and BOS compliance." />
+  <link rel="stylesheet" href="/library.css" />
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark">SP</span>
+      <span><strong>Seedance Porter</strong><small>Prompt Intelligence Library</small></span>
+    </a>
+    <nav class="topnav" aria-label="Primary">
+      <button class="nav-tab is-active" data-view="prompts">Library</button>
+      <button class="nav-tab" data-view="sources">Source audit</button>
+      <a href="/">Production Studio</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">DESIGN-FIRST · SOURCE-DATED · BOS-2026-07-17</p>
+        <h1>Prompt library for people who actually ship design.</h1>
+        <p class="lede">Web hero motion, SaaS UI, brand systems, kinetic type, product films, packaging, editorial, VFX and case-study transitions. Every card is a Porter-original reusable template with source provenance, remixable variables and production notes.</p>
+        <div class="hero-actions">
+          <button class="button primary" id="randomPrompt">Surprise me</button>
+          <button class="button" id="favoritesOnly">Favorites</button>
+          <a class="button ghost" href="https://github.com/IMONsergey/Seedance-Porter" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </div>
+      <div class="hero-stats" id="heroStats"></div>
+    </section>
+
+    <section id="promptView" class="library-view">
+      <div class="controls">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input id="search" type="search" placeholder="Search SaaS, logo, glass, UI, product, camera…" autocomplete="off" />
+          <kbd>/</kbd>
+        </div>
+        <div class="select-row">
+          <label>Category<select id="categoryFilter"><option value="all">All categories</option></select></label>
+          <label>Mode<select id="modeFilter"><option value="all">All modes</option></select></label>
+          <label>Aspect<select id="aspectFilter"><option value="all">All ratios</option></select></label>
+          <label>Sort<select id="sortFilter">
+            <option value="featured">Design-first</option>
+            <option value="authority">Source authority</option>
+            <option value="category">Category</option>
+            <option value="title">A–Z</option>
+          </select></label>
+        </div>
+        <div class="chip-row" id="categoryChips"></div>
+      </div>
+
+      <div class="results-meta">
+        <div><strong id="resultCount">0</strong> prompts <span id="activeQuery"></span></div>
+        <div class="legend"><span class="dot original"></span> Porter original <span class="dot source"></span> source linked <span class="dot bos"></span> BOS baseline</div>
+      </div>
+
+      <div id="promptGrid" class="prompt-grid" aria-live="polite"></div>
+      <div id="emptyState" class="empty" hidden>
+        <strong>No prompts match these filters.</strong>
+        <button class="button" id="resetFilters">Reset filters</button>
+      </div>
+    </section>
+
+    <section id="sourceView" class="source-view" hidden>
+      <div class="source-intro">
+        <div>
+          <p class="eyebrow">GLOBAL INDUSTRY AUDIT · 2026-08-07</p>
+          <h2>Evidence before aesthetics.</h2>
+          <p>Official model guidance, prompt galleries, commercial AI products, 2026 motion-design cases, awarded web references and prompt research. Community sources are treated as pattern evidence, not authority.</p>
+        </div>
+        <a class="button" href="https://github.com/IMONsergey/Seedance-Porter/blob/main/docs/INDUSTRY-PROMPT-AUDIT.md" target="_blank" rel="noopener">Read full audit ↗</a>
+      </div>
+      <div class="source-filter-row">
+        <input id="sourceSearch" type="search" placeholder="Search source audit…" />
+        <select id="sourceType"><option value="all">All source types</option></select>
+      </div>
+      <div id="sourceGrid" class="source-grid"></div>
+    </section>
+  </main>
+
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-backdrop" data-close></div>
+    <div class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+      <button class="drawer-close" data-close aria-label="Close">×</button>
+      <div id="drawerContent"></div>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="/library.js"></script>
+</body>
+</html>
