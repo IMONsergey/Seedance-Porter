@@ -37,24 +37,29 @@ jobs:
         run: node scripts/validate-deep-review-workspace.mjs
       - name: Validate Promotion Workspace
         run: node scripts/validate-promotion-workspace.mjs
+      - name: Validate strategic Coverage Planner and review queue
+        run: node scripts/validate-coverage-planner.mjs
       - name: Validate GitHub Pages production artifact
         run: node scripts/validate-pages-contract.mjs
       - name: Validate rendered 100-card browser contract
         run: npm run validate:render
-      - name: Syntax-check research, evidence and promotion scripts
+      - name: Syntax-check research, evidence, promotion and planning scripts
         run: |
           node --check scripts/import-case-candidates.mjs
           node --check scripts/augment-case-candidates.mjs
           node --check scripts/refresh-case-corpus.mjs
           node --check scripts/build-case-review-queue.mjs
+          node --check scripts/build-coverage-plan.mjs
           node --check scripts/build-curation-draft.mjs
           node --check scripts/validate-corpus-ui.mjs
           node --check scripts/validate-case-intelligence-evidence.mjs
           node --check scripts/validate-deep-review-workspace.mjs
           node --check scripts/validate-promotion-workspace.mjs
+          node --check scripts/validate-coverage-planner.mjs
           node --check scripts/validate-pages-contract.mjs
       - name: Syntax-check browser modules
         run: |
+          node --check studio/workspace-router.js
           node --check studio/i18n.js
           node --check studio/media-embed.js
           node --check studio/experience.js
@@ -77,6 +82,9 @@ jobs:
           node --check studio/unified-curated-ui.js
           node --check studio/multi-source-polish.js
           node --check studio/coverage-audit.js
+          node --check studio/coverage-planner-bootstrap.js
+          node --check studio/coverage-planner-engine.js
+          node --check studio/coverage-planner-ui.js
           node --check studio/case-corpus-ui.js
           node --check studio/deep-review-bootstrap.js
           node --check studio/deep-review-ui.js
