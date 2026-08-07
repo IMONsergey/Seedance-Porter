@@ -6,14 +6,6 @@ import { getRoute } from "../models/registry.js";
 import type { SeedanceProvider } from "./provider.js";
 import { normalizeStatus } from "./provider.js";
 
-const genericRoleFor = (ref: ReferenceAsset) => {
-  if (ref.role === "first_frame") return "first_frame";
-  if (ref.role === "last_frame" || ref.role === "endpoint") return "last_frame";
-  if (ref.kind === "image") return "reference_image";
-  if (ref.kind === "video") return "reference_video";
-  return "reference_audio";
-};
-
 function bytePlusPrompt(prompt: string): string {
   // Canonical Porter prompts already use [Image 1] / [Video 1] / [Audio 1],
   // matching the human-readable convention in the official BytePlus guide.
@@ -22,6 +14,23 @@ function bytePlusPrompt(prompt: string): string {
     .replace(/@Image(\d+)/g, "[Image $1]")
     .replace(/@Video(\d+)/g, "[Video $1]")
     .replace(/@Audio(\d+)/g, "[Audio $1]");
+}
+
+function apiRole(request: GenerationRequest, ref: ReferenceAsset, fallbackFirst?: string): string {
+  if (request.mode === "reference-to-video") {
+    if (ref.kind === "image") return "reference_image";
+    if (ref.kind === "video") return "reference_video";
+    return "reference_audio";
+  }
+  if (request.mode === "first-last-frame") {
+    return ref.role === "first_frame" ? "first_frame" : "last_frame";
+  }
+  if (request.mode === "image-to-video") {
+    return ref.id === fallbackFirst || ref.role === "first_frame" ? "first_frame" : "reference_image";
+  }
+  if (ref.kind === "image") return "reference_image";
+  if (ref.kind === "video") return "reference_video";
+  return "reference_audio";
 }
 
 export class BytePlusProvider implements SeedanceProvider {
@@ -38,6 +47,7 @@ export class BytePlusProvider implements SeedanceProvider {
     const route = getRoute(request.modelKey, this.name);
     if (!route.modes.includes(request.mode)) throw new PorterError("UNSUPPORTED", `${request.mode} is not enabled for ${request.modelKey} on BytePlus`);
     if (!route.resolutions.includes(request.resolution)) throw new PorterError("UNSUPPORTED", `${request.resolution} is not enabled for ${request.modelKey} on BytePlus`);
+    if (request.seed !== undefined && route.supportsSeed === false) throw new PorterError("UNSUPPORTED", `${request.modelKey} does not support seed control on the verified BytePlus route.`);
     const model = request.modelId ?? route.modelId;
     if (!model) throw new PorterError("CONFIG", `No BytePlus model ID configured for ${request.modelKey}`);
 
@@ -49,7 +59,7 @@ export class BytePlusProvider implements SeedanceProvider {
 
     for (const ref of request.references) {
       const url = await resolveBytePlusSource(ref.url, ref.kind);
-      const role = ref.id === fallbackFirst ? "first_frame" : genericRoleFor(ref);
+      const role = apiRole(request, ref, fallbackFirst);
       if (ref.kind === "image") content.push({ type: "image_url", image_url: { url }, role });
       if (ref.kind === "video") content.push({ type: "video_url", video_url: { url }, role });
       if (ref.kind === "audio") content.push({ type: "audio_url", audio_url: { url }, role });
@@ -64,7 +74,7 @@ export class BytePlusProvider implements SeedanceProvider {
       generate_audio: request.generateAudio,
       watermark: request.watermark ?? false,
     };
-    if (request.seed !== undefined) body.seed = request.seed;
+    if (request.seed !== undefined && route.supportsSeed) body.seed = request.seed;
 
     const response = await fetch(`${this.cfg.byteplusBaseUrl}/contents/generations/tasks`, {
       method: "POST",
