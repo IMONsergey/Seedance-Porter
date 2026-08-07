@@ -8,6 +8,13 @@ import { getRoute } from "../models/registry.js";
 import type { SeedanceProvider } from "./provider.js";
 import { normalizeStatus } from "./provider.js";
 
+function muApiPrompt(prompt: string): string {
+  return prompt
+    .replace(/\[Image\s+(\d+)\]/gi, "@image$1")
+    .replace(/\[Video\s+(\d+)\]/gi, "@video$1")
+    .replace(/\[Audio\s+(\d+)\]/gi, "@audio$1");
+}
+
 export class MuApiProvider implements SeedanceProvider {
   readonly name = "muapi" as const;
   private readonly cfg = loadConfig();
@@ -49,7 +56,7 @@ export class MuApiProvider implements SeedanceProvider {
     const last = refs.find((r) => r.role === "last_frame" || r.role === "endpoint");
 
     const body: Record<string, unknown> = {
-      prompt: request.prompt,
+      prompt: muApiPrompt(request.prompt),
       aspect_ratio: request.aspectRatio === "adaptive" ? "16:9" : request.aspectRatio,
       duration: request.duration,
     };
