@@ -95,8 +95,20 @@ export interface GenerationTask {
   error?: { code?: string; message: string };
 }
 
+export interface OfficialComplianceSummary {
+  standard: string;
+  verifiedAt: string;
+  sourceUpdatedAt: string;
+  passed: boolean;
+  score: number;
+  findings: Array<{ rule: string; severity: "error" | "warning" | "info"; message: string; path?: string }>;
+  normalization: string[];
+  sources: readonly string[];
+}
+
 export interface CompiledProject {
   request: GenerationRequest;
   referenceMap: Array<{ id: string; token: string; role: ReferenceRole; note?: string }>;
   warnings: string[];
+  officialCompliance: OfficialComplianceSummary;
 }
