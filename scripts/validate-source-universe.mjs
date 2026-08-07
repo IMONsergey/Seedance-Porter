@@ -9,10 +9,12 @@ const allowedPlayers = new Set(['vimeo','behance','youtube','iframe']);
 
 if (SOURCE_PLATFORMS.length < 25) fail(`expected broad platform registry, got ${SOURCE_PLATFORMS.length}`);
 if (new Set(SOURCE_PLATFORMS.map(item => item.id)).size !== SOURCE_PLATFORMS.length) fail('source platform IDs must be unique');
-if (MULTI_SOURCE_CASES.length < 62) fail(`expected at least 62 non-X curated cases, got ${MULTI_SOURCE_CASES.length}`);
+if (MULTI_SOURCE_CASES.length < 76) fail(`expected at least 76 non-X curated cases, got ${MULTI_SOURCE_CASES.length}`);
 if (MULTI_SOURCE_BATCH_STATS.batch2 < 10) fail(`source expansion batch 2 unexpectedly small: ${MULTI_SOURCE_BATCH_STATS.batch2}`);
 if (MULTI_SOURCE_BATCH_STATS.batch3 < 15) fail(`digital source expansion batch 3 unexpectedly small: ${MULTI_SOURCE_BATCH_STATS.batch3}`);
 if (MULTI_SOURCE_BATCH_STATS.batch4 < 15) fail(`motion-craft source expansion batch 4 unexpectedly small: ${MULTI_SOURCE_BATCH_STATS.batch4}`);
+if (MULTI_SOURCE_BATCH_STATS.batch5 !== 14) fail(`final source expansion batch 5 must contain 14 cases, got ${MULTI_SOURCE_BATCH_STATS.batch5}`);
+if (MULTI_SOURCE_CASES.length + 24 !== 100) fail(`first curated milestone must be exactly 100 cases, got ${MULTI_SOURCE_CASES.length + 24}`);
 if (new Set(MULTI_SOURCE_CASES.map(item => item.id)).size !== MULTI_SOURCE_CASES.length) fail('multi-source case IDs must be unique');
 
 for (const item of MULTI_SOURCE_CASES) {
