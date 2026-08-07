@@ -27,8 +27,11 @@ window.addEventListener('resize', () => {
   if (window.innerWidth > 980) closeSidebar();
 });
 
-// Keep Case Intelligence isolated from the core prompt library runtime.
-// If this layer fails, the base library remains usable.
-import('./case-intelligence-ui.js').catch((error) => {
-  console.warn('Case Intelligence UI did not load', error);
+// Keep intelligence layers isolated from the core prompt-library runtime.
+// If either optional layer fails, the base library remains usable.
+Promise.allSettled([
+  import('./case-intelligence-ui.js'),
+  import('./case-corpus-ui.js')
+]).then((results) => {
+  for (const result of results) if (result.status === 'rejected') console.warn('Optional Case Intelligence layer did not load', result.reason);
 });
