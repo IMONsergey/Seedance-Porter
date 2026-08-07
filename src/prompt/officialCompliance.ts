@@ -1,16 +1,16 @@
 import type { ProjectSpec, ShotSpec } from "../core/schema.js";
-import type { ReferenceAsset } from "../core/types.js";
+import type { GenerationMode, ProviderName, ReferenceAsset } from "../core/types.js";
 import { PorterError } from "../core/errors.js";
 
 export const BYTEDANCE_OFFICIAL_STANDARD = {
-  id: "BOS-2026-07-31",
+  id: "BOS-2026-07-17",
   guide: "Dreamina Seedance 2.0 series prompt guide",
   verifiedAt: "2026-08-07",
-  sourceUpdatedAt: "2026-07-31",
+  sourceUpdatedAt: "2026-07-17",
   sources: [
     "https://docs.byteplus.com/en/docs/ModelArk/2222480",
     "https://docs.byteplus.com/en/docs/ModelArk/2291680",
-    "https://docs.byteplus.com/en/docs/modelark/1520757",
+    "https://docs.byteplus.com/en/docs/ModelArk/1520757",
     "https://seed.bytedance.com/en/blog/seedance-2-0-official-launch",
   ],
 } as const;
@@ -81,7 +81,74 @@ function motionAdvisory(action: string, path: string): ComplianceFinding[] {
   return findings;
 }
 
-export function validateOfficialCompliance(spec: ProjectSpec, refs: ReferenceAsset[], shots: ShotSpec[], prompt?: string): OfficialComplianceReport {
+function validateBytePlusIdentitySources(refs: ReferenceAsset[], findings: ComplianceFinding[], normalization: string[]) {
+  for (const ref of refs.filter((item) => item.role === "identity")) {
+    if (!ref.identitySource) {
+      findings.push({
+        rule: "BOS-13",
+        severity: "error",
+        path: `references.${ref.id}.identitySource`,
+        message: "BytePlus identity references must declare provenance: synthetic, non-human, ModelArk trusted output, preset digital character, or authorized real-person asset.",
+      });
+      continue;
+    }
+    if ((ref.identitySource === "preset-digital-character" || ref.identitySource === "authorized-real-person") && !ref.url.startsWith("asset://")) {
+      findings.push({
+        rule: "BOS-13",
+        severity: "error",
+        path: `references.${ref.id}.url`,
+        message: `${ref.identitySource} references on ModelArk must use the registered asset flow (asset://...).`,
+      });
+    }
+    if (ref.identitySource === "modelark-trusted-output") {
+      normalization.push(`Identity ${ref.id} is declared as a ModelArk trusted output; account ownership and trust-window eligibility remain provider-side checks.`);
+    }
+  }
+}
+
+function validateBytePlusModeContract(mode: GenerationMode, refs: ReferenceAsset[], findings: ComplianceFinding[]) {
+  const images = refs.filter((ref) => ref.kind === "image");
+  const videos = refs.filter((ref) => ref.kind === "video");
+  const audios = refs.filter((ref) => ref.kind === "audio");
+
+  if (mode === "first-last-frame") {
+    const first = refs.filter((ref) => ref.role === "first_frame");
+    const last = refs.filter((ref) => ref.role === "last_frame");
+    if (images.length !== 2 || videos.length || audios.length || first.length !== 1 || last.length !== 1) {
+      findings.push({
+        rule: "BOS-14",
+        severity: "error",
+        path: "references",
+        message: "Official ModelArk first/last-frame mode must be an endpoint-only package: exactly one first_frame image and one last_frame image, with no video/audio reference package mixed in.",
+      });
+    }
+  }
+
+  if (mode === "image-to-video") {
+    if (images.length !== 1 || videos.length || audios.length) findings.push({
+      rule: "BOS-14",
+      severity: "error",
+      path: "references",
+      message: "Official ModelArk image-to-video mode expects one visual starting image. Use reference-to-video for a multimodal or multi-image reference package.",
+    });
+  }
+
+  if (mode === "text-to-video" && refs.length) findings.push({
+    rule: "BOS-14",
+    severity: "error",
+    path: "references",
+    message: "text-to-video mode should not carry reference assets. Let Porter infer a reference-capable mode or choose one explicitly.",
+  });
+}
+
+export function validateOfficialCompliance(
+  spec: ProjectSpec,
+  refs: ReferenceAsset[],
+  shots: ShotSpec[],
+  prompt: string | undefined,
+  provider: ProviderName,
+  mode: GenerationMode,
+): OfficialComplianceReport {
   const findings: ComplianceFinding[] = [];
   const normalization: string[] = [
     "Complex shot prompts are rendered as ordered Shot N blocks rather than exact second ranges.",
@@ -157,6 +224,11 @@ export function validateOfficialCompliance(spec: ProjectSpec, refs: ReferenceAss
 
   if (spec.outputPolicy.generatedWatermark === "forbid") normalization.push("Default no-generated-watermark constraint is appended.");
   if (needsTwinGuard(spec)) normalization.push("Multi-character identity references trigger an anti-duplicate/twin-character constraint.");
+
+  if (provider === "byteplus") {
+    validateBytePlusIdentitySources(refs, findings, normalization);
+    validateBytePlusModeContract(mode, refs, findings);
+  }
 
   if (prompt) {
     const words = prompt.trim().split(/\s+/).filter(Boolean).length;
