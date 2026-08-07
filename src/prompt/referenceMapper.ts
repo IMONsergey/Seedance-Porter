@@ -5,6 +5,7 @@ import type { ProjectSpec } from "../core/schema.js";
 const roleInstruction: Record<ReferenceRole, string> = {
   identity: "identity/character anchor; preserve the explicitly described stable appearance features",
   product: "exact product anchor; preserve proportions, materials, construction, identifying details and brand colors",
+  logo: "exact logo reference; preserve the supplied mark's geometry, proportions and visual identity and do not invent a different logo",
   environment: "scene tone-setting reference; preserve the requested environment, spatial relationships and atmosphere",
   motion: "motion reference only; follow the requested action mechanics, timing and movement trajectory",
   camera: "camera/action-rhythm reference only; follow the requested shot language and camera path without borrowing subject identity",
