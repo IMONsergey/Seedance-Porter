@@ -19,7 +19,7 @@ assert(media.includes("type: 'direct-video'"), 'Direct video descriptor is requi
 assert(media.includes("type: 'youtube'"), 'YouTube embed descriptor is required.');
 assert(media.includes("type: 'vimeo'"), 'Vimeo embed descriptor is required.');
 assert(media.includes("type: 'x-post'"), 'X source-post embed fallback must remain supported.');
-assert(media.includes('<video class=\\"source-media-video\\"') || media.includes('<video class="source-media-video"'), 'Direct media must render with native video controls.');
+assert(media.includes('<video class="source-media-video"'), 'Direct media must render with native video controls.');
 assert(!media.includes('crossorigin="anonymous"'), 'Direct source video must not require upstream CORS when no pixel access is needed.');
 
 // Review Player must be a companion evidence tool only.
@@ -46,8 +46,11 @@ assert(schema.includes('coveragePercent'), 'Companion schema must validate playb
 assert(schema.includes('shot-boundary') && schema.includes('signature-move'), 'Companion schema must validate marker taxonomy.');
 assert(schema.includes('"maximum": 100'), 'Playback coverage must be bounded at 100%.');
 
-// Sidebar is allowed to lag before bootstrap wiring in early branch construction, but final contract requires it.
-assert(sidebar.includes("import './deep-review-bootstrap.js';"), 'Core Deep Review bootstrap must remain mounted.');
+const deepIndex = sidebar.indexOf("import './deep-review-bootstrap.js';");
+const playerIndex = sidebar.indexOf("import './deep-review-player-bootstrap.js';");
+assert(deepIndex >= 0, 'Core Deep Review bootstrap must remain mounted.');
+assert(playerIndex >= 0, 'Sidebar shell must mount Review Player bootstrap.');
+assert(playerIndex > deepIndex, 'Review Player bootstrap must mount after core Deep Review UI initialization.');
 
 if (failures.length) {
   console.error('Review Player contract failed:\n' + failures.map(item => `- ${item}`).join('\n'));
@@ -60,6 +63,7 @@ console.log(JSON.stringify({
   nativePlaybackCoverage: true,
   markerTypes: ['shot-boundary','transition','artifact','continuity','signature-move','note'],
   companionStorage: 'porterDeepReviewMediaEvidence:*',
+  mountOrder: 'after-core-deep-review',
   autoAttestation: false,
   autoDeepReviewed: false
 }, null, 2));
