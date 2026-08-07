@@ -33,8 +33,12 @@ jobs:
           cp studio/library.html _site/index.html
           cp studio/library.css _site/library.css
           cp studio/digest.css _site/digest.css
+          cp studio/case-intelligence.css _site/case-intelligence.css
           cp studio/library.js _site/library.js
           cp studio/sidebar.js _site/sidebar.js
+          cp studio/case-intelligence-ui.js _site/case-intelligence-ui.js
+          cp studio/case-intelligence-data.js _site/case-intelligence-data.js
+          cp studio/pattern-builder.js _site/pattern-builder.js
           cp studio/library-data.js _site/library-data.js
           cp studio/digest-data.js _site/digest-data.js
           touch _site/.nojekyll
