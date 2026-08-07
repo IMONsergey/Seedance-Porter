@@ -45,7 +45,12 @@
       "kind": "image",
       "url": "https://example.com/character-reference.jpg",
       "role": "identity",
-      "note": "Same woman: dark chin-length bob haircut, charcoal knit sweater, silver watch and unchanged facial identity."
+      "anchors": [
+        "dark chin-length bob haircut",
+        "charcoal knit sweater",
+        "silver watch on her wrist"
+      ],
+      "note": "Use this image as the exact identity and wardrobe source for the same woman from the accepted previous clip."
     }
   ],
   "shots": []
