@@ -10,6 +10,7 @@ import './coverage-planner-bootstrap.js';
 import './source-health-bootstrap.js';
 import './case-corpus-ui.js';
 import './deep-review-bootstrap.js';
+import './deep-review-player-bootstrap.js';
 import './promotion-bootstrap.js';
 
 const sidebarState = document.querySelector('#sidebarState');
