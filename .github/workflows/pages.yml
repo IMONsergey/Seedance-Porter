@@ -38,6 +38,7 @@ jobs:
           cp studio/sidebar.js _site/sidebar.js
           cp studio/case-ui.js _site/case-ui.js
           cp studio/case-intelligence.js _site/case-intelligence.js
+          cp studio/case-intelligence-runtime.js _site/case-intelligence-runtime.js
           cp studio/library-data.js _site/library-data.js
           cp studio/digest-data.js _site/digest-data.js
           touch _site/.nojekyll
