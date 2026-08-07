@@ -34,6 +34,7 @@ jobs:
           cp studio/library.css _site/library.css
           cp studio/digest.css _site/digest.css
           cp studio/library.js _site/library.js
+          cp studio/sidebar.js _site/sidebar.js
           cp studio/library-data.js _site/library-data.js
           cp studio/digest-data.js _site/digest-data.js
           touch _site/.nojekyll
@@ -43,6 +44,7 @@ jobs:
           sed -i 's|href="/library.css"|href="./library.css"|g' _site/index.html
           sed -i 's|href="/digest.css"|href="./digest.css"|g' _site/index.html
           sed -i 's|src="/library.js"|src="./library.js"|g' _site/index.html
+          sed -i 's|src="/sidebar.js"|src="./sidebar.js"|g' _site/index.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
