@@ -5,6 +5,13 @@ import type { FaceSource, ProviderName } from "../core/types.js";
 import { compileProject } from "../prompt/compiler.js";
 
 function deriveContinuationFaceSource(previous: Awaited<ReturnType<typeof readManifest>>, visualAnchor?: string): FaceSource | undefined {
+  // A provider-returned BytePlus last-frame URL is generated output rather than
+  // an arbitrary user-uploaded real-face source. Mark trusted-output intent;
+  // ModelArk still performs the final account/trust-window eligibility check.
+  if (previous.request.provider === "byteplus" && visualAnchor && previous.output?.lastFrameUrl === visualAnchor) {
+    return "modelark-trusted-output";
+  }
+
   const sources = previous.request.references
     .filter((ref) => ref.kind === "image" || ref.kind === "video")
     .map((ref) => ref.faceSource ?? ref.identitySource)
@@ -13,13 +20,6 @@ function deriveContinuationFaceSource(previous: Awaited<ReturnType<typeof readMa
   if (!sources.length) return undefined;
   if (sources.every((source) => source === "none")) return "none";
   if (sources.every((source) => source === "none" || source === "non-human")) return "non-human";
-
-  // A provider-returned BytePlus last-frame URL is generated output rather than
-  // an arbitrary re-uploaded real-face source. Mark it as trusted-output intent;
-  // ModelArk still performs the final account/trust-window eligibility check.
-  if (previous.request.provider === "byteplus" && visualAnchor && previous.output?.lastFrameUrl === visualAnchor) {
-    return "modelark-trusted-output";
-  }
 
   // Synthetic source projects remain synthetic after a locally extracted frame.
   if (sources.every((source) => ["none", "synthetic"].includes(source))) return "synthetic";
