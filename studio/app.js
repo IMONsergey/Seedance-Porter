@@ -13,15 +13,23 @@ const sample = {
   resolution: "720p",
   aspectRatio: "16:9",
   generateAudio: true,
+  outputPolicy: {
+    generatedText: "forbid",
+    generatedLogo: "forbid",
+    generatedWatermark: "forbid"
+  },
   brief: {
     objective: "Create a controlled premium hero shot.",
     subject: "A matte green product bottle",
-    action: "The bottle rises slightly and settles completely still",
+    action: "The bottle slowly rises two centimeters and settles completely still",
     environment: "Minimal dark studio with warm stone plinth",
     camera: "Slow 20-degree clockwise orbit that settles centered",
     lighting: "Large soft source camera-left and subtle warm edge light",
+    colorTone: "Deep neutral green with warm stone highlights",
     sound: "Low restrained pulse and one soft impact at the final settle",
     endpoint: "Bottle upright, centered, stable three-quarter view",
+    style: "Contemporary premium commercial product photography with matte realistic materials",
+    imageQuality: "HD, rich fine details, stable geometry, natural colors and coherent material texture",
     constraints: ["frame remains text-free", "product geometry remains unchanged"],
     beats: []
   },
@@ -66,10 +74,10 @@ async function run(label, fn) {
 
 $("example").onclick = () => { project.value = JSON.stringify(sample, null, 2); };
 $("models").onclick = () => run("Loading models", () => api("/api/models"));
-$("compile").onclick = () => run("Compiling", () => api("/api/compile", { method: "POST", body: JSON.stringify({ project: parsedProject(), provider: provider.value }) }));
+$("compile").onclick = () => run("Compiling + official compliance", () => api("/api/compile", { method: "POST", body: JSON.stringify({ project: parsedProject(), provider: provider.value }) }));
 $("generate").onclick = () => {
-  if (!confirm("This can spend provider credits. Generate now?")) return;
-  run("Generating", () => api("/api/generate", { method: "POST", body: JSON.stringify({ project: parsedProject(), provider: provider.value, wait: true }) }));
+  if (!confirm("This can spend provider credits. Porter will block generation if the official ByteDance compliance gate fails. Generate now?")) return;
+  run("Validating + generating", () => api("/api/generate", { method: "POST", body: JSON.stringify({ project: parsedProject(), provider: provider.value, wait: true }) }));
 };
 
 api("/api/health").then(() => { $("health").textContent = "local API online"; }).catch(() => { $("health").textContent = token.value ? "API unavailable / token rejected" : "API unavailable / token may be required"; });
