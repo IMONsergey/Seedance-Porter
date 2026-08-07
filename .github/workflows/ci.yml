@@ -35,19 +35,23 @@ jobs:
         run: node scripts/validate-case-intelligence-evidence.mjs
       - name: Validate Deep Review Workspace
         run: node scripts/validate-deep-review-workspace.mjs
+      - name: Validate Promotion Workspace
+        run: node scripts/validate-promotion-workspace.mjs
       - name: Validate GitHub Pages production artifact
         run: node scripts/validate-pages-contract.mjs
       - name: Validate rendered 100-card browser contract
         run: npm run validate:render
-      - name: Syntax-check research and evidence scripts
+      - name: Syntax-check research, evidence and promotion scripts
         run: |
           node --check scripts/import-case-candidates.mjs
           node --check scripts/augment-case-candidates.mjs
           node --check scripts/refresh-case-corpus.mjs
           node --check scripts/build-case-review-queue.mjs
+          node --check scripts/build-curation-draft.mjs
           node --check scripts/validate-corpus-ui.mjs
           node --check scripts/validate-case-intelligence-evidence.mjs
           node --check scripts/validate-deep-review-workspace.mjs
+          node --check scripts/validate-promotion-workspace.mjs
           node --check scripts/validate-pages-contract.mjs
       - name: Syntax-check browser modules
         run: |
@@ -76,4 +80,7 @@ jobs:
           node --check studio/case-corpus-ui.js
           node --check studio/deep-review-bootstrap.js
           node --check studio/deep-review-ui.js
+          node --check studio/promotion-bootstrap.js
+          node --check studio/promotion-engine.js
+          node --check studio/promotion-ui.js
           node --check studio/sidebar.js
