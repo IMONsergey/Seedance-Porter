@@ -145,7 +145,7 @@ export function compileProject(input: unknown, providerOverride?: ProviderName):
       seed: spec.seed,
       watermark: spec.watermark,
     },
-    referenceMap: refs.map((r) => ({ id: r.id, token: r.token!, role: r.role, note: r.note })),
+    referenceMap: refs.map((r) => ({ id: r.id, token: r.token!, role: r.role, note: r.note, anchors: r.anchors })),
     warnings: [...lintPrompt(prompt, spec), ...officialWarnings],
     officialCompliance,
   };
