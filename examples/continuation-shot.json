@@ -45,7 +45,7 @@
       "kind": "image",
       "url": "https://example.com/character-reference.jpg",
       "role": "identity",
-      "identitySource": "synthetic",
+      "faceSource": "synthetic",
       "anchors": [
         "dark chin-length bob haircut",
         "charcoal knit sweater",
