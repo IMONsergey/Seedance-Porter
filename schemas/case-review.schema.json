@@ -2,12 +2,22 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Seedance Porter Deep Case Review",
   "type": "object",
-  "required": ["candidateId", "reviewStatus", "promptAnatomy", "visualReview", "transfer"],
+  "required": ["candidateId", "reviewStatus", "reviewedAt", "sourceVideoUrl", "evidenceAttestation", "promptAnatomy", "visualReview", "transfer"],
   "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
     "candidateId": { "type": "string", "minLength": 1 },
     "reviewStatus": { "const": "deep-reviewed" },
     "reviewedAt": { "type": "string", "format": "date-time" },
     "sourceVideoUrl": { "type": "string", "format": "uri" },
+    "evidenceAttestation": {
+      "type": "object",
+      "required": ["completeVideoWatched", "attestedAt", "method"],
+      "properties": {
+        "completeVideoWatched": { "const": true },
+        "attestedAt": { "type": "string", "format": "date-time" },
+        "method": { "const": "manual-complete-video-review" }
+      }
+    },
     "promptAnatomy": {
       "type": "object",
       "required": ["thesis", "signatureMove", "shotBreakdown", "causalMechanics", "referenceStrategy", "motionLanguage", "failureRisks"],
@@ -16,14 +26,14 @@
         "signatureMove": { "type": "string", "minLength": 10 },
         "shotBreakdown": { "type": "array", "minItems": 1 },
         "causalMechanics": { "type": "array", "minItems": 2, "items": { "type": "string" } },
-        "referenceStrategy": { "type": "string" },
+        "referenceStrategy": { "type": "string", "minLength": 5 },
         "motionLanguage": { "type": "array", "minItems": 1, "items": { "type": "string" } },
         "failureRisks": { "type": "array", "minItems": 2, "items": { "type": "string" } }
       }
     },
     "visualReview": {
       "type": "object",
-      "required": ["observedShots", "observedTransitions", "observedMotion", "observedArtifacts", "observedContinuity", "verifiedSignatureMove"],
+      "required": ["observedShots", "observedTransitions", "observedMotion", "observedArtifacts", "observedContinuity", "verifiedSignatureMove", "whyItWorked", "whatDidNotWork"],
       "properties": {
         "observedShots": {
           "type": "array",
@@ -33,19 +43,19 @@
             "required": ["n", "observedFraming", "observedCamera", "observedAction", "promptMatch", "attentionMechanic"],
             "properties": {
               "n": { "type": "integer", "minimum": 1 },
-              "observedFraming": { "type": "string" },
-              "observedCamera": { "type": "string" },
-              "observedAction": { "type": "string" },
+              "observedFraming": { "type": "string", "minLength": 1 },
+              "observedCamera": { "type": "string", "minLength": 1 },
+              "observedAction": { "type": "string", "minLength": 1 },
               "promptMatch": { "enum": ["strong", "partial", "weak", "invented"] },
-              "attentionMechanic": { "type": "string" },
+              "attentionMechanic": { "type": "string", "minLength": 1 },
               "notes": { "type": "string" }
             }
           }
         },
         "observedTransitions": { "type": "array", "items": { "type": "string" } },
-        "observedMotion": { "type": "array", "items": { "type": "string" } },
+        "observedMotion": { "type": "array", "minItems": 1, "items": { "type": "string" } },
         "observedArtifacts": { "type": "array", "items": { "type": "string" } },
-        "observedContinuity": { "type": "array", "items": { "type": "string" } },
+        "observedContinuity": { "type": "array", "minItems": 1, "items": { "type": "string" } },
         "verifiedSignatureMove": { "type": "string", "minLength": 10 },
         "whyItWorked": { "type": "array", "minItems": 2, "items": { "type": "string" } },
         "whatDidNotWork": { "type": "array", "items": { "type": "string" } }
@@ -53,7 +63,7 @@
     },
     "transfer": {
       "type": "object",
-      "required": ["transferablePattern", "doTransfer", "doNotTransfer"],
+      "required": ["transferablePattern", "doTransfer", "doNotTransfer", "bestFor"],
       "properties": {
         "transferablePattern": { "type": "string", "minLength": 20 },
         "doTransfer": { "type": "array", "minItems": 1, "items": { "type": "string" } },
