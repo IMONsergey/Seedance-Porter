@@ -1,9 +1,9 @@
 {
   "name": "seedance-porter",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
-  "description": "Production toolkit and agent layer for ByteDance Seedance",
+  "description": "Production toolkit and prompt intelligence layer for ByteDance Seedance",
   "engines": { "node": ">=20" },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -11,7 +11,8 @@
     "test": "vitest run",
     "porter": "tsx src/cli.ts",
     "mcp": "tsx src/mcp/server.ts",
-    "studio": "tsx src/server/http.ts"
+    "studio": "tsx src/server/http.ts",
+    "validate:library": "node scripts/validate-library.mjs"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",
