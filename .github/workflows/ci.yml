@@ -39,6 +39,9 @@ jobs:
           node --check studio/case-translation-runtime.js
           node --check studio/source-universe.js
           node --check studio/multi-source-cases.js
+          node --check studio/multi-source-cases-batch2.js
+          node --check studio/multi-source-index.js
           node --check studio/multi-source-ui.js
+          node --check studio/multi-source-batch2-ui.js
           node --check studio/multi-source-polish.js
           node --check studio/sidebar.js
