@@ -4,98 +4,139 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Seedance Porter — Prompt Library</title>
-  <meta name="description" content="A clean, source-first Seedance prompt library with industry examples, Porter adaptations and reusable production patterns." />
+  <meta name="description" content="A source-first Seedance prompt library with industry examples, Porter adaptations and reusable production patterns." />
   <link rel="stylesheet" href="/library.css" />
   <link rel="stylesheet" href="/digest.css" />
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="./">
-      <span class="brand-mark">SP</span>
-      <span><strong>Seedance Porter</strong><small>Prompt Library</small></span>
-    </a>
-    <nav class="topnav" aria-label="Primary">
-      <button class="nav-tab is-active" data-view="digest">Industry Digest</button>
-      <button class="nav-tab" data-view="prompts">Porter Originals</button>
-      <button class="nav-tab" data-view="sources">Sources</button>
-      <a href="https://github.com/IMONsergey/Seedance-Porter" target="_blank" rel="noopener">GitHub ↗</a>
-    </nav>
-  </header>
-
-  <main class="page">
-    <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">PROMPT INTELLIGENCE · BOS-2026-07-17</p>
-        <h1>Seedance prompt library</h1>
-        <p class="lede">Find a proven visual pattern, inspect the original source, then reuse the idea through an independently written Porter adaptation.</p>
-        <div class="hero-actions">
-          <button class="button primary" id="randomPrompt">Random prompt</button>
-          <button class="button" id="favoritesOnly">Favorites</button>
-        </div>
-      </div>
-      <div class="hero-stats" id="heroStats"></div>
-    </section>
-
-    <section id="digestView" class="library-view">
-      <div class="digest-note">
-        <div><strong>Source-first digest.</strong><span>Short original excerpt + creator link + independent Porter adaptation.</span></div>
-        <a href="https://github.com/YouMind-OpenLab/awesome-seedance-2-prompts" target="_blank" rel="noopener">Corpus attribution ↗</a>
+  <input class="sidebar-state" type="checkbox" id="sidebarState" aria-hidden="true" tabindex="-1" />
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Library navigation and filters">
+      <div class="sidebar-header">
+        <a class="brand" href="./">
+          <span class="brand-mark">SP</span>
+          <span><strong>Seedance Porter</strong><small>Prompt Library</small></span>
+        </a>
+        <button class="icon-button sidebar-close" id="sidebarClose" type="button" aria-label="Close sidebar">×</button>
       </div>
 
-      <div class="controls digest-controls">
-        <div class="search-wrap">
-          <span class="search-icon">⌕</span>
-          <input id="digestSearch" type="search" placeholder="Search product, UI, fashion, macro, UGC, VFX…" autocomplete="off" />
-          <kbd>/</kbd>
-        </div>
-        <div class="select-row digest-select-row">
-          <label>Category<select id="digestCategory"><option value="all">All categories</option></select></label>
-          <label>Creator<select id="digestCreator"><option value="all">All creators</option></select></label>
-          <label>Design relevance<select id="digestUse"><option value="all">Any score</option><option value="5">5 / 5</option><option value="4">4+ / 5</option></select></label>
-          <label>Sort<select id="digestSort"><option value="featured">Curator pick</option><option value="latest">Newest</option><option value="design">Design relevance</option><option value="title">A–Z</option></select></label>
-        </div>
-        <div class="chip-row" id="digestChips"></div>
+      <nav class="sidebar-nav" aria-label="Library views">
+        <button class="nav-tab is-active" data-view="digest"><span class="nav-icon">⌘</span><span>Industry Digest</span></button>
+        <button class="nav-tab" data-view="prompts"><span class="nav-icon">◫</span><span>Porter Originals</span></button>
+        <button class="nav-tab" data-view="sources"><span class="nav-icon">↗</span><span>Sources</span></button>
+      </nav>
+
+      <div class="sidebar-actions">
+        <button class="sidebar-action" id="randomPrompt"><span>＋</span><span>Random prompt</span></button>
+        <button class="sidebar-action" id="favoritesOnly"><span>☆</span><span>Favorites</span></button>
       </div>
 
-      <div class="results-meta">
-        <div><strong id="digestCount">0</strong> examples <span id="digestQuery"></span></div>
-        <div class="legend"><span class="dot source"></span> source <span class="dot original"></span> excerpt <span class="dot bos"></span> adaptation</div>
-      </div>
+      <div class="sidebar-divider"></div>
 
-      <div id="digestGrid" class="prompt-grid digest-grid" aria-live="polite"></div>
-      <div id="digestEmpty" class="empty" hidden><strong>No results.</strong><button class="button" id="resetDigest">Reset filters</button></div>
-    </section>
+      <section class="sidebar-filter-panel" data-sidebar-view="digest">
+        <div class="sidebar-section-title">Filter digest</div>
+        <label class="sidebar-search">
+          <span>Search</span>
+          <div class="sidebar-search-field"><span class="search-icon">⌕</span><input id="digestSearch" type="search" placeholder="Product, fashion, UI…" autocomplete="off" /><kbd>/</kbd></div>
+        </label>
+        <label>Category<select id="digestCategory"><option value="all">All categories</option></select></label>
+        <label>Creator<select id="digestCreator"><option value="all">All creators</option></select></label>
+        <label>Design relevance<select id="digestUse"><option value="all">Any score</option><option value="5">5 / 5</option><option value="4">4+ / 5</option></select></label>
+        <label>Sort<select id="digestSort"><option value="featured">Curator pick</option><option value="latest">Newest</option><option value="design">Design relevance</option><option value="title">A–Z</option></select></label>
+        <div class="sidebar-subtitle">Quick categories</div>
+        <div class="chip-row sidebar-chips" id="digestChips"></div>
+        <button class="sidebar-reset" id="resetDigest">Reset filters</button>
+      </section>
 
-    <section id="promptView" class="library-view" hidden>
-      <div class="section-heading">
-        <p class="eyebrow">192 PORTER-ORIGINAL CARDS</p>
-        <h2>Reusable production patterns</h2>
-        <p>48 production archetypes × 4 visual directions for web hero, SaaS UI, brand motion, product, packaging, editorial, case studies, UGC and VFX.</p>
-      </div>
-      <div class="controls">
-        <div class="search-wrap"><span class="search-icon">⌕</span><input id="search" type="search" placeholder="Search UI, logo, product, material, camera…" autocomplete="off" /><kbd>/</kbd></div>
-        <div class="select-row">
-          <label>Category<select id="categoryFilter"><option value="all">All categories</option></select></label>
-          <label>Mode<select id="modeFilter"><option value="all">All modes</option></select></label>
-          <label>Aspect<select id="aspectFilter"><option value="all">All ratios</option></select></label>
-          <label>Sort<select id="sortFilter"><option value="featured">Design-first</option><option value="authority">Source authority</option><option value="category">Category</option><option value="title">A–Z</option></select></label>
-        </div>
-        <div class="chip-row" id="categoryChips"></div>
-      </div>
-      <div class="results-meta"><div><strong id="resultCount">0</strong> originals <span id="activeQuery"></span></div><div class="legend"><span class="dot original"></span> Porter original <span class="dot source"></span> research <span class="dot bos"></span> BOS</div></div>
-      <div id="promptGrid" class="prompt-grid" aria-live="polite"></div>
-      <div id="emptyState" class="empty" hidden><strong>No results.</strong><button class="button" id="resetFilters">Reset filters</button></div>
-    </section>
+      <section class="sidebar-filter-panel" data-sidebar-view="prompts">
+        <div class="sidebar-section-title">Filter originals</div>
+        <label class="sidebar-search">
+          <span>Search</span>
+          <div class="sidebar-search-field"><span class="search-icon">⌕</span><input id="search" type="search" placeholder="UI, logo, material…" autocomplete="off" /><kbd>/</kbd></div>
+        </label>
+        <label>Category<select id="categoryFilter"><option value="all">All categories</option></select></label>
+        <label>Mode<select id="modeFilter"><option value="all">All modes</option></select></label>
+        <label>Aspect<select id="aspectFilter"><option value="all">All ratios</option></select></label>
+        <label>Sort<select id="sortFilter"><option value="featured">Design-first</option><option value="authority">Source authority</option><option value="category">Category</option><option value="title">A–Z</option></select></label>
+        <div class="sidebar-subtitle">Quick categories</div>
+        <div class="chip-row sidebar-chips" id="categoryChips"></div>
+        <button class="sidebar-reset" id="resetFilters">Reset filters</button>
+      </section>
 
-    <section id="sourceView" class="source-view" hidden>
-      <div class="source-intro">
-        <div><p class="eyebrow">GLOBAL INDUSTRY AUDIT · 2026-08-07</p><h2>Source audit</h2><p>Official model guidance, public prompt corpora, commercial AI workflows, design case studies and research ranked by authority and design relevance.</p></div>
-        <a class="button" href="https://github.com/IMONsergey/Seedance-Porter/blob/main/docs/INDUSTRY-PROMPT-AUDIT.md" target="_blank" rel="noopener">Full audit ↗</a>
+      <section class="sidebar-filter-panel" data-sidebar-view="sources">
+        <div class="sidebar-section-title">Filter sources</div>
+        <label class="sidebar-search">
+          <span>Search</span>
+          <div class="sidebar-search-field"><span class="search-icon">⌕</span><input id="sourceSearch" type="search" placeholder="OpenAI, Runway…" autocomplete="off" /></div>
+        </label>
+        <label>Source type<select id="sourceType"><option value="all">All source types</option></select></label>
+      </section>
+
+      <div class="sidebar-footer">
+        <a href="https://github.com/IMONsergey/Seedance-Porter" target="_blank" rel="noopener">GitHub repository <span>↗</span></a>
+        <a href="https://github.com/IMONsergey/Seedance-Porter/blob/main/docs/INDUSTRY-PROMPT-AUDIT.md" target="_blank" rel="noopener">Industry audit <span>↗</span></a>
       </div>
-      <div class="source-filter-row"><input id="sourceSearch" type="search" placeholder="Search sources…" /><select id="sourceType"><option value="all">All source types</option></select></div>
-      <div id="sourceGrid" class="source-grid"></div>
-    </section>
-  </main>
+    </aside>
+
+    <button class="sidebar-backdrop" id="sidebarBackdrop" type="button" aria-label="Close sidebar"></button>
+
+    <div class="main-shell">
+      <header class="mobile-topbar">
+        <button class="icon-button" id="sidebarToggle" type="button" aria-label="Open sidebar">☰</button>
+        <div class="mobile-brand"><strong>Seedance Porter</strong><span>Prompt Library</span></div>
+      </header>
+
+      <main class="page">
+        <section id="digestView" class="library-view">
+          <header class="view-header">
+            <div>
+              <div class="view-kicker">Source-first prompt intelligence</div>
+              <h1>Industry Digest</h1>
+              <p>Real creator examples, source previews and independently rewritten Porter adaptations.</p>
+            </div>
+          </header>
+
+          <div class="digest-note">
+            <div><strong>Digest, not a mirror.</strong><span>Short creator excerpt, direct source link and an independent adaptation.</span></div>
+            <a href="https://github.com/YouMind-OpenLab/awesome-seedance-2-prompts" target="_blank" rel="noopener">Corpus attribution ↗</a>
+          </div>
+
+          <div class="results-meta">
+            <div><strong id="digestCount">0</strong> examples <span id="digestQuery"></span></div>
+            <div class="legend"><span class="dot source"></span> source <span class="dot original"></span> excerpt <span class="dot bos"></span> adaptation</div>
+          </div>
+
+          <div id="digestGrid" class="prompt-grid digest-grid" aria-live="polite"></div>
+          <div id="digestEmpty" class="empty" hidden><strong>No results.</strong><span>Change filters in the sidebar.</span></div>
+        </section>
+
+        <section id="promptView" class="library-view" hidden>
+          <header class="view-header">
+            <div>
+              <div class="view-kicker">192 reusable prompt cards</div>
+              <h1>Porter Originals</h1>
+              <p>48 production archetypes × 4 visual directions for design, product, web, branding, UGC and VFX.</p>
+            </div>
+          </header>
+          <div class="results-meta"><div><strong id="resultCount">0</strong> originals <span id="activeQuery"></span></div><div class="legend"><span class="dot original"></span> Porter original <span class="dot source"></span> research <span class="dot bos"></span> BOS</div></div>
+          <div id="promptGrid" class="prompt-grid" aria-live="polite"></div>
+          <div id="emptyState" class="empty" hidden><strong>No results.</strong><span>Change filters in the sidebar.</span></div>
+        </section>
+
+        <section id="sourceView" class="source-view" hidden>
+          <header class="view-header source-intro">
+            <div>
+              <div class="view-kicker">Global industry audit · 2026-08-07</div>
+              <h1>Sources</h1>
+              <p>Official model guidance, public prompt corpora, commercial AI workflows, design cases and research ranked by authority and design relevance.</p>
+            </div>
+            <a class="button" href="https://github.com/IMONsergey/Seedance-Porter/blob/main/docs/INDUSTRY-PROMPT-AUDIT.md" target="_blank" rel="noopener">Full audit ↗</a>
+          </header>
+          <div id="sourceGrid" class="source-grid"></div>
+        </section>
+      </main>
+    </div>
+  </div>
 
   <aside class="drawer" id="drawer" aria-hidden="true">
     <div class="drawer-backdrop" data-close></div>
@@ -107,5 +148,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script type="module" src="/library.js"></script>
+  <script type="module" src="/sidebar.js"></script>
 </body>
 </html>
