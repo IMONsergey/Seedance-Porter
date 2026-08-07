@@ -10,7 +10,7 @@ import { prepareContinuation } from "../projects/continuation.js";
 import { loadLedger } from "../projects/ledger.js";
 import { planVariants } from "../projects/variants.js";
 
-const server = new McpServer({ name: "seedance-porter", version: "0.4.0" });
+const server = new McpServer({ name: "seedance-porter", version: "0.5.0" });
 const text = (value: unknown) => ({ content: [{ type: "text" as const, text: JSON.stringify(value, null, 2) }] });
 
 server.tool("seedance_models", "List current dated Seedance model/provider capabilities", {}, async () => text(listModels()));

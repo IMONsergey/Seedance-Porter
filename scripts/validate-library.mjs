@@ -1,6 +1,7 @@
 import { INDUSTRY_DIGEST, DIGEST_META } from '../studio/digest-data.js';
 import { PROMPTS, SOURCES, LIBRARY_STATS } from '../studio/library-data.js';
 import { CASE_INTELLIGENCE, COLLECTION_GROUPS } from '../studio/case-intelligence-runtime.js';
+import { CURATED_CASE_ANALYSIS } from '../studio/case-analysis-curated.js';
 
 const fail = (message) => {
   console.error(`library validation failed: ${message}`);
@@ -27,21 +28,27 @@ for (const item of INDUSTRY_DIGEST) {
   if (!/(Shot\s+1:|Clip\s+[A-Z0-9]+:|Camera:|Core motion:|Continuous action:)/i.test(item.porterPrompt)) fail(`${item.id} adaptation lacks an explicit shot/clip/camera/motion production instruction`);
   if (!item.variables || !Object.keys(item.variables).length) fail(`${item.id} has no remix variables`);
   if (item.designScore < 1 || item.designScore > 5) fail(`${item.id} designScore must be 1-5`);
+  if (!CURATED_CASE_ANALYSIS[item.id]) fail(`${item.id} missing bespoke curated-case evidence overlay`);
 }
 
 if (CASE_INTELLIGENCE.length !== INDUSTRY_DIGEST.length) fail('every digest entry must have Case Intelligence');
 const validCollections = new Set(COLLECTION_GROUPS.flatMap(group => group.items));
+if (validCollections.size !== 30) fail(`expected 30 requested Collections, got ${validCollections.size}`);
+
 for (const item of CASE_INTELLIGENCE) {
   const intel = item.intelligence;
   if (!intel) { fail(`${item.id} missing intelligence object`); continue; }
   if (!intel.collections?.length) fail(`${item.id} has no collections`);
   for (const collection of intel.collections || []) if (!validCollections.has(collection)) fail(`${item.id} uses unknown collection ${collection}`);
   if (!['A','B','C'].includes(intel.evidenceLevel)) fail(`${item.id} has invalid evidenceLevel`);
+  if (!['prompt-reviewed','deep-reviewed'].includes(intel.reviewStatus)) fail(`${item.id} has invalid reviewStatus`);
+  if (!intel.evidence?.prompt || !intel.evidence?.fullVideo) fail(`${item.id} missing evidence boundary`);
+  if (intel.reviewStatus === 'prompt-reviewed' && intel.evidence.fullVideo === 'reviewed') fail(`${item.id} claims full-video evidence while only prompt-reviewed`);
   if (!intel.signatureMove || words(intel.signatureMove) < 4) fail(`${item.id} signatureMove is too weak`);
   if (!intel.transferablePattern || words(intel.transferablePattern) < 10) fail(`${item.id} transferablePattern is too weak`);
-  if (!intel.promptMechanics?.length) fail(`${item.id} has no prompt mechanics`);
+  if (!intel.causalMechanics?.length || intel.causalMechanics.length < 2) fail(`${item.id} needs at least two causal mechanics`);
   if (!intel.referenceStrategy?.length) fail(`${item.id} has no reference strategy`);
-  if (!intel.cameraLanguage?.length) fail(`${item.id} has no camera analysis`);
+  if (!(intel.motionLanguage?.length || intel.cameraLanguage?.length)) fail(`${item.id} has no camera/motion analysis`);
   if (!intel.failureRisks?.length) fail(`${item.id} has no failure risks`);
   if (!intel.bosNotes?.length) fail(`${item.id} has no BOS notes`);
   if (!intel.postProductionExpectation) fail(`${item.id} has no post-production expectation`);
@@ -62,6 +69,8 @@ if (!process.exitCode) {
     ok: true,
     digestEntries: INDUSTRY_DIGEST.length,
     caseIntelligenceEntries: CASE_INTELLIGENCE.length,
+    promptReviewed: CASE_INTELLIGENCE.filter(item => item.intelligence.reviewStatus === 'prompt-reviewed').length,
+    deepReviewed: CASE_INTELLIGENCE.filter(item => item.intelligence.reviewStatus === 'deep-reviewed').length,
     digestCreators: new Set(INDUSTRY_DIGEST.map(item => item.author)).size,
     digestCategories: new Set(INDUSTRY_DIGEST.map(item => item.category)).size,
     collections: validCollections.size,
