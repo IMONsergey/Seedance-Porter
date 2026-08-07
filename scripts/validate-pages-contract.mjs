@@ -25,8 +25,7 @@ for (const asset of htmlAssets) {
   if (!copied.has(asset)) fail(`Pages workflow does not copy root HTML asset: ${asset}`);
   const absolute = asset.endsWith('.css') ? `href="/${asset}"` : `src="/${asset}"`;
   const relative = asset.endsWith('.css') ? `href="./${asset}"` : `src="./${asset}"`;
-  const sedToken = `s|${absolute}|${relative}|g`;
-  if (!workflow.includes(sedToken)) fail(`Pages workflow does not rewrite Project Pages path for ${asset}`);
+  if (!workflow.includes(`s|${absolute}|${relative}|g`)) fail(`Pages workflow does not rewrite Project Pages path for ${asset}`);
 }
 
 const visited = new Set();
@@ -37,7 +36,6 @@ async function visit(modulePath, parent = null) {
   if (visited.has(clean)) return;
   visited.add(clean);
   if (!copied.has(clean)) fail(`Pages workflow does not copy browser module${parent ? ` imported by ${parent}` : ''}: ${clean}`);
-
   let source;
   try { source = await readFile(join('studio', clean), 'utf8'); }
   catch { fail(`Browser module is referenced but missing from studio/: ${clean}`); return; }
@@ -45,8 +43,7 @@ async function visit(modulePath, parent = null) {
   const staticImports = [...source.matchAll(/(?:import\s+(?:[^'";]*?\s+from\s+)?|export\s+[^'";]*?\s+from\s+)["'](\.\.?\/[^"']+)["']/g)].map(match => match[1]);
   const sideEffectImports = [...source.matchAll(/import\s*["'](\.\.?\/[^"']+)["']/g)].map(match => match[1]);
   const dynamicImports = [...source.matchAll(/import\(\s*["'](\.\.?\/[^"']+)["']\s*\)/g)].map(match => match[1]);
-  const imports = [...new Set([...staticImports, ...sideEffectImports, ...dynamicImports])];
-  for (const specifier of imports) {
+  for (const specifier of [...new Set([...staticImports, ...sideEffectImports, ...dynamicImports])]) {
     const resolved = posix.normalize(posix.join(posix.dirname(clean), specifier));
     if (resolved.endsWith('.js')) await visit(resolved, clean);
   }
@@ -58,6 +55,7 @@ for (const required of [
   'workspace-router.js',
   'case-corpus-ui.js','case-corpus.css',
   'deep-review-bootstrap.js','deep-review-ui.js','deep-review.css',
+  'deep-review-player-bootstrap.js','deep-review-player.js','deep-review-player.css',
   'promotion-bootstrap.js','promotion-engine.js','promotion-ui.js','promotion.css',
   'coverage-planner-bootstrap.js','coverage-planner-engine.js','coverage-planner-ui.js','coverage-planner.css',
   'source-health-bootstrap.js','source-health-ui.js','source-health.css',
@@ -74,6 +72,7 @@ if (!workflow.includes(snapshotLoop)) fail('Pages workflow must publish candidat
 
 for (const validator of [
   'validate-deep-review-workspace.mjs',
+  'validate-review-player.mjs',
   'validate-promotion-workspace.mjs',
   'validate-coverage-planner.mjs',
   'validate-source-adapters.mjs'
@@ -94,11 +93,13 @@ console.log(JSON.stringify({
   roots,
   researchSnapshotBuild: 'best-effort',
   deepReviewWorkspace: 'validated-and-published',
+  reviewPlayer: 'validated-and-published',
   promotionWorkspace: 'validated-and-published',
   coveragePlanner: 'validated-and-published',
   sourceAdapterHealth: 'validated-and-published',
   workspaceRouter: 'production-critical',
   machineReadableSnapshots: ['case-candidates.json','case-review-queue.json','coverage-plan.json','source-health.json'],
+  autoAttestationFromPlayback: false,
   autoCuratedDigestMutation: false,
   curatedSiteFailureMode: 'deploy remains available if external research generation fails'
 }, null, 2));
