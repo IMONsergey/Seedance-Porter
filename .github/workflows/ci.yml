@@ -31,15 +31,18 @@ jobs:
         run: node scripts/validate-experience.mjs
       - name: Validate isolated bilingual Research Corpus UI
         run: node scripts/validate-corpus-ui.mjs
+      - name: Validate evidence-aware Case Intelligence
+        run: node scripts/validate-case-intelligence-evidence.mjs
       - name: Validate rendered 100-card browser contract
         run: npm run validate:render
-      - name: Syntax-check research corpus scripts
+      - name: Syntax-check research and evidence scripts
         run: |
           node --check scripts/import-case-candidates.mjs
           node --check scripts/augment-case-candidates.mjs
           node --check scripts/refresh-case-corpus.mjs
           node --check scripts/build-case-review-queue.mjs
           node --check scripts/validate-corpus-ui.mjs
+          node --check scripts/validate-case-intelligence-evidence.mjs
       - name: Syntax-check browser modules
         run: |
           node --check studio/i18n.js
@@ -48,6 +51,11 @@ jobs:
           node --check studio/experience-stability.js
           node --check studio/case-locales.js
           node --check studio/case-translation-runtime.js
+          node --check studio/case-analysis-curated.js
+          node --check studio/case-intelligence.js
+          node --check studio/case-intelligence-runtime.js
+          node --check studio/case-intelligence-locales.js
+          node --check studio/case-ui.js
           node --check studio/source-universe.js
           node --check studio/multi-source-cases.js
           node --check studio/multi-source-cases-batch2.js
