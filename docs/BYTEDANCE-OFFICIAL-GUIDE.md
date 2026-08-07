@@ -11,6 +11,7 @@ Source of truth for Porter prompt generation and project validation.
 2. BytePlus ModelArk — **Dreamina Seedance 2.0 series tutorial**
    - https://docs.byteplus.com/en/docs/ModelArk/2291680
    - Official capability/workflow tutorial, including reference asset and identity/real-person usage rules.
+   - The tutorial also advertises an official **Seedance 2.0 prompt optimization skill** for Code Agent / AI Agent workflows. BytePlus instructs users to install its `SKILL.md` attachment and invoke it with `/sd2-pe + <prompt>`.
 3. BytePlus ModelArk — **Create a video generation task**
    - https://docs.byteplus.com/en/docs/ModelArk/1520757
    - Official API contract: request modes, media roles/limits, prompt length guidance, output resolution rules and provider-specific parameter support.
@@ -19,6 +20,12 @@ Source of truth for Porter prompt generation and project validation.
    - Official model capability statement and first-party prompt examples.
 
 No dedicated official BytePlus/ByteDance Seed prompt guide for Seedance 2.5 was verified during the 2026-08-07 research pass. Porter therefore applies the latest verified Seedance 2.0 first-party methodology as the conservative baseline to preview 2.5 routes until ByteDance publishes model-specific guidance.
+
+## Official prompt optimization skill
+
+The ModelArk tutorial explicitly provides a Seedance 2.0 prompt optimization skill as a downloadable `SKILL.md` attachment and documents the `/sd2-pe + prompt` invocation pattern.
+
+Porter does **not** vendor an unofficial/community mirror of that attachment under the label "official". The current web-accessible ModelArk page exposes the existence and usage instructions but not a directly materializable attachment URL through Porter's research environment. Until the original attachment is retrieved from the official ModelArk surface, BOS is derived only from first-party documentation that can be directly verified and cited. Once the original official `SKILL.md` is available, it should be stored as a source snapshot and diffed against BOS before any additional rule is promoted to official compliance.
 
 ## The official mental model
 
