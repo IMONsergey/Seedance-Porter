@@ -35,6 +35,8 @@ jobs:
         run: node scripts/validate-case-intelligence-evidence.mjs
       - name: Validate Deep Review Workspace
         run: node scripts/validate-deep-review-workspace.mjs
+      - name: Validate Deep Review Player evidence boundary
+        run: node scripts/validate-review-player.mjs
       - name: Validate Promotion Workspace
         run: node scripts/validate-promotion-workspace.mjs
       - name: Validate strategic Coverage Planner and review queue
@@ -61,6 +63,7 @@ jobs:
           node --check scripts/validate-corpus-ui.mjs
           node --check scripts/validate-case-intelligence-evidence.mjs
           node --check scripts/validate-deep-review-workspace.mjs
+          node --check scripts/validate-review-player.mjs
           node --check scripts/validate-promotion-workspace.mjs
           node --check scripts/validate-coverage-planner.mjs
           node --check scripts/validate-source-adapters.mjs
@@ -98,6 +101,8 @@ jobs:
           node --check studio/case-corpus-ui.js
           node --check studio/deep-review-bootstrap.js
           node --check studio/deep-review-ui.js
+          node --check studio/deep-review-player-bootstrap.js
+          node --check studio/deep-review-player.js
           node --check studio/promotion-bootstrap.js
           node --check studio/promotion-engine.js
           node --check studio/promotion-ui.js
