@@ -6,6 +6,7 @@ import './unified-curated-ui.js';
 import './multi-source-polish.js';
 import './coverage-audit.js';
 import './case-corpus-ui.js';
+import './deep-review-ui.js';
 
 const sidebarState = document.querySelector('#sidebarState');
 const sidebarToggle = document.querySelector('#sidebarToggle');
