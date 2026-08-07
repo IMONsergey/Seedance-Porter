@@ -91,7 +91,7 @@ const transferablePatterns = {
   'digest-fashion-mall': 'Use for launch edits where multiple environments/outfits will ultimately be assembled in post.',
   'digest-water-skincare': 'Use when one simple metaphor can carry the full visual identity of a short film.',
   'digest-soda-monster': 'Use when a mascot and product need a causal relationship rather than decorative coexistence.',
-  'digest-night-market': 'Use for authentic-feeling product placement, hospitality and social proof.',
+  'digest-night-market': 'Use for hospitality, food and lifestyle campaigns where believable handheld imperfection, ambient sound, restrained reaction and product-in-context create authentic social proof.',
   'digest-idol-homevideo': 'Use for agency case films, launches, founders, events and process documentaries.',
   'digest-werewolf': 'Use for fashion, gaming, beauty and reveal concepts that depend on controlled metamorphosis.',
   'digest-seattle-chase': 'Use for ad/case-film narratives where a trivial objective is treated with disproportionate cinematic urgency.',
