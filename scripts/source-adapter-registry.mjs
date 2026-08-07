@@ -92,7 +92,7 @@ export const SOURCE_ADAPTERS = Object.freeze([
     enabled: true,
     upstream: 'https://github.com/HuyLe82US/awesome-seedance-prompts',
     provenance: 'curator-first collection with proof clips and original X source links',
-    rights: 'MIT repository; third-party prompt/source attribution remains authoritative; snapshot stores short excerpt only',
+    rights: 'MIT repository; third-party source attribution remains authoritative; snapshot stores short excerpt only',
     expectedEvidence: ['prompt', 'X creator/post', 'GitHub proof clip']
   },
   {
