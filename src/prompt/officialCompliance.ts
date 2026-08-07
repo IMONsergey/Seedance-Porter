@@ -1,5 +1,5 @@
 import type { ProjectSpec, ShotSpec } from "../core/schema.js";
-import type { GenerationMode, ProviderName, ReferenceAsset } from "../core/types.js";
+import type { FaceSource, GenerationMode, ProviderName, ReferenceAsset } from "../core/types.js";
 import { PorterError } from "../core/errors.js";
 
 export const BYTEDANCE_OFFICIAL_STANDARD = {
@@ -81,27 +81,35 @@ function motionAdvisory(action: string, path: string): ComplianceFinding[] {
   return findings;
 }
 
-function validateBytePlusIdentitySources(refs: ReferenceAsset[], findings: ComplianceFinding[], normalization: string[]) {
-  for (const ref of refs.filter((item) => item.role === "identity")) {
-    if (!ref.identitySource) {
+function resolvedFaceSource(ref: ReferenceAsset): FaceSource | undefined {
+  return ref.faceSource ?? ref.identitySource;
+}
+
+function validateBytePlusFaceSources(refs: ReferenceAsset[], findings: ComplianceFinding[], normalization: string[]) {
+  for (const ref of refs.filter((item) => item.kind === "image" || item.kind === "video")) {
+    const faceSource = resolvedFaceSource(ref);
+    if (!faceSource) {
       findings.push({
         rule: "BOS-13",
         severity: "error",
-        path: `references.${ref.id}.identitySource`,
-        message: "BytePlus identity references must declare provenance: synthetic, non-human, ModelArk trusted output, preset digital character, or authorized real-person asset.",
+        path: `references.${ref.id}.faceSource`,
+        message: "Every BytePlus visual reference must declare faceSource so Porter does not silently treat an arbitrary real-face upload as supported. Use none, synthetic, non-human, modelark-trusted-output, preset-digital-character, or authorized-real-person.",
       });
       continue;
     }
-    if ((ref.identitySource === "preset-digital-character" || ref.identitySource === "authorized-real-person") && !ref.url.startsWith("asset://")) {
+    if ((faceSource === "preset-digital-character" || faceSource === "authorized-real-person") && !ref.url.startsWith("asset://")) {
       findings.push({
         rule: "BOS-13",
         severity: "error",
         path: `references.${ref.id}.url`,
-        message: `${ref.identitySource} references on ModelArk must use the registered asset flow (asset://...).`,
+        message: `${faceSource} references on ModelArk must use the registered asset flow (asset://...).`,
       });
     }
-    if (ref.identitySource === "modelark-trusted-output") {
-      normalization.push(`Identity ${ref.id} is declared as a ModelArk trusted output; account ownership and trust-window eligibility remain provider-side checks.`);
+    if (faceSource === "modelark-trusted-output") {
+      normalization.push(`Visual reference ${ref.id} is declared as a ModelArk trusted output; account ownership and trust-window eligibility remain provider-side checks.`);
+    }
+    if (ref.identitySource && !ref.faceSource) {
+      normalization.push(`Reference ${ref.id} uses deprecated identitySource compatibility; migrate it to faceSource.`);
     }
   }
 }
@@ -226,7 +234,7 @@ export function validateOfficialCompliance(
   if (needsTwinGuard(spec)) normalization.push("Multi-character identity references trigger an anti-duplicate/twin-character constraint.");
 
   if (provider === "byteplus") {
-    validateBytePlusIdentitySources(refs, findings, normalization);
+    validateBytePlusFaceSources(refs, findings, normalization);
     validateBytePlusModeContract(mode, refs, findings);
   }
 
