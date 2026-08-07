@@ -17,6 +17,7 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+# GitHub Pages is enabled with Source = GitHub Actions.
 jobs:
   build:
     runs-on: ubuntu-latest
