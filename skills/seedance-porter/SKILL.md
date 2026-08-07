@@ -9,7 +9,7 @@ Use this skill when the user wants to plan, prompt, generate, evaluate or contin
 3. Porter empirical best practices may be stricter, but must stay visibly separate from official requirements.
 4. Community heuristics never silently override first-party guidance.
 
-Current official baseline: `BOS-2026-07-31`, verified 2026-08-07. A dedicated official 2.5 prompt guide has not yet been verified, so preview 2.5 inherits this baseline conservatively until ByteDance publishes model-specific guidance.
+Current official baseline: `BOS-2026-07-17`, verified 2026-08-07. A dedicated official 2.5 prompt guide has not been verified, so preview 2.5 inherits this baseline conservatively until ByteDance publishes model-specific guidance.
 
 ## Operating order
 
@@ -17,16 +17,18 @@ Current official baseline: `BOS-2026-07-31`, verified 2026-08-07. A dedicated of
 2. Build a Porter project object.
 3. Choose model + provider from the dated registry. Prefer production routes unless the user explicitly wants newest-model experimentation.
 4. Define the core subject precisely and assign one explicit job to every reference.
-5. For identity/product/logo references, add a concise stable-feature/source note explaining what must remain unchanged.
-6. Supply environment, lighting/color tone, visual style, image-quality intent and constraints.
-7. For narrative/performance, perform a Director's Read before writing camera/light/sound. Do not fabricate drama for packshots.
-8. Build complex requests as ordered `Shot 1`, `Shot 2`, etc. Do not send hard per-shot second ranges to Seedance 2.0.
-9. Keep one camera movement type per shot and make actions physically observable: body/object part, motion amount/speed/force when useful, natural transition/inertia and visible emotional behavior.
-10. Compile with `seedance_compile` before spending credits and inspect `officialCompliance`.
-11. Fix every official-compliance error. Warnings require conscious review but do not automatically block.
-12. Only call `seedance_generate` when generation is explicitly requested, credentials are configured and the official hard gate passes.
-13. Evaluate serious takes with `seedance_score_take` / persistent review.
-14. For a continuation, use the accepted footage's actual final state and extracted final frame rather than the original expected endpoint.
+5. For identity/product/logo references, add exactly 2–3 stable `anchors` plus a concise note explaining the source/job and what must remain unchanged.
+6. On BytePlus, every identity reference declares `identitySource`; do not treat an arbitrary direct real-face upload as a supported ModelArk identity reference.
+7. Supply environment, lighting/color tone, visual style, image-quality intent and constraints.
+8. For narrative/performance, perform a Director's Read before writing camera/light/sound. Do not fabricate drama for packshots.
+9. Build complex requests as ordered `Shot 1`, `Shot 2`, etc. Do not send hard per-shot second ranges to Seedance 2.0.
+10. Keep one camera movement type per shot and make actions physically observable: body/object part, motion amount/speed/force when useful, natural transition/inertia and visible emotional behavior.
+11. Keep strict first/last interpolation separate from multimodal reference generation: endpoint-only FLF uses exactly two endpoint images; multimodal reference packages use reference mode.
+12. Compile with `seedance_validate_official` / `seedance_compile` before spending credits and inspect `officialCompliance`.
+13. Fix every official-compliance error. Warnings require conscious review but do not automatically block.
+14. Only call `seedance_generate` when generation is explicitly requested, credentials are configured and the official hard gate passes.
+15. Evaluate serious takes with `seedance_score_take` / persistent review.
+16. For a continuation, use the accepted footage's actual final state and extracted final frame rather than the original expected endpoint.
 
 ## Default shot policy
 
@@ -38,9 +40,13 @@ Use `identity`, `product`, `logo`, `environment`, `motion`, `camera`, `style`, `
 
 Do not fill every available reference slot by default. The official guide recommends a focused working set around 4–5 functional assets: usually 1–2 character images, one scene image, one camera/action video and one audio reference. Exceeding five references should trigger review for priority/style conflicts.
 
-## Model policy
+For BytePlus real-person use, registered authorized real-person assets and preset digital characters use the ModelArk asset flow. Trusted ModelArk outputs can be valid identity sources subject to the provider's account/trust-window rules.
+
+## Model/provider policy
 
 `seedance-2.0` is the stable target. `seedance-2.5-preview` remains isolated behind a third-party route until a stable official route is verified. Do not describe MuAPI as official ByteDance. Prompt methodology for preview 2.5 inherits the latest verified first-party Seedance guide unless/until a 2.5-specific official guide is published.
+
+Do not assume seed control from the model name alone. The verified direct BytePlus Seedance 2.0 route does not support seed control; use seed variants only on provider routes that explicitly advertise it.
 
 ## Output policy
 
