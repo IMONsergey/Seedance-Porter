@@ -15,6 +15,9 @@ const genericRoleFor = (ref: ReferenceAsset) => {
 };
 
 function bytePlusPrompt(prompt: string): string {
+  // Canonical Porter prompts already use [Image 1] / [Video 1] / [Audio 1],
+  // matching the human-readable convention in the official BytePlus guide.
+  // Keep compatibility with older manifests that used @Image1 tokens.
   return prompt
     .replace(/@Image(\d+)/g, "[Image $1]")
     .replace(/@Video(\d+)/g, "[Video $1]")
