@@ -1,4 +1,4 @@
-import { CASE_INTELLIGENCE, COLLECTION_GROUPS, COLLECTION_COUNTS } from './case-intelligence.js';
+import { CASE_INTELLIGENCE, COLLECTION_GROUPS, COLLECTION_COUNTS } from './case-intelligence-runtime.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -6,7 +6,6 @@ const esc = (value = '') => String(value).replace(/[&<>"']/g, char => ({'&':'&am
 
 const intelligenceById = new Map(CASE_INTELLIGENCE.map(item => [item.id, item]));
 let activeCollection = 'all';
-let currentCase = null;
 
 function injectCollections() {
   const panel = $('[data-sidebar-view="digest"]');
@@ -95,11 +94,22 @@ function buildPatternDraft(item, form) {
     referenceNotes ? `Reference notes supplied by user: ${referenceNotes}` : ''
   ].filter(Boolean).join('\n');
 
+  const isInterface = /ui|website|app|dashboard|saas/i.test(projectType);
+  const reference = referenceNotes ? {
+    id: 'primary-reference',
+    kind: 'image',
+    url: '<replace-with-reference-url>',
+    role: isInterface ? 'environment' : 'product',
+    faceSource: 'none',
+    note: referenceNotes,
+    ...(isInterface ? {} : { anchors: [`exact overall geometry of ${subject}`, `stable material and color system of ${subject}`] })
+  } : null;
+
   return {
     project: `pattern-${item.id.replace(/^digest-/, '')}`,
     label: `${brand} / ${item.title}`,
     model: 'seedance-2.0',
-    mode: referenceNotes ? 'reference-to-video' : 'text-to-video',
+    mode: reference ? 'image-to-video' : 'text-to-video',
     duration: Math.min(15, Math.max(6, intelligence.shotBreakdown.length * 3)),
     resolution: '720p',
     aspectRatio: item.aspect || '16:9',
@@ -116,7 +126,7 @@ function buildPatternDraft(item, form) {
       constraints: ['preserve reference identity and geometry','one dominant camera movement per shot','no unrequested text or logos','composite exact typography/UI/branding in post when required'],
       beats
     },
-    references: referenceNotes ? [{ id: 'primary-reference', kind: 'image', url: '<replace-with-reference-url>', role: /ui|website|app|dashboard/i.test(projectType) ? 'environment' : 'product', faceSource: 'none', note: referenceNotes }] : [],
+    references: reference ? [reference] : [],
     shots: [],
     library: {
       kind: 'case-intelligence-pattern-adaptation',
@@ -132,7 +142,7 @@ function buildPatternDraft(item, form) {
   };
 }
 
-function adapterHtml(item) {
+function adapterHtml() {
   return `<section class="pattern-adapter" data-pattern-adapter>
     <div class="intelligence-section-head">
       <div><span>Pattern adapter</span><h3>Use this pattern for my project</h3></div>
@@ -189,7 +199,7 @@ function intelligenceHtml(item) {
       <article><span>BOS notes</span>${intel.bosNotes.map(x => `<p>• ${esc(x)}</p>`).join('')}</article>
     </section>
 
-    ${adapterHtml(item)}
+    ${adapterHtml()}
   </div>`;
 }
 
@@ -204,14 +214,14 @@ function enhanceDrawer() {
   if (!drawerContent || $('[data-case-intelligence]', drawerContent)) return;
   const item = identifyOpenCase();
   if (!item) return;
-  currentCase = item;
   const body = $('[data-digest-body]', drawerContent);
   if (!body) return;
-  const attribution = $('.attribution-grid', body)?.parentElement;
+  const attributionGrid = $('.attribution-grid', body);
+  const marker = attributionGrid?.previousElementSibling || attributionGrid;
   const insertion = document.createElement('div');
   insertion.innerHTML = intelligenceHtml(item);
   const block = insertion.firstElementChild;
-  if (attribution) body.insertBefore(block, attribution);
+  if (marker && marker.parentElement === body) body.insertBefore(block, marker);
   else body.appendChild(block);
 
   const form = $('.pattern-form', block);
