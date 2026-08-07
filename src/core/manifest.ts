@@ -1,6 +1,6 @@
 import { dirname, extname, join, basename } from "node:path";
 import { readJson, writeJson } from "./io.js";
-import type { GenerationRequest, GenerationTask } from "./types.js";
+import type { GenerationRequest, GenerationTask, OfficialComplianceSummary } from "./types.js";
 import type { ProjectSpec } from "./schema.js";
 
 export type TakeDecision = "accept" | "retake" | "reject";
@@ -25,6 +25,7 @@ export interface PorterManifest {
   projectSpec?: ProjectSpec;
   request: GenerationRequest;
   task: GenerationTask;
+  officialCompliance?: OfficialComplianceSummary;
   output?: { path?: string; videoUrl?: string; lastFrameUrl?: string };
   evaluation?: PorterReview;
 }
