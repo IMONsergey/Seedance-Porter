@@ -18,7 +18,7 @@ Current official baseline: `BOS-2026-07-17`, verified 2026-08-07. A dedicated of
 3. Choose model + provider from the dated registry. Prefer production routes unless the user explicitly wants newest-model experimentation.
 4. Define the core subject precisely and assign one explicit job to every reference.
 5. For identity/product/logo references, add exactly 2–3 stable `anchors` plus a concise note explaining the source/job and what must remain unchanged.
-6. On BytePlus, every identity reference declares `identitySource`; do not treat an arbitrary direct real-face upload as a supported ModelArk identity reference.
+6. On BytePlus, every image/video reference declares `faceSource`: `none`, `synthetic`, `non-human`, `modelark-trusted-output`, `preset-digital-character`, or `authorized-real-person`. Provider-managed identity assets follow the corresponding ModelArk asset/trust flow.
 7. Supply environment, lighting/color tone, visual style, image-quality intent and constraints.
 8. For narrative/performance, perform a Director's Read before writing camera/light/sound. Do not fabricate drama for packshots.
 9. Build complex requests as ordered `Shot 1`, `Shot 2`, etc. Do not send hard per-shot second ranges to Seedance 2.0.
@@ -40,7 +40,7 @@ Use `identity`, `product`, `logo`, `environment`, `motion`, `camera`, `style`, `
 
 Do not fill every available reference slot by default. The official guide recommends a focused working set around 4–5 functional assets: usually 1–2 character images, one scene image, one camera/action video and one audio reference. Exceeding five references should trigger review for priority/style conflicts.
 
-For BytePlus real-person use, registered authorized real-person assets and preset digital characters use the ModelArk asset flow. Trusted ModelArk outputs can be valid identity sources subject to the provider's account/trust-window rules.
+For BytePlus visual inputs, `faceSource` is mandatory in Porter. ModelArk-managed authorized/preset assets use the asset flow; trusted ModelArk outputs remain subject to provider-side account/trust-window checks.
 
 ## Model/provider policy
 
