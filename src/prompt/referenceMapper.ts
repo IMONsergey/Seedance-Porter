@@ -43,7 +43,9 @@ export function mapReferences(spec: ProjectSpec, model: ModelDefinition): Refere
 
 export function referenceContract(refs: ReferenceAsset[]): string[] {
   return refs.map((ref) => {
-    const base = `${ref.token}: ${roleInstruction[ref.role]}`;
-    return `${base}${ref.note ? `. Stable/reference details: ${ref.note}` : ""}.`;
+    const parts = [`${ref.token}: ${roleInstruction[ref.role]}`];
+    if (ref.anchors?.length) parts.push(`Stable anchors: ${ref.anchors.join("; ")}`);
+    if (ref.note) parts.push(`Reference job/details: ${ref.note}`);
+    return `${parts.join(". ")}.`;
   });
 }
