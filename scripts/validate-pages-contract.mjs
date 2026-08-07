@@ -14,9 +14,7 @@ const copied = new Set(
     .map(item => item.source)
 );
 
-function fail(message) {
-  failures.push(message);
-}
+function fail(message) { failures.push(message); }
 
 const htmlAssets = [
   ...[...html.matchAll(/href=["']\/([^"']+\.(?:css))["']/g)].map(match => match[1]),
@@ -38,28 +36,19 @@ async function visit(modulePath, parent = null) {
   const clean = normalize(modulePath).replace(/\\/g, '/').replace(/^\.\//, '');
   if (visited.has(clean)) return;
   visited.add(clean);
-
-  if (!copied.has(clean)) {
-    fail(`Pages workflow does not copy browser module${parent ? ` imported by ${parent}` : ''}: ${clean}`);
-  }
+  if (!copied.has(clean)) fail(`Pages workflow does not copy browser module${parent ? ` imported by ${parent}` : ''}: ${clean}`);
 
   let source;
-  try {
-    source = await readFile(join('studio', clean), 'utf8');
-  } catch {
-    fail(`Browser module is referenced but missing from studio/: ${clean}`);
-    return;
-  }
+  try { source = await readFile(join('studio', clean), 'utf8'); }
+  catch { fail(`Browser module is referenced but missing from studio/: ${clean}`); return; }
 
   const staticImports = [...source.matchAll(/(?:import\s+(?:[^'";]*?\s+from\s+)?|export\s+[^'";]*?\s+from\s+)["'](\.\.?\/[^"']+)["']/g)].map(match => match[1]);
   const sideEffectImports = [...source.matchAll(/import\s*["'](\.\.?\/[^"']+)["']/g)].map(match => match[1]);
   const dynamicImports = [...source.matchAll(/import\(\s*["'](\.\.?\/[^"']+)["']\s*\)/g)].map(match => match[1]);
   const imports = [...new Set([...staticImports, ...sideEffectImports, ...dynamicImports])];
-
   for (const specifier of imports) {
     const resolved = posix.normalize(posix.join(posix.dirname(clean), specifier));
-    if (!resolved.endsWith('.js')) continue;
-    await visit(resolved, clean);
+    if (resolved.endsWith('.js')) await visit(resolved, clean);
   }
 }
 
@@ -67,48 +56,29 @@ for (const root of roots) await visit(root);
 
 for (const required of [
   'workspace-router.js',
-  'case-corpus-ui.js',
-  'case-corpus.css',
-  'deep-review-bootstrap.js',
-  'deep-review-ui.js',
-  'deep-review.css',
-  'promotion-bootstrap.js',
-  'promotion-engine.js',
-  'promotion-ui.js',
-  'promotion.css',
-  'coverage-planner-bootstrap.js',
-  'coverage-planner-engine.js',
-  'coverage-planner-ui.js',
-  'coverage-planner.css',
-  'unified-curated-ui.js',
-  'multi-source-index.js'
+  'case-corpus-ui.js','case-corpus.css',
+  'deep-review-bootstrap.js','deep-review-ui.js','deep-review.css',
+  'promotion-bootstrap.js','promotion-engine.js','promotion-ui.js','promotion.css',
+  'coverage-planner-bootstrap.js','coverage-planner-engine.js','coverage-planner-ui.js','coverage-planner.css',
+  'source-health-bootstrap.js','source-health-ui.js','source-health.css',
+  'unified-curated-ui.js','multi-source-index.js'
 ]) {
   if (!copied.has(required)) fail(`Critical production asset missing from Pages artifact: ${required}`);
 }
 
-if (!workflow.includes('npm run case:refresh')) {
-  fail('Pages build must attempt to generate Research Corpus, strategic review queue and Coverage Planner snapshots');
-}
-if (!workflow.includes('continue-on-error: true')) {
-  fail('External research generation must not take the curated live site down when an upstream source is unavailable');
-}
-if (!workflow.includes('case-candidates.json _site/case-candidates.json')) {
-  fail('Pages workflow must publish case-candidates.json when generated');
-}
-if (!workflow.includes('case-review-queue.json _site/case-review-queue.json')) {
-  fail('Pages workflow must publish case-review-queue.json when generated');
-}
-if (!workflow.includes('coverage-plan.json _site/coverage-plan.json')) {
-  fail('Pages workflow must publish machine-readable coverage-plan.json when generated');
-}
-if (!workflow.includes('node scripts/validate-deep-review-workspace.mjs')) {
-  fail('Pages build must validate the Deep Review evidence gate before deployment');
-}
-if (!workflow.includes('node scripts/validate-promotion-workspace.mjs')) {
-  fail('Pages build must validate Promotion Workspace curation gates before deployment');
-}
-if (!workflow.includes('node scripts/validate-coverage-planner.mjs')) {
-  fail('Pages build must validate Coverage Planner strategy before deployment');
+if (!workflow.includes('npm run case:refresh')) fail('Pages build must attempt the full research operations refresh');
+if (!workflow.includes('continue-on-error: true')) fail('External research generation must not take the curated live site down when an upstream source is unavailable');
+
+const snapshotLoop = 'for snapshot in case-candidates.json case-review-queue.json coverage-plan.json source-health.json; do';
+if (!workflow.includes(snapshotLoop)) fail('Pages workflow must publish candidates, strategic queue, coverage plan and source-health snapshots when generated');
+
+for (const validator of [
+  'validate-deep-review-workspace.mjs',
+  'validate-promotion-workspace.mjs',
+  'validate-coverage-planner.mjs',
+  'validate-source-adapters.mjs'
+]) {
+  if (!workflow.includes(`node scripts/${validator}`)) fail(`Pages build must run ${validator} before deployment`);
 }
 
 if (failures.length) {
@@ -126,8 +96,9 @@ console.log(JSON.stringify({
   deepReviewWorkspace: 'validated-and-published',
   promotionWorkspace: 'validated-and-published',
   coveragePlanner: 'validated-and-published',
+  sourceAdapterHealth: 'validated-and-published',
   workspaceRouter: 'production-critical',
-  machineReadablePlan: 'coverage-plan.json',
+  machineReadableSnapshots: ['case-candidates.json','case-review-queue.json','coverage-plan.json','source-health.json'],
   autoCuratedDigestMutation: false,
   curatedSiteFailureMode: 'deploy remains available if external research generation fails'
 }, null, 2));
