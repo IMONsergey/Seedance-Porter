@@ -39,7 +39,12 @@
       "kind": "image",
       "url": "https://example.com/product-master.png",
       "role": "product",
-      "note": "Exact bottle geometry: tall cylindrical dark-green aluminum body, short neck, matte finish and unchanged cap proportions."
+      "anchors": [
+        "tall cylindrical dark-green aluminum body",
+        "short neck with unchanged cap proportions",
+        "matte low-reflection surface finish"
+      ],
+      "note": "Use this image as the exact product geometry, material and construction source; do not redesign the bottle."
     }
   ],
   "shots": []
