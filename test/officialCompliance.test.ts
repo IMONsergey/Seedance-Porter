@@ -52,7 +52,7 @@ describe("ByteDance official Seedance compliance", () => {
     expect(() => assertOfficialCompliance(compiled.officialCompliance)).toThrow(/BOS-04/);
   });
 
-  it("requires stable anchors and identity provenance for BytePlus identity references", () => {
+  it("requires stable anchors and visual face provenance for BytePlus references", () => {
     const missing = compileProject({
       ...compliant,
       references: [{ kind: "image" as const, url: "https://example.com/person.jpg", role: "identity" as const }],
@@ -66,12 +66,26 @@ describe("ByteDance official Seedance compliance", () => {
         kind: "image" as const,
         url: "https://example.com/synthetic-person.jpg",
         role: "identity" as const,
-        identitySource: "synthetic" as const,
+        faceSource: "synthetic" as const,
         anchors: ["dark bob haircut", "charcoal sweater"],
         note: "Synthetic identity and wardrobe source",
       }],
     });
     expect(synthetic.officialCompliance.findings.some((f) => f.rule === "BOS-13" && f.severity === "error")).toBe(false);
+  });
+
+  it("requires faceSource even for non-character visual references on BytePlus", () => {
+    const missing = compileProject({
+      ...compliant,
+      references: [{ kind: "image" as const, url: "https://example.com/empty-room.jpg", role: "environment" as const }],
+    });
+    expect(missing.officialCompliance.findings.some((f) => f.rule === "BOS-13" && f.severity === "error")).toBe(true);
+
+    const declared = compileProject({
+      ...compliant,
+      references: [{ kind: "image" as const, url: "https://example.com/empty-room.jpg", role: "environment" as const, faceSource: "none" as const }],
+    });
+    expect(declared.officialCompliance.findings.some((f) => f.rule === "BOS-13" && f.severity === "error")).toBe(false);
   });
 
   it("warns when reference count exceeds the official recommended working set", () => {
@@ -80,6 +94,7 @@ describe("ByteDance official Seedance compliance", () => {
       kind: "image" as const,
       url: `https://example.com/scene-${index + 1}.jpg`,
       role: "environment" as const,
+      faceSource: "none" as const,
       note: `Scene atmosphere reference ${index + 1}`,
     }));
     const compiled = compileProject({ ...compliant, references });
@@ -107,8 +122,8 @@ describe("ByteDance official Seedance compliance", () => {
       ...compliant,
       mode: "first-last-frame" as const,
       references: [
-        { kind: "image" as const, url: "https://example.com/a.jpg", role: "first_frame" as const },
-        { kind: "image" as const, url: "https://example.com/b.jpg", role: "last_frame" as const },
+        { kind: "image" as const, url: "https://example.com/a.jpg", role: "first_frame" as const, faceSource: "none" as const },
+        { kind: "image" as const, url: "https://example.com/b.jpg", role: "last_frame" as const, faceSource: "none" as const },
         { kind: "audio" as const, url: "https://example.com/a.mp3", role: "audio" as const },
       ],
     });
