@@ -11,6 +11,7 @@ const backlogLimit = clamp(Number(args.backlog || 30), 10, 100);
 const output = resolve(args.output || 'studio/case-candidates.json');
 const queueOutput = resolve(args['queue-output'] || 'studio/case-review-queue.json');
 const planOutput = resolve(args['plan-output'] || 'studio/coverage-plan.json');
+const healthOutput = resolve(args['health-output'] || 'studio/source-health.json');
 const strict = args.strict === true || String(args.strict || '').toLowerCase() === 'true';
 
 await runNode([
@@ -22,6 +23,13 @@ await runNode([
 
 await runNode([
   'scripts/augment-case-candidates.mjs',
+  '--input', output,
+  '--output', output,
+  '--limit', String(limit)
+]);
+
+await runNode([
+  'scripts/expand-case-candidates.mjs',
   '--input', output,
   '--output', output,
   '--limit', String(limit)
@@ -42,14 +50,22 @@ await runNode([
   '--backlog', String(backlogLimit)
 ]);
 
+await runNode([
+  'scripts/build-source-health.mjs',
+  '--corpus', output,
+  '--plan', planOutput,
+  '--output', healthOutput
+]);
+
 const corpus = JSON.parse(await readFile(output, 'utf8'));
 const queue = JSON.parse(await readFile(queueOutput, 'utf8'));
 const plan = JSON.parse(await readFile(planOutput, 'utf8'));
+const health = JSON.parse(await readFile(healthOutput, 'utf8'));
 const candidates = Number(corpus.stats?.candidates || 0);
 const queueSize = Number(queue.stats?.queue || 0);
 const targetReached = candidates >= min;
-const respondingPools = (corpus.sourceStats || []).filter(item => item.ok).length;
-const totalPools = (corpus.sourceStats || []).length;
+const respondingPools = Number(health.summary?.responding || 0);
+const totalPools = Number(health.summary?.enabled || 0);
 
 if (queueSize < 10) {
   console.error('[case-corpus] Deep-review queue was not populated.');
@@ -60,6 +76,7 @@ const summary = {
   output,
   queueOutput,
   planOutput,
+  healthOutput,
   candidates,
   minimumTarget: min,
   limit,
@@ -71,13 +88,15 @@ const summary = {
     backlog: Number(plan.backlog?.length || 0),
     topPriorityCollection: plan.summary?.topPriorityCollection || null
   },
+  sourceHealth: health.summary,
   respondingSourcePools: `${respondingPools}/${totalPools}`,
   sourceStats: corpus.sourceStats,
-  augmentation: corpus.augmentation || null
+  augmentation: corpus.augmentation || null,
+  expansion: corpus.expansion || null
 };
 
 if (!targetReached) {
-  console.error(`[case-corpus] PARTIAL SNAPSHOT: ${candidates}/${min} candidates after dedupe/risk filtering and augmentation.`);
+  console.error(`[case-corpus] PARTIAL SNAPSHOT: ${candidates}/${min} candidates after dedupe/risk filtering and source expansion.`);
   console.error('[case-corpus] Keep expanding discovery adapters; do not present this as a completed 500+ corpus.');
 }
 

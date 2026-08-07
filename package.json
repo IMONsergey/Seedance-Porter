@@ -16,8 +16,10 @@
     "validate:render": "node scripts/validate-render-contract.mjs",
     "case:import": "node scripts/import-case-candidates.mjs --limit 750 --min 500 --output studio/case-candidates.json",
     "case:augment": "node scripts/augment-case-candidates.mjs --input studio/case-candidates.json --output studio/case-candidates.json --limit 750",
+    "case:expand": "node scripts/expand-case-candidates.mjs --input studio/case-candidates.json --output studio/case-candidates.json --limit 750",
     "case:queue": "node scripts/build-case-review-queue.mjs --input studio/case-candidates.json --limit 90 --output studio/case-review-queue.json",
     "coverage:plan": "node scripts/build-coverage-plan.mjs --corpus studio/case-candidates.json --queue studio/case-review-queue.json --output studio/coverage-plan.json --backlog 30",
+    "source:health": "node scripts/build-source-health.mjs --corpus studio/case-candidates.json --plan studio/coverage-plan.json --output studio/source-health.json",
     "case:refresh": "node scripts/refresh-case-corpus.mjs --limit 750 --min 500 --queue 90 --backlog 30",
     "curation:build": "node scripts/build-curation-draft.mjs"
   },

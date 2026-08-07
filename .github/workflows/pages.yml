@@ -9,6 +9,11 @@ on:
       - 'schemas/curation-draft.schema.json'
       - 'scripts/import-case-candidates.mjs'
       - 'scripts/augment-case-candidates.mjs'
+      - 'scripts/expand-case-candidates.mjs'
+      - 'scripts/source-adapter-registry.mjs'
+      - 'scripts/research-risk-policy.mjs'
+      - 'scripts/source-health-engine.mjs'
+      - 'scripts/build-source-health.mjs'
       - 'scripts/refresh-case-corpus.mjs'
       - 'scripts/build-case-review-queue.mjs'
       - 'scripts/build-coverage-plan.mjs'
@@ -17,6 +22,7 @@ on:
       - 'scripts/validate-deep-review-workspace.mjs'
       - 'scripts/validate-promotion-workspace.mjs'
       - 'scripts/validate-coverage-planner.mjs'
+      - 'scripts/validate-source-adapters.mjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -35,7 +41,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -60,7 +66,10 @@ jobs:
       - name: Validate strategic Coverage Planner contract
         run: node scripts/validate-coverage-planner.mjs
 
-      - name: Build Research Corpus + strategic snapshots for Pages
+      - name: Validate source adapter registry, risk policy and health engine
+        run: node scripts/validate-source-adapters.mjs
+
+      - name: Build Research Corpus + strategic operations snapshots for Pages
         continue-on-error: true
         run: npm run case:refresh
 
@@ -77,6 +86,7 @@ jobs:
           cp studio/deep-review.css _site/deep-review.css
           cp studio/promotion.css _site/promotion.css
           cp studio/coverage-planner.css _site/coverage-planner.css
+          cp studio/source-health.css _site/source-health.css
           cp studio/experience.css _site/experience.css
           cp studio/multi-source.css _site/multi-source.css
           cp studio/coverage-audit.css _site/coverage-audit.css
@@ -93,6 +103,8 @@ jobs:
           cp studio/coverage-planner-bootstrap.js _site/coverage-planner-bootstrap.js
           cp studio/coverage-planner-engine.js _site/coverage-planner-engine.js
           cp studio/coverage-planner-ui.js _site/coverage-planner-ui.js
+          cp studio/source-health-bootstrap.js _site/source-health-bootstrap.js
+          cp studio/source-health-ui.js _site/source-health-ui.js
           cp studio/case-intelligence.js _site/case-intelligence.js
           cp studio/case-intelligence-runtime.js _site/case-intelligence-runtime.js
           cp studio/case-analysis-curated.js _site/case-analysis-curated.js
@@ -117,18 +129,14 @@ jobs:
           cp studio/library-data.js _site/library-data.js
           cp studio/digest-data.js _site/digest-data.js
 
-          # Research/planning snapshots are generated in the Pages workspace. If an
+          # Research operations snapshots are generated in the Pages workspace. If an
           # upstream source is temporarily unavailable, deploy the curated app anyway
           # and let research workspaces expose explicit pending/partial states.
-          if [[ -f studio/case-candidates.json ]]; then
-            cp studio/case-candidates.json _site/case-candidates.json
-          fi
-          if [[ -f studio/case-review-queue.json ]]; then
-            cp studio/case-review-queue.json _site/case-review-queue.json
-          fi
-          if [[ -f studio/coverage-plan.json ]]; then
-            cp studio/coverage-plan.json _site/coverage-plan.json
-          fi
+          for snapshot in case-candidates.json case-review-queue.json coverage-plan.json source-health.json; do
+            if [[ -f "studio/$snapshot" ]]; then
+              cp "studio/$snapshot" "_site/$snapshot"
+            fi
+          done
 
           touch _site/.nojekyll
 

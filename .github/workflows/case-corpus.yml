@@ -14,6 +14,11 @@ on:
     paths:
       - 'scripts/import-case-candidates.mjs'
       - 'scripts/augment-case-candidates.mjs'
+      - 'scripts/expand-case-candidates.mjs'
+      - 'scripts/source-adapter-registry.mjs'
+      - 'scripts/research-risk-policy.mjs'
+      - 'scripts/source-health-engine.mjs'
+      - 'scripts/build-source-health.mjs'
       - 'scripts/refresh-case-corpus.mjs'
       - 'scripts/build-case-review-queue.mjs'
       - 'scripts/build-coverage-plan.mjs'
@@ -33,7 +38,7 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,53 +53,59 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Refresh corpus, strategic review queue and coverage plan
+      - name: Refresh corpus, strategic queue, coverage and source health
         env:
           CORPUS_LIMIT: ${{ inputs.limit || '750' }}
-        run: node scripts/refresh-case-corpus.mjs --limit "$CORPUS_LIMIT" --min 500 --queue 90 --backlog 30 --output studio/case-candidates.json --queue-output studio/case-review-queue.json --plan-output studio/coverage-plan.json
+        run: node scripts/refresh-case-corpus.mjs --limit "$CORPUS_LIMIT" --min 500 --queue 90 --backlog 30 --output studio/case-candidates.json --queue-output studio/case-review-queue.json --plan-output studio/coverage-plan.json --health-output studio/source-health.json
 
-      - name: Report corpus and coverage progress
+      - name: Report research operations health
         run: |
           node --input-type=module - <<'NODE'
           import { appendFile, readFile } from 'node:fs/promises';
           const corpus = JSON.parse(await readFile('studio/case-candidates.json', 'utf8'));
           const queue = JSON.parse(await readFile('studio/case-review-queue.json', 'utf8'));
           const plan = JSON.parse(await readFile('studio/coverage-plan.json', 'utf8'));
+          const health = JSON.parse(await readFile('studio/source-health.json', 'utf8'));
           const candidates = corpus.stats?.candidates || 0;
-          const queueSize = queue.stats?.queue || 0;
           const target = corpus.target?.min || 500;
-          const sourceStats = corpus.sourceStats || [];
-          const top = (plan.collections || []).slice(0, 8).map(item => `${item.title}: ${item.priority} (${item.nextAction})`).join('; ');
+          const topCollections = (plan.collections || []).slice(0, 8).map(item => `${item.title}: ${item.priority} (${item.nextAction})`).join('; ');
+          const topAdapters = (health.adapters || []).slice(0, 6).map(item => `${item.label}: ${item.health.score}/${item.health.status}, selected ${item.yield.selected}, 70+ ${item.yield.highQuality}`).join('; ');
+          const repair = (health.adapters || []).filter(item => ['failed','zero-yield'].includes(item.health.status)).map(item => item.label).join(', ');
           const summary = [
-            '## Research Corpus + Coverage Planner refresh',
+            '## Research Corpus + Coverage + Source Health',
             '',
             `- Candidates: **${candidates} / ${target} minimum target**`,
             `- Target reached: **${candidates >= target ? 'yes' : 'no — partial snapshot published'}**`,
-            `- Strategic deep-review queue: **${queueSize}**`,
+            `- Automated source adapters: **${health.summary?.enabled || 0}**`,
+            `- Responding adapters: **${health.summary?.responding || 0}/${health.summary?.enabled || 0}**`,
+            `- Contributing adapters: **${health.summary?.contributing || 0}**`,
+            `- High-value adapters: **${health.summary?.highValue || 0}**`,
+            `- Adapters needing repair/yield inspection: **${health.summary?.needsRepair || 0}**`,
+            `- Strategic deep-review queue: **${queue.stats?.queue || 0}**`,
             `- Curated cases considered by queue: **${queue.stats?.curatedCasesConsidered || 0}**`,
             `- Queue source pools represented: **${queue.stats?.sourcePoolsRepresented || 0}**`,
             `- Critical Collections: **${plan.summary?.criticalCollections || 0}**`,
             `- High-priority Collections: **${plan.summary?.highPriorityCollections || 0}**`,
             `- Planner backlog: **${plan.backlog?.length || 0}**`,
-            `- Source pools responding: **${sourceStats.filter(item => item.ok).length}/${sourceStats.length}**`,
-            `- Automated pools: **${sourceStats.map(item => item.source).join(', ')}**`,
             '',
-            `Top priorities: ${top || 'none'}`,
+            `Top Collection priorities: ${topCollections || 'none'}`,
+            `Top adapter health: ${topAdapters || 'none'}`,
+            repair ? `Needs attention: ${repair}` : 'Needs attention: none',
             '',
-            candidates < target ? '> Partial data is intentionally published so the research/planning UI remains useful while discovery coverage is expanded.' : '> Minimum corpus target reached.'
+            candidates < target ? '> Partial data is intentionally published. Do not describe this as a completed 500+ corpus.' : '> Minimum corpus target reached.'
           ].join('\n');
           if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, `${summary}\n`);
-          console.log(JSON.stringify({ target, targetReached: candidates >= target, corpus: corpus.stats, queue: queue.stats, planner: plan.summary, sourceStats }, null, 2));
+          console.log(JSON.stringify({ corpus:corpus.stats, queue:queue.stats, planner:plan.summary, sourceHealth:health.summary }, null, 2));
           NODE
 
       - name: Commit refreshed snapshots
         run: |
-          if git diff --quiet -- studio/case-candidates.json studio/case-review-queue.json studio/coverage-plan.json; then
-            echo 'Research/coverage snapshots unchanged.'
+          if git diff --quiet -- studio/case-candidates.json studio/case-review-queue.json studio/coverage-plan.json studio/source-health.json; then
+            echo 'Research operations snapshots unchanged.'
             exit 0
           fi
           git config user.name 'seedance-porter-bot'
           git config user.email 'seedance-porter-bot@users.noreply.github.com'
-          git add studio/case-candidates.json studio/case-review-queue.json studio/coverage-plan.json
-          git commit -m 'data: refresh Case Intelligence research and coverage snapshots'
+          git add studio/case-candidates.json studio/case-review-queue.json studio/coverage-plan.json studio/source-health.json
+          git commit -m 'data: refresh research, coverage and source health snapshots'
           git push origin HEAD:main

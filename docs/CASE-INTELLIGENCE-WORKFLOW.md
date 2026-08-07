@@ -14,17 +14,7 @@ Candidate means only: **worth investigating**. It is not a recommendation and do
 
 ### Prompt-reviewed
 
-A reviewer has inspected the published prompt/source material and documented:
-
-- shot / beat functions;
-- requested framing and camera behavior;
-- subject/object action;
-- reference jobs and continuity locks;
-- causal hypothesis for why the instructions should create the intended look;
-- signature move;
-- rhythm and motion language;
-- transferable pattern;
-- likely failure modes.
+A reviewer has inspected the published prompt/source material and documented shot/beat functions, requested framing/camera behavior, subject/object action, reference jobs, causal hypotheses, signature move, rhythm/motion language, transferable pattern and likely failure modes.
 
 This state must remain visibly labeled as prompt-derived evidence when the complete generated video has not been watched.
 
@@ -32,30 +22,17 @@ This state must remain visibly labeled as prompt-derived evidence when the compl
 
 The complete source video has been visually inspected. Record what is actually visible rather than assuming the model followed the prompt.
 
-Required evidence:
-
-1. Actual shot boundaries or continuous-take structure.
-2. Actual framing for every beat.
-3. Actual camera behavior.
-4. Actual subject/object motion.
-5. Actual transitions.
-6. Pacing, hold time and attention mechanics.
-7. Material and physics behavior.
-8. Continuity successes and failures.
-9. Visible artifacts / compromises.
-10. Which requested instructions were followed, compressed, ignored or invented.
-11. Verified signature move.
-12. Why the observed result works — or why it does not.
+Required evidence includes actual shot boundaries, framing, camera behavior, subject/object motion, transitions, pacing, material/physics behavior, continuity successes/failures, visible artifacts, prompt-following gaps, verified signature move and observed reasons the result works or fails.
 
 Only this state may claim **“the video works because…”** as observed evidence.
 
 ### Curated
 
-A deep-reviewed case can enter the main Digest when it additionally has useful attribution, meaningful design/commercial/motion value, at least one Collection, a reusable production pattern separable from source subject matter, and a Porter adaptation.
+A deep-reviewed case can enter the main Digest when it additionally has useful attribution, meaningful design/commercial/motion value, at least one Collection, a reusable production pattern separable from source subject matter, and an independently written Porter adaptation.
 
 ## Collections
 
-The taxonomy contains the 30 requested Collections.
+The taxonomy contains 30 Collections.
 
 **Digital / Design:** Website Hero, SaaS UI, App Launch, Dashboard, Case Study Motion, Brand Reveal, Rebranding Transition, Logo Motion, Kinetic Type, Interactive / Web3D.
 
@@ -65,66 +42,150 @@ The taxonomy contains the 30 requested Collections.
 
 A case may belong to several Collections. Membership describes what is reusable about the production pattern, not merely nouns found in the prompt.
 
-## Research Corpus
+## Unified research refresh
 
-Use the unified refresh path:
+Run:
 
 ```bash
 npm run case:refresh
 ```
 
-or explicitly:
+The current pipeline performs seven operational stages:
 
-```bash
-node scripts/refresh-case-corpus.mjs --limit 750 --min 500 --queue 90
-```
+1. Base discovery from public source adapters.
+2. Attributed augmentation from additional public corpora.
+3. Expansion from vetted source sets added through the adapter registry.
+4. Final cross-source dedupe + named-IP/public-figure risk enforcement + Collection balancing.
+5. Strategic Deep Review queue generation from the full unified 100-case curated baseline.
+6. Coverage Planner snapshot generation.
+7. Source Adapter Health snapshot generation.
 
-The refresh pipeline performs four stages:
+Generated runtime snapshots:
 
-1. Discover candidates from the base public-source adapters.
-2. Augment the corpus with additional attributed prompt/case repositories.
-3. Canonicalize and deduplicate by original-source URL and prompt fingerprint, filter obvious named-IP / celebrity-dependent candidates, then rebalance across all 30 Collections.
-4. Build the deep-review queue from the final combined snapshot.
+- `studio/case-candidates.json`
+- `studio/case-review-queue.json`
+- `studio/coverage-plan.json`
+- `studio/source-health.json`
 
-The snapshot stores attribution, source links, preview references, scoring metadata and a short excerpt. It does **not** mirror whole third-party prompt collections into Porter.
+The snapshot stores attribution, source links, preview/video references where available, scoring metadata and short excerpts. It does **not** mirror whole third-party prompt collections into Porter.
 
-### Source Universe vs automated corpus pools
+## Source Universe vs automated source adapters
 
 The browser Source Universe currently maps **31 useful platforms/source families** for manual discovery, curation and source attribution. That number must not be confused with automated crawlers.
 
-The automated Research Corpus currently uses **7 real discovery pools**:
+The automated Research Corpus currently registers **9 real source pools**:
 
-- YouMind OpenLab;
-- CyberBara Seedance Library;
-- Seedance2Prompt;
-- Lanshu Awesome AI Video Kit;
-- ZeroLu Awesome Seedance;
-- Awesome AI Video-Ad Prompts (`LichAmnesia/awesome-ad-video-prompts`);
-- Awesome Seedance Prompts CN (`marsoyang1/awesome-seedance-prompts`).
+### Base
 
-New adapters should be added only when a source has a stable public structure and useful attribution. A source being easy to scrape is not enough. Porter should prefer fewer reliable pools over inflated source counts with weak provenance.
+- YouMind OpenLab
+- CyberBara Seedance Library
+- Seedance2Prompt
+- Lanshu Awesome AI Video Kit
 
-### Corpus target and partial snapshots
+### Augment
+
+- ZeroLu Awesome Seedance
+- Awesome AI Video-Ad Prompts (`LichAmnesia/awesome-ad-video-prompts`)
+- Awesome Seedance Prompts CN (`marsoyang1/awesome-seedance-prompts`)
+
+### Expand
+
+- HuyLe Awesome Seedance Prompts (`HuyLe82US/awesome-seedance-prompts`)
+- Astorie / Martini source set (`astorie-ai/awesome-seedance-2-prompt`)
+
+The Astorie adapter is intentionally metadata/excerpt-only because a standalone repository LICENSE file was not verified. HuyLe has a verified repository MIT LICENSE, but third-party creator/source attribution remains authoritative for collected community material.
+
+New adapters should be added only when a source has a stable public structure and useful provenance. A source being easy to scrape is not enough.
+
+## Source Adapter Registry
+
+Canonical adapter metadata lives in:
+
+`scripts/source-adapter-registry.mjs`
+
+Every adapter declares:
+
+- stable ID;
+- label;
+- pipeline stage;
+- source kind;
+- priority;
+- enabled state;
+- upstream URL;
+- provenance expectation;
+- rights/storage policy;
+- expected evidence types.
+
+The registry is deliberately separate from parser implementation. It gives CI, Pages, health reporting and future agents one canonical map of acquisition infrastructure without forcing a risky rewrite of already stable parser code.
+
+## Research risk policy
+
+`scripts/research-risk-policy.mjs` centralizes named fictional IP, branded-character and public-figure dependency checks for new source expansion and future adapters.
+
+Automatic review/promotion queues must exclude candidates that depend on protected named characters/franchises or recognizable public figures.
+
+The expansion stage also re-checks existing snapshot title/author/excerpt text so the policy can retroactively remove obvious risky candidates that slipped through older narrower filters.
+
+Risk policy is a routing safeguard, not a legal determination.
+
+## Source Adapter Health
+
+Run:
+
+```bash
+npm run source:health
+```
+
+Health combines runtime source stats with the final selected candidate corpus and Coverage Planner weak-Collection data.
+
+For each adapter it reports:
+
+- runtime success/failure;
+- discovered items;
+- selected contribution after global processing;
+- selection yield;
+- high-quality candidate count/rate;
+- average research score;
+- average source traceability;
+- preview coverage;
+- direct creator-source coverage;
+- direct source-video count;
+- Collections served;
+- weak Collections served;
+- health score/status;
+- acquisition recommendation.
+
+**Selection yield is not called duplicate rate.** Final contribution is also changed by risk filtering, cross-source dedupe, Collection balancing and the global corpus limit.
+
+Recommendations include:
+
+- `expand-this-source`
+- `keep-and-deepen`
+- `keep-monitoring`
+- `improve-provenance-before-scaling`
+- `inspect-duplicates-risk-and-parser-quality`
+- `inspect-upstream-structure`
+- `repair-adapter`
+
+The Sources UI renders the same data in Source Adapter Health directly below Coverage Planner.
+
+## Corpus target and partial snapshots
 
 The operating target remains **500–1000 deduplicated research candidates**. This is a research corpus target, not a promise that 500–1000 cases are curated.
 
-If the automated sources temporarily produce fewer than 500 safe unique candidates, the workflow may publish a partial snapshot so the Research Corpus UI stays useful. The snapshot and GitHub Action summary must keep the minimum target visible and must not describe a partial snapshot as a completed 500+ corpus.
+If automated sources temporarily produce fewer than 500 safe unique candidates, Pages may publish a partial snapshot so Research Corpus, Deep Review, Coverage Planner and Source Health remain useful. The target must stay visible; partial data must never be presented as a completed 500+ corpus.
 
-## Deep-review queue
+## Deep Review queue
 
-The unified refresh builds the queue automatically. It can also be rebuilt directly:
+The queue is generated from the final combined corpus and the Coverage Planner engine. Curated coverage is calculated from the full unified curated runtime, not only the original 24 Case Intelligence cases.
 
-```bash
-node scripts/build-case-review-queue.mjs --input studio/case-candidates.json --limit 90 --output studio/case-review-queue.json
-```
+Every queue item carries prompt-anatomy and visual-review checklists plus target Collection, strategic priority, source pool and source traceability.
 
-The queue gives priority to under-covered Collections before candidate score. Every queue item carries separate prompt-anatomy and visual-review checklists.
-
-The critical evidence rule does not change with scale: **do not mark a case `deep-reviewed` until the complete source video has actually been watched.** Prompt text, metadata, a thumbnail, GIF preview or source description are insufficient.
+Critical evidence rule: **do not mark a case `deep-reviewed` until the complete source video has actually been watched.** Prompt text, metadata, a thumbnail, GIF preview or source description are insufficient.
 
 ## Research Corpus browser
 
-The Research Corpus browser is intentionally separate from Industry Digest.
+Research Corpus remains separate from Industry Digest.
 
 - Industry Digest = curated production examples.
 - Research Corpus = discovery candidates that still need review.
@@ -135,6 +196,6 @@ The candidate layer has independent search, Collection, source-pool and research
 
 The Pattern Adapter keeps shot function, information hierarchy, camera/motion logic, causal structure and the signature mechanism while replacing source subject matter.
 
-It must discard source-specific character identity, product/trademark, location when incidental, distinctive wording and unsupported generated typography/logo assumptions.
+It must discard source-specific character identity, product/trademark, incidental location, distinctive wording and unsupported generated typography/logo assumptions.
 
-Reference URLs or local paths and exact-lock notes can be written into the generated Porter project. The static GitHub Pages tool does not upload assets or spend credits. Run the generated JSON through the authoritative local `porter validate` / Studio compliance gate before paid generation.
+Reference URLs or local paths and exact-lock notes can be written into the generated Porter project. The static GitHub Pages tool does not upload assets or spend credits. Run generated JSON through the authoritative local Porter validation/compliance gate before paid generation.
