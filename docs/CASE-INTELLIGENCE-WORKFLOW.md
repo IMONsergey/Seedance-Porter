@@ -65,27 +65,71 @@ The taxonomy contains the 30 requested Collections.
 
 A case may belong to several Collections. Membership describes what is reusable about the production pattern, not merely nouns found in the prompt.
 
-## Research corpus
+## Research Corpus
 
-Run:
+Use the unified refresh path:
 
 ```bash
-node scripts/import-case-candidates.mjs --limit 750 --min 500 --output studio/case-candidates.json
+npm run case:refresh
 ```
 
-The importer discovers candidates from multiple public pools, stores source metadata + a short excerpt rather than a wholesale prompt mirror, canonicalizes URLs, deduplicates by source URL and prompt fingerprint, flags obvious named-IP / celebrity-dependent cases, maps likely Collections and ranks candidates by source traceability, design/commercial usefulness, motion specificity, shot structure and reference strategy.
+or explicitly:
 
-The 500–1000 target is a **research corpus**, not a promise that 1000 entries are curated.
+```bash
+node scripts/refresh-case-corpus.mjs --limit 750 --min 500 --queue 90
+```
+
+The refresh pipeline performs four stages:
+
+1. Discover candidates from the base public-source adapters.
+2. Augment the corpus with additional attributed prompt/case repositories.
+3. Canonicalize and deduplicate by original-source URL and prompt fingerprint, filter obvious named-IP / celebrity-dependent candidates, then rebalance across all 30 Collections.
+4. Build the deep-review queue from the final combined snapshot.
+
+The snapshot stores attribution, source links, preview references, scoring metadata and a short excerpt. It does **not** mirror whole third-party prompt collections into Porter.
+
+### Source Universe vs automated corpus pools
+
+The browser Source Universe currently maps **31 useful platforms/source families** for manual discovery, curation and source attribution. That number must not be confused with automated crawlers.
+
+The automated Research Corpus currently uses **7 real discovery pools**:
+
+- YouMind OpenLab;
+- CyberBara Seedance Library;
+- Seedance2Prompt;
+- Lanshu Awesome AI Video Kit;
+- ZeroLu Awesome Seedance;
+- Awesome AI Video-Ad Prompts (`LichAmnesia/awesome-ad-video-prompts`);
+- Awesome Seedance Prompts CN (`marsoyang1/awesome-seedance-prompts`).
+
+New adapters should be added only when a source has a stable public structure and useful attribution. A source being easy to scrape is not enough. Porter should prefer fewer reliable pools over inflated source counts with weak provenance.
+
+### Corpus target and partial snapshots
+
+The operating target remains **500–1000 deduplicated research candidates**. This is a research corpus target, not a promise that 500–1000 cases are curated.
+
+If the automated sources temporarily produce fewer than 500 safe unique candidates, the workflow may publish a partial snapshot so the Research Corpus UI stays useful. The snapshot and GitHub Action summary must keep the minimum target visible and must not describe a partial snapshot as a completed 500+ corpus.
 
 ## Deep-review queue
 
-Run:
+The unified refresh builds the queue automatically. It can also be rebuilt directly:
 
 ```bash
 node scripts/build-case-review-queue.mjs --input studio/case-candidates.json --limit 90 --output studio/case-review-queue.json
 ```
 
 The queue gives priority to under-covered Collections before candidate score. Every queue item carries separate prompt-anatomy and visual-review checklists.
+
+The critical evidence rule does not change with scale: **do not mark a case `deep-reviewed` until the complete source video has actually been watched.** Prompt text, metadata, a thumbnail, GIF preview or source description are insufficient.
+
+## Research Corpus browser
+
+The Research Corpus browser is intentionally separate from Industry Digest.
+
+- Industry Digest = curated production examples.
+- Research Corpus = discovery candidates that still need review.
+
+The candidate layer has independent search, Collection, source-pool and research-score filters and paginates the large corpus instead of injecting candidates into the curated renderer. The exact 100-card curated DOM contract remains independently CI-validated.
 
 ## Use this pattern for my project
 
