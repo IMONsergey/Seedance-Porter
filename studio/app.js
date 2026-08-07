@@ -46,7 +46,11 @@ async function api(path, options = {}) {
   if (token.value) headers.Authorization = `Bearer ${token.value}`;
   const response = await fetch(path, { ...options, headers });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || data.message || `HTTP ${response.status}`);
+  if (!response.ok) {
+    const error = new Error(data.error || data.message || `HTTP ${response.status}`);
+    error.details = data.details || data;
+    throw error;
+  }
   return data;
 }
 
@@ -69,15 +73,21 @@ function show(data) {
 async function run(label, fn) {
   result.textContent = `${label}…`;
   try { show(await fn()); }
-  catch (error) { result.textContent = `${error.name}: ${error.message}`; }
+  catch (error) {
+    result.textContent = `${error.name}: ${error.message}${error.details ? `\n\n${JSON.stringify(error.details, null, 2)}` : ""}`;
+  }
 }
 
 $("example").onclick = () => { project.value = JSON.stringify(sample, null, 2); };
 $("models").onclick = () => run("Loading models", () => api("/api/models"));
+$("validate").onclick = () => run("Validating against BOS-2026-07-31", async () => {
+  const compiled = await api("/api/compile", { method: "POST", body: JSON.stringify({ project: parsedProject(), provider: provider.value }) });
+  return compiled.officialCompliance;
+});
 $("compile").onclick = () => run("Compiling + official compliance", () => api("/api/compile", { method: "POST", body: JSON.stringify({ project: parsedProject(), provider: provider.value }) }));
 $("generate").onclick = () => {
   if (!confirm("This can spend provider credits. Porter will block generation if the official ByteDance compliance gate fails. Generate now?")) return;
   run("Validating + generating", () => api("/api/generate", { method: "POST", body: JSON.stringify({ project: parsedProject(), provider: provider.value, wait: true }) }));
 };
 
-api("/api/health").then(() => { $("health").textContent = "local API online"; }).catch(() => { $("health").textContent = token.value ? "API unavailable / token rejected" : "API unavailable / token may be required"; });
+api("/api/health").then(() => { $("health").textContent = "local API online · BOS gate active"; }).catch(() => { $("health").textContent = token.value ? "API unavailable / token rejected" : "API unavailable / token may be required"; });
