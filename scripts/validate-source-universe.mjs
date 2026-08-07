@@ -1,5 +1,5 @@
 import { SOURCE_PLATFORMS } from '../studio/source-universe.js';
-import { MULTI_SOURCE_CASES } from '../studio/multi-source-cases.js';
+import { MULTI_SOURCE_CASES, MULTI_SOURCE_BATCH_STATS } from '../studio/multi-source-index.js';
 
 const fail = message => { console.error(`source universe validation failed: ${message}`); process.exitCode = 1; };
 const words = value => String(value || '').trim().split(/\s+/).filter(Boolean).length;
@@ -9,7 +9,8 @@ const allowedPlayers = new Set(['vimeo','behance','youtube','iframe']);
 
 if (SOURCE_PLATFORMS.length < 25) fail(`expected broad platform registry, got ${SOURCE_PLATFORMS.length}`);
 if (new Set(SOURCE_PLATFORMS.map(item => item.id)).size !== SOURCE_PLATFORMS.length) fail('source platform IDs must be unique');
-if (MULTI_SOURCE_CASES.length < 15) fail(`expected at least 15 non-X curated cases, got ${MULTI_SOURCE_CASES.length}`);
+if (MULTI_SOURCE_CASES.length < 30) fail(`expected at least 30 non-X curated cases, got ${MULTI_SOURCE_CASES.length}`);
+if (MULTI_SOURCE_BATCH_STATS.batch2 < 10) fail(`source expansion batch 2 unexpectedly small: ${MULTI_SOURCE_BATCH_STATS.batch2}`);
 if (new Set(MULTI_SOURCE_CASES.map(item => item.id)).size !== MULTI_SOURCE_CASES.length) fail('multi-source case IDs must be unique');
 
 for (const item of MULTI_SOURCE_CASES) {
@@ -32,12 +33,14 @@ for (const item of MULTI_SOURCE_CASES) {
 }
 
 const nonXPlatforms = new Set(MULTI_SOURCE_CASES.map(item => item.sourcePlatform));
-if (nonXPlatforms.size < 6) fail(`expected cases from >=6 platforms, got ${nonXPlatforms.size}`);
+if (nonXPlatforms.size < 10) fail(`expected cases from >=10 platforms, got ${nonXPlatforms.size}`);
 
 if (!process.exitCode) console.log(JSON.stringify({
   ok:true,
   sourcePlatforms:SOURCE_PLATFORMS.length,
   curatedNonXCases:MULTI_SOURCE_CASES.length,
+  batches:MULTI_SOURCE_BATCH_STATS,
+  totalCuratedWithPromptDigest:MULTI_SOURCE_CASES.length + 24,
   representedPlatforms:[...nonXPlatforms].sort(),
   sourceKinds:[...new Set(MULTI_SOURCE_CASES.map(item=>item.sourceKind))].sort()
 },null,2));
