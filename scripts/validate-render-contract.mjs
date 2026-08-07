@@ -73,20 +73,18 @@ console.log(JSON.stringify(summary, null, 2));
 
 if (!summary.ok) {
   console.error('render contract failed: the live digest must render exactly 100 unique cards and display count 100');
-  dom.window.close();
   process.exit(1);
 }
-
 if (!summary.platformFilter) {
   console.error('render contract failed: platform filter was not mounted');
-  dom.window.close();
   process.exit(1);
 }
-
 if (!summary.coverageAudit) {
   console.error('render contract failed: coverage audit was not mounted');
-  dom.window.close();
   process.exit(1);
 }
 
-dom.window.close();
+// Exit explicitly: the application intentionally keeps requestAnimationFrame/listener
+// work scheduled for the browser lifetime, while this smoke test only needs the
+// settled render snapshot above.
+process.exit(0);
