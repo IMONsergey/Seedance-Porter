@@ -10,26 +10,26 @@ const OUTPUT = resolve(args.output || 'studio/case-candidates.json');
 
 const COLLECTION_RULES = {
   'website-hero': ['website hero','homepage','landing page','web hero','hero loop','landing-page'],
-  'saas-ui': ['saas','user interface','product ui','software interface','dashboard ui','ui animation'],
+  'saas-ui': ['saas','user interface','product ui','software interface','dashboard ui','ui animation','glass ui','interface animation'],
   'app-launch': ['app launch','mobile app','product launch','launch film','application launch'],
   dashboard: ['dashboard','analytics','data visualization','metrics','control panel'],
   'case-study-motion': ['case study','case-study','portfolio','showreel','brand film','explainer','behind the scenes','bts'],
-  'brand-reveal': ['brand reveal','brand identity','branding','identity reveal','brand film'],
+  'brand-reveal': ['brand reveal','brand identity','branding','identity reveal','brand film','commercial branding'],
   'rebranding-transition': ['rebrand','rebranding','old to new','identity transition'],
   'logo-motion': ['logo reveal','logo animation','logo motion','wordmark','brand symbol','logomark'],
-  'kinetic-type': ['kinetic type','kinetic typography','typography animation','animated typography','type animation'],
-  'interactive-web3d': ['web3d','interactive 3d','interactive website','spatial web','3d website','portal interface'],
-  packshot: ['packshot','product shot','product hero','product commercial','product ad','product advertisement','package reveal'],
+  'kinetic-type': ['kinetic type','kinetic typography','typography animation','animated typography','type animation','motion graphics ad'],
+  'interactive-web3d': ['web3d','interactive 3d','interactive website','spatial web','3d website','portal interface','glass ui'],
+  packshot: ['packshot','product shot','product hero','product commercial','product ad','product advertisement','package reveal','ads & products'],
   beauty: ['beauty','skincare','skin care','serum','cosmetic','makeup','haircare','hair care','perfume','fragrance'],
   fmcg: ['fmcg','beverage','soda','drink ad','snack','consumer product','toothpaste','shampoo','packaged food'],
   food: ['food','cooking','restaurant','coffee','pizza','burger','fish','meal','dessert','ingredient'],
-  automotive: ['automotive','vehicle','racing','race car','motorcycle','suv','sedan','car commercial','road film'],
+  automotive: ['automotive','vehicle','racing','race car','motorcycle','suv','sedan','car commercial','road film','vehicles & travel'],
   fashion: ['fashion','garment','clothing','streetwear','couture','runway','editorial model','sneaker','apparel'],
   sports: ['sport','tennis','football','basketball','athlete','running','fitness','workout','soccer','golf'],
   luxury: ['luxury','premium','jewelry','jewellery','watch','high-end','quiet luxury','diamond'],
   electronics: ['electronics','smartphone','laptop','earbuds','headphones','device','gadget','camera product','tech product'],
   'real-estate': ['real estate','architecture','architectural','interior','property','apartment','villa','hotel'],
-  camera: ['camera','dolly','tracking shot','orbit','pan ','tilt ','crane','handheld','push-in','pull-back','zoom'],
+  camera: ['camera','dolly','tracking shot','orbit','pan ','tilt ','crane','handheld','push-in','pull-back','zoom','multiple camera angles'],
   transitions: ['transition','whip pan','wipe','dissolve','smash cut','match transition','seamless cut'],
   morphs: ['morph','morphing','metamorph','transform into','transforms into','transformation'],
   macro: ['macro','extreme close-up','extreme close up','close-up detail','close up detail'],
@@ -41,16 +41,17 @@ const COLLECTION_RULES = {
   'first-last-frame': ['first frame','last frame','first/last','start frame','end frame','endpoint','keyframe']
 };
 
-const HIGH_VALUE = ['product','commercial','advertising','brand','branding','website','saas','interface','app','logo','typography','packaging','fashion','beauty','automotive','architecture','case study','motion design','showreel','campaign','ecommerce','retail','luxury'];
+const HIGH_VALUE = ['product','commercial','advertising','brand','branding','website','saas','interface','app','logo','typography','packaging','fashion','beauty','automotive','architecture','case study','motion design','motion graphics','showreel','campaign','ecommerce','retail','luxury'];
 const MOTION_TERMS = ['camera','tracking','dolly','orbit','pan','tilt','push-in','pull-back','handheld','macro','match cut','transition','morph','freeze','loop','slow motion','overhead','close-up','wide shot'];
 const STRUCTURE_TERMS = ['shot 1','shot 2','00:','scene 1','scene 2','sequence','first shot','final shot','begin with','concludes with'];
 const REFERENCE_TERMS = ['@image','image 1','reference image','reference video','storyboard','first frame','last frame','character lock','product reference'];
-const IP_RISK = ['naruto','dragon ball','harry potter','marvel','disney','pixar','pokemon','one piece','luffy','batman','superman','star wars','mickey mouse','spongebob','elon musk','kanye west','taylor swift','kim kardashian'];
+const IP_RISK = ['naruto','dragon ball','harry potter','marvel','disney','pixar','pokemon','one piece','luffy','batman','superman','star wars','mickey mouse','spongebob','spider-man','spiderman','elon musk','kanye west','taylor swift','kim kardashian'];
 
 const raw = [];
 const sourceStats = [];
 for (const source of [
   ['youmind','YouMind OpenLab',discoverYouMind,5,'CC BY 4.0 repository; candidate corpus stores only excerpt + attribution'],
+  ['cyberbara','CyberBara Seedance Library',discoverCyberBara,4,'Source-only discovery pool; store short excerpt + creator/archive attribution, not a full mirrored prompt'],
   ['seedance2prompt','Seedance2Prompt',discoverSeedance2Prompt,4,'Source-only editorial metadata; no mirrored full prompt'],
   ['lanshu','Lanshu Awesome AI Video Kit',discoverLanshu,3,'Source-specific; candidate corpus stores excerpt + source link only']
 ]) {
@@ -127,6 +128,49 @@ async function discoverYouMind() {
     });
   }
   return items;
+}
+
+async function discoverCyberBara() {
+  const origin = 'https://cyberbara.com';
+  const items = [];
+  let emptyPages = 0;
+  for (let page = 1; page <= 24; page++) {
+    const pageUrl = `${origin}/seedance-prompt-library${page === 1 ? '' : `?page=${page}`}`;
+    let html;
+    try { html = await fetchText(pageUrl, 20000); } catch { emptyPages += 1; if (emptyPages >= 2) break; continue; }
+    const headings = [...html.matchAll(/<h3\b[^>]*>([\s\S]*?)<\/h3>/gi)];
+    let pageItems = 0;
+    for (let i = 0; i < headings.length; i++) {
+      const title = cleanTitle(strip(headings[i][1]));
+      if (!title || /FAQ|How is this different|Where do the prompts|Can I use|Why do|How long|Should I|Are these|How often|Generate without/i.test(title)) continue;
+      const block = html.slice(headings[i].index, headings[i + 1]?.index ?? Math.min(html.length, headings[i].index + 12000));
+      const text = strip(block);
+      if (text.length < 40) continue;
+      const xUrl = block.match(/https:\/\/(?:x\.com|twitter\.com)\/[^"'<>\s]+(?:\/status\/\d+)?/i)?.[0] || '';
+      const detailHrefs = [...block.matchAll(/href=["']([^"']+)["']/gi)].map(m => absolutize(origin, decodeEntities(m[1]))).filter(url => url && /cyberbara\.com\/.+seedance/i.test(url));
+      const detailUrl = detailHrefs.find(url => !/[?&](?:page|category)=/i.test(url)) || pageUrl;
+      const preview = block.match(/<img\b[^>]+src=["']([^"']+)["']/i)?.[1] || block.match(/<img\b[^>]+data-src=["']([^"']+)["']/i)?.[1] || '';
+      const author = text.match(/\bby\s+(.{2,80}?)(?=\s+(?:Try it now|Open details|Generate now|Image:|$))/i)?.[1]?.trim() || 'CyberBara attributed creator';
+      let body = text.replace(title,' ').replace(/\bby\s+.{2,80}?(?=\s+(?:Try it now|Open details|Generate now|Image:|$))/i,' ').replace(/Try it now|Open details|Generate now/gi,' ').replace(/\s+/g,' ').trim();
+      if (body.length < 30) body = title;
+      items.push({
+        externalId:`cb-${shortHash(`${pageUrl}|${title}|${author}`)}`,
+        title,
+        author,
+        sourceUrl:xUrl || detailUrl,
+        archiveUrl:detailUrl || pageUrl,
+        previewUrl:absolutize(origin, preview) || preview,
+        excerpt:excerpt(body,25),
+        textForAnalysis:`${title}\n${body.slice(0,5000)}`,
+        published:'',
+        traceability:xUrl ? 5 : detailUrl !== pageUrl ? 3 : 2
+      });
+      pageItems += 1;
+    }
+    if (pageItems === 0) emptyPages += 1; else emptyPages = 0;
+    if (emptyPages >= 2) break;
+  }
+  return dedupeSourceItems(items);
 }
 
 async function discoverSeedance2Prompt() {
@@ -242,6 +286,15 @@ function dedupe(items) {
   return [...byPrompt.values()];
 }
 
+function dedupeSourceItems(items) {
+  const map = new Map();
+  for (const item of items) {
+    const key = `${normalize(item.title)}|${canonicalUrl(item.sourceUrl || item.archiveUrl)}`;
+    if (!map.has(key)) map.set(key,item);
+  }
+  return [...map.values()];
+}
+
 function selectBalanced(items,limit) {
   const sorted=[...items].sort((a,b)=>b.score-a.score || b.sourcePriority-a.sourcePriority || a.title.localeCompare(b.title));
   const selected=[]; const used=new Set();
@@ -268,7 +321,15 @@ function corpusStats(items) {
   };
 }
 
-async function fetchText(url,timeoutMs=20000){ const controller=new AbortController(); const timeout=setTimeout(()=>controller.abort(),timeoutMs); try{ const response=await fetch(url,{signal:controller.signal,headers:{'user-agent':'Seedance-Porter-Research/0.5 (+https://github.com/IMONsergey/Seedance-Porter)','accept':'text/html,application/xml,text/plain;q=0.9,*/*;q=0.8'}}); if(!response.ok) throw new Error(`${response.status} ${response.statusText} for ${url}`); return await response.text(); } finally { clearTimeout(timeout); } }
+async function fetchText(url,timeoutMs=20000){
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),timeoutMs);
+  try{
+    const response=await fetch(url,{signal:controller.signal,headers:{'user-agent':'Seedance-Porter-Research/0.5 (+https://github.com/IMONsergey/Seedance-Porter)','accept':'text/html,application/xml,text/plain;q=0.9,*/*;q=0.8'}});
+    if(!response.ok) throw new Error(`${response.status} ${response.statusText} for ${url}`);
+    return await response.text();
+  } finally { clearTimeout(timeout); }
+}
 function excerpt(value,max=25){ return strip(value).split(/\s+/).filter(Boolean).slice(0,max).join(' '); }
 function strip(value){ return decodeEntities(String(value||'').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' ')).replace(/\s+/g,' ').trim(); }
 function normalize(value){ return strip(value).toLowerCase(); }
