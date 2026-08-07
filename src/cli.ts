@@ -16,7 +16,7 @@ import type { TakeDecision } from "./core/manifest.js";
 import { PorterError } from "./core/errors.js";
 
 const program = new Command();
-program.name("porter").description("Production control layer for ByteDance Seedance").version("0.4.0");
+program.name("porter").description("Production control layer for ByteDance Seedance").version("0.5.0");
 
 program.command("models")
   .description("List model/provider capabilities from Porter's dated registry")
