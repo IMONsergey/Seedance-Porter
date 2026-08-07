@@ -39,14 +39,21 @@ jobs:
         run: node scripts/validate-promotion-workspace.mjs
       - name: Validate strategic Coverage Planner and review queue
         run: node scripts/validate-coverage-planner.mjs
+      - name: Validate source adapter registry, risk policy and health intelligence
+        run: node scripts/validate-source-adapters.mjs
       - name: Validate GitHub Pages production artifact
         run: node scripts/validate-pages-contract.mjs
       - name: Validate rendered 100-card browser contract
         run: npm run validate:render
-      - name: Syntax-check research, evidence, promotion and planning scripts
+      - name: Syntax-check research operations scripts
         run: |
           node --check scripts/import-case-candidates.mjs
           node --check scripts/augment-case-candidates.mjs
+          node --check scripts/expand-case-candidates.mjs
+          node --check scripts/source-adapter-registry.mjs
+          node --check scripts/research-risk-policy.mjs
+          node --check scripts/source-health-engine.mjs
+          node --check scripts/build-source-health.mjs
           node --check scripts/refresh-case-corpus.mjs
           node --check scripts/build-case-review-queue.mjs
           node --check scripts/build-coverage-plan.mjs
@@ -56,6 +63,7 @@ jobs:
           node --check scripts/validate-deep-review-workspace.mjs
           node --check scripts/validate-promotion-workspace.mjs
           node --check scripts/validate-coverage-planner.mjs
+          node --check scripts/validate-source-adapters.mjs
           node --check scripts/validate-pages-contract.mjs
       - name: Syntax-check browser modules
         run: |
@@ -85,6 +93,8 @@ jobs:
           node --check studio/coverage-planner-bootstrap.js
           node --check studio/coverage-planner-engine.js
           node --check studio/coverage-planner-ui.js
+          node --check studio/source-health-bootstrap.js
+          node --check studio/source-health-ui.js
           node --check studio/case-corpus-ui.js
           node --check studio/deep-review-bootstrap.js
           node --check studio/deep-review-ui.js
