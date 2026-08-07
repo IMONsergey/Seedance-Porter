@@ -34,13 +34,17 @@ jobs:
           cp studio/library.css _site/library.css
           cp studio/digest.css _site/digest.css
           cp studio/case-intelligence.css _site/case-intelligence.css
+          cp studio/case-corpus.css _site/case-corpus.css
           cp studio/library.js _site/library.js
           cp studio/sidebar.js _site/sidebar.js
           cp studio/case-intelligence-ui.js _site/case-intelligence-ui.js
           cp studio/case-intelligence-data.js _site/case-intelligence-data.js
+          cp studio/case-corpus-ui.js _site/case-corpus-ui.js
           cp studio/pattern-builder.js _site/pattern-builder.js
           cp studio/library-data.js _site/library-data.js
           cp studio/digest-data.js _site/digest-data.js
+          if [ -f studio/case-candidates.json ]; then cp studio/case-candidates.json _site/case-candidates.json; fi
+          if [ -f studio/case-review-queue.json ]; then cp studio/case-review-queue.json _site/case-review-queue.json; fi
           touch _site/.nojekyll
 
           # Project Pages is hosted under /Seedance-Porter/, so root-relative
