@@ -10,7 +10,7 @@ This repository exists for one purpose: get reliably better production output fr
 4. **No fake local inference.** There are no public Seedance 2.x weights in this repository. Do not add installers claiming otherwise without independently verified official weights.
 5. **Compile before spending credits.** `porter validate` and `porter compile` are free. `porter generate` hard-blocks if `officialCompliance.passed` is false.
 6. **Every reference gets one explicit role and job.** Identity/product/logo/environment/motion/camera/style/audio/endpoint must not be left implicit. Identity/product/logo references require exactly 2–3 stable `anchors` plus a concise source/job note.
-7. **Real-person identity provenance is explicit on BytePlus.** Identity references must declare `identitySource`. Registered authorized real-person and preset digital-character inputs use ModelArk's asset flow; do not treat an arbitrary uploaded real-face image as a supported direct reference.
+7. **Every BytePlus visual reference declares `faceSource`.** Allowed declarations are `none`, `synthetic`, `non-human`, `modelark-trusted-output`, `preset-digital-character`, and `authorized-real-person`. Provider-managed identity assets must follow the corresponding ModelArk asset/trust flow.
 8. **Do not max out references by default.** The official guide recommends a focused working set of roughly 4–5 functional assets. More is a warning even when the API supports it.
 9. **Use `Shot N`, not hard timestamps, for the model prompt.** start/end seconds are internal planning metadata only. BytePlus explicitly warns that precise per-shot duration constraints are unstable for Seedance 2.0.
 10. **One camera movement type per shot.** Split compound push/pan/orbit/zoom instructions instead of stacking them in a single shot.
@@ -27,7 +27,7 @@ For a new idea:
 
 1. Convert it into a Porter project spec.
 2. Decide the minimum viable mode: T2V, I2V, R2V or first/last-frame.
-3. Define the core subject and bind every reference asset to one function; add stable anchors and identity provenance where required.
+3. Define the core subject and bind every reference asset to one function; add stable anchors and BytePlus `faceSource` where required.
 4. Supply scene/environment, lighting/color tone, visual style, image quality and constraints.
 5. Build complex sequences as ordered `Shot 1`, `Shot 2`, etc.; give each shot one camera movement type and physical action description.
 6. Use a Director's Read only when narrative/performance benefits from it; do not invent drama for packshots or utility motion.
@@ -44,4 +44,4 @@ When a new Seedance version appears, do not fork the architecture. Add a registr
 
 ## Upstream research policy
 
-First-party ByteDance/BytePlus documentation outranks community heuristics. Community upstreams such as ComfyUI's ByteDance API nodes, `paperfoot/seedance-cli`, `fal-ai/seedance-2.0-api`, `Emily2040/seedance-2.0`, and current 2.5 wrappers may inform implementation or empirical best practices, but must not silently override a source-dated official rule. Do not wholesale copy files without checking licenses and attribution.
+First-party ByteDance/BytePlus documentation outranks community heuristics. Community upstreams may inform implementation or empirical best practices, but must not silently override a source-dated official rule. Do not wholesale copy files without checking licenses and attribution.
