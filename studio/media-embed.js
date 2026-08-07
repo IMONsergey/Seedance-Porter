@@ -8,11 +8,14 @@ function aspectFor(item) {
   return item?.aspect === '9:16' ? '9 / 16' : item?.aspect === '1:1' ? '1 / 1' : item?.aspect === '4:3' ? '4 / 3' : '16 / 9';
 }
 
+function isDirectVideoUrl(value) {
+  const text = String(value || '').trim();
+  return /(?:\.mp4|\.webm|\.m4v|\.mov)(?:$|[?#])/i.test(text) || /video\.twimg\.com\//i.test(text);
+}
+
 function directVideoDescriptor(item) {
-  const explicit = String(item?.sourceVideoUrl || '').trim();
-  if (explicit) return { type: 'direct-video', title: t('media.sourceVideo'), src: explicit, aspect: aspectFor(item) };
-  const candidates = [item?.sourceUrl, item?.previewUrl].filter(Boolean).map(String);
-  const direct = candidates.find(value => /(?:\.mp4|\.webm|\.m4v|\.mov)(?:$|[?#])/i.test(value) || /video\.twimg\.com\//i.test(value));
+  const candidates = [item?.sourceVideoUrl, item?.sourceUrl, item?.previewUrl].filter(Boolean).map(String);
+  const direct = candidates.find(isDirectVideoUrl);
   return direct ? { type: 'direct-video', title: t('media.sourceVideo'), src: direct, aspect: aspectFor(item) } : null;
 }
 
@@ -29,34 +32,43 @@ function cloudflareDescriptor(item, autoplay = false) {
   } catch { return null; }
 }
 
+function firstEmbeddablePage(item) {
+  return [item?.sourceVideoUrl, item?.sourceUrl, item?.archiveUrl].filter(Boolean).map(String);
+}
+
 function youtubeDescriptor(item) {
-  const raw = String(item?.sourceUrl || item?.archiveUrl || '').trim();
-  try {
-    const url = new URL(raw);
-    let id = '';
-    if (/youtu\.be$/i.test(url.hostname)) id = url.pathname.split('/').filter(Boolean)[0] || '';
-    if (/youtube\.com$/i.test(url.hostname) || /youtube-nocookie\.com$/i.test(url.hostname)) id = url.searchParams.get('v') || url.pathname.match(/\/(?:shorts|embed)\/([^/?]+)/i)?.[1] || '';
-    if (!id) return null;
-    return { type: 'youtube', title: t('media.sourceVideo'), src: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?rel=0`, aspect: aspectFor(item) };
-  } catch { return null; }
+  for (const raw of firstEmbeddablePage(item)) {
+    try {
+      const url = new URL(raw);
+      let id = '';
+      if (/youtu\.be$/i.test(url.hostname)) id = url.pathname.split('/').filter(Boolean)[0] || '';
+      if (/(?:^|\.)youtube\.com$/i.test(url.hostname) || /(?:^|\.)youtube-nocookie\.com$/i.test(url.hostname)) id = url.searchParams.get('v') || url.pathname.match(/\/(?:shorts|embed)\/([^/?]+)/i)?.[1] || '';
+      if (id) return { type: 'youtube', title: t('media.sourceVideo'), src: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?rel=0`, aspect: aspectFor(item) };
+    } catch {}
+  }
+  return null;
 }
 
 function vimeoDescriptor(item) {
-  const raw = String(item?.sourceUrl || item?.archiveUrl || '').trim();
-  try {
-    const url = new URL(raw);
-    if (!/(?:^|\.)vimeo\.com$/i.test(url.hostname)) return null;
-    const id = url.pathname.match(/\/(?:video\/)?(\d+)/)?.[1] || '';
-    if (!id) return null;
-    return { type: 'vimeo', title: t('media.sourceVideo'), src: `https://player.vimeo.com/video/${id}?dnt=1`, aspect: aspectFor(item) };
-  } catch { return null; }
+  for (const raw of firstEmbeddablePage(item)) {
+    try {
+      const url = new URL(raw);
+      if (!/(?:^|\.)vimeo\.com$/i.test(url.hostname)) continue;
+      const id = url.pathname.match(/\/(?:video\/)?(\d+)/)?.[1] || '';
+      if (id) return { type: 'vimeo', title: t('media.sourceVideo'), src: `https://player.vimeo.com/video/${id}?dnt=1`, aspect: aspectFor(item) };
+    } catch {}
+  }
+  return null;
 }
 
 function xDescriptor(item) {
-  const match = String(item.sourceUrl || '').match(/(?:x|twitter)\.com\/[^/]+\/status\/(\d+)/i);
-  if (!match) return null;
-  const params = new URLSearchParams({ id: match[1], theme: 'light', dnt: 'true', hideThread: 'true', frame: 'false', lang: getLanguage() === 'ru' ? 'ru' : 'en' });
-  return { type: 'x-post', title: t('media.embeddedPost'), src: `https://platform.twitter.com/embed/Tweet.html?${params.toString()}`, aspect: null };
+  for (const raw of firstEmbeddablePage(item)) {
+    const match = raw.match(/(?:x|twitter)\.com\/[^/]+\/status\/(\d+)/i);
+    if (!match) continue;
+    const params = new URLSearchParams({ id: match[1], theme: 'light', dnt: 'true', hideThread: 'true', frame: 'false', lang: getLanguage() === 'ru' ? 'ru' : 'en' });
+    return { type: 'x-post', title: t('media.embeddedPost'), src: `https://platform.twitter.com/embed/Tweet.html?${params.toString()}`, aspect: null };
+  }
+  return null;
 }
 
 export function getMediaEmbed(item, options = {}) {
@@ -72,9 +84,7 @@ export function mediaEmbedHtml(item, options = {}) {
     return `<div class="source-media-fallback">${preview}<div><strong>${escapeAttr(t('media.unavailable'))}</strong>${item?.sourceUrl ? `<a href="${escapeAttr(item.sourceUrl)}" target="_blank" rel="noopener">${escapeAttr(t('media.openFallback'))} ↗</a>` : ''}</div></div>`;
   }
   const aspectStyle = descriptor.aspect ? `style="aspect-ratio:${descriptor.aspect}"` : '';
-  if (descriptor.type === 'direct-video') {
-    return `<div class="source-media-shell" data-media-type="direct-video"><video class="source-media-video" ${aspectStyle} src="${escapeAttr(descriptor.src)}" controls preload="metadata" playsinline></video></div>`;
-  }
+  if (descriptor.type === 'direct-video') return `<div class="source-media-shell" data-media-type="direct-video"><video class="source-media-video" ${aspectStyle} src="${escapeAttr(descriptor.src)}" controls preload="metadata" playsinline></video></div>`;
   const className = descriptor.type === 'x-post' ? 'source-media-frame is-x' : 'source-media-frame';
   return `<div class="source-media-shell" data-media-type="${escapeAttr(descriptor.type)}"><iframe class="${className}" ${aspectStyle} src="${escapeAttr(descriptor.src)}" title="${escapeAttr(descriptor.title)}" loading="eager" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
 }
