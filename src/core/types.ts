@@ -12,6 +12,7 @@ export type GenerationMode = (typeof MODES)[number];
 export type Resolution = "480p" | "720p" | "1080p" | "4k";
 export type AspectRatio = "adaptive" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16" | "9:21";
 export type ReferenceKind = "image" | "video" | "audio";
+export type IdentitySource = "synthetic" | "modelark-trusted-output" | "preset-digital-character" | "authorized-real-person" | "non-human";
 export type ReferenceRole =
   | "identity"
   | "product"
@@ -32,6 +33,7 @@ export interface ReferenceAsset {
   role: ReferenceRole;
   note?: string;
   anchors?: string[];
+  identitySource?: IdentitySource;
   token?: string;
 }
 
@@ -48,6 +50,7 @@ export interface ProviderRoute {
   endpoints?: Partial<Record<GenerationMode, string>>;
   resolutions: Resolution[];
   modes: GenerationMode[];
+  supportsSeed?: boolean;
   notes?: string[];
 }
 
@@ -110,7 +113,7 @@ export interface OfficialComplianceSummary {
 
 export interface CompiledProject {
   request: GenerationRequest;
-  referenceMap: Array<{ id: string; token: string; role: ReferenceRole; note?: string; anchors?: string[] }>;
+  referenceMap: Array<{ id: string; token: string; role: ReferenceRole; note?: string; anchors?: string[]; identitySource?: IdentitySource }>;
   warnings: string[];
   officialCompliance: OfficialComplianceSummary;
 }
