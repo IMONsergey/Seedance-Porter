@@ -33,6 +33,8 @@ jobs:
         run: node scripts/validate-corpus-ui.mjs
       - name: Validate evidence-aware Case Intelligence
         run: node scripts/validate-case-intelligence-evidence.mjs
+      - name: Validate GitHub Pages production artifact
+        run: node scripts/validate-pages-contract.mjs
       - name: Validate rendered 100-card browser contract
         run: npm run validate:render
       - name: Syntax-check research and evidence scripts
@@ -43,6 +45,7 @@ jobs:
           node --check scripts/build-case-review-queue.mjs
           node --check scripts/validate-corpus-ui.mjs
           node --check scripts/validate-case-intelligence-evidence.mjs
+          node --check scripts/validate-pages-contract.mjs
       - name: Syntax-check browser modules
         run: |
           node --check studio/i18n.js
