@@ -2,6 +2,7 @@ import './experience.js';
 import './experience-stability.js';
 import './case-translation-runtime.js';
 import './multi-source-ui.js';
+import './multi-source-polish.js';
 
 const sidebarState = document.querySelector('#sidebarState');
 const sidebarToggle = document.querySelector('#sidebarToggle');

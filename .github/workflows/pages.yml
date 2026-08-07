@@ -50,6 +50,7 @@ jobs:
           cp studio/source-universe.js _site/source-universe.js
           cp studio/multi-source-cases.js _site/multi-source-cases.js
           cp studio/multi-source-ui.js _site/multi-source-ui.js
+          cp studio/multi-source-polish.js _site/multi-source-polish.js
           cp studio/library-data.js _site/library-data.js
           cp studio/digest-data.js _site/digest-data.js
           touch _site/.nojekyll
