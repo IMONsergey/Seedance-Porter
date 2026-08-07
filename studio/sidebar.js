@@ -2,6 +2,7 @@ import './experience.js';
 import './experience-stability.js';
 import './case-translation-runtime.js';
 import './multi-source-ui.js';
+import './multi-source-batch2-ui.js';
 import './multi-source-polish.js';
 
 const sidebarState = document.querySelector('#sidebarState');
