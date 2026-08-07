@@ -12,12 +12,18 @@ const DEFAULT_IMAGE_QUALITY = "HD, rich details, stable structure, natural color
 function inferMode(spec: ProjectSpec): GenerationMode {
   if (spec.mode !== "auto") return spec.mode;
   const first = spec.references.some((r) => r.role === "first_frame");
-  const last = spec.references.some((r) => r.role === "last_frame" || r.role === "endpoint");
-  const visualCount = spec.references.filter((r) => r.kind === "image").length;
-  const hasVideoOrAudio = spec.references.some((r) => r.kind === "video" || r.kind === "audio");
-  if (first && last) return "first-last-frame";
-  if (hasVideoOrAudio || visualCount > 1) return "reference-to-video";
-  if (visualCount === 1) return "image-to-video";
+  const last = spec.references.some((r) => r.role === "last_frame");
+  const imageCount = spec.references.filter((r) => r.kind === "image").length;
+  const videoCount = spec.references.filter((r) => r.kind === "video").length;
+  const audioCount = spec.references.filter((r) => r.kind === "audio").length;
+  const hasVideoOrAudio = videoCount > 0 || audioCount > 0;
+
+  // Official ModelArk treats first/last-frame interpolation and multimodal
+  // reference generation as different request scenarios. Only infer strict FLF
+  // when the reference package is exactly the two endpoint images.
+  if (first && last && imageCount === 2 && !hasVideoOrAudio) return "first-last-frame";
+  if (hasVideoOrAudio || imageCount > 1) return "reference-to-video";
+  if (imageCount === 1) return "image-to-video";
   return "text-to-video";
 }
 
@@ -93,6 +99,7 @@ export function compileProject(input: unknown, providerOverride?: ProviderName):
   if (!route.resolutions.includes(spec.resolution)) throw new PorterError("UNSUPPORTED", `${spec.resolution} is not configured for ${spec.model} via ${provider}`);
   if (spec.duration < model.duration.min || spec.duration > model.duration.max) throw new PorterError("INVALID_INPUT", `${spec.model} duration must be ${model.duration.min}-${model.duration.max}s`);
   if (!model.aspectRatios.includes(spec.aspectRatio)) throw new PorterError("INVALID_INPUT", `${spec.aspectRatio} is not supported by ${spec.model}`);
+  if (spec.seed !== undefined && route.supportsSeed === false) throw new PorterError("UNSUPPORTED", `${spec.model} via ${provider} does not support seed control on the verified provider contract. Remove seed or choose a route that explicitly supports it.`);
 
   const refs = mapReferences(spec, model);
   const shots = planShots(spec);
@@ -123,7 +130,7 @@ export function compileProject(input: unknown, providerOverride?: ProviderName):
   sections.push("Constraints:", ...productionLocks(spec, refs));
 
   const prompt = sections.filter(Boolean).join("\n");
-  const officialCompliance = validateOfficialCompliance(spec, refs, shots, prompt);
+  const officialCompliance = validateOfficialCompliance(spec, refs, shots, prompt, provider, mode);
   const officialWarnings = officialCompliance.findings
     .filter((finding) => finding.severity !== "error")
     .map((finding) => `${finding.rule}: ${finding.message}`);
@@ -145,7 +152,7 @@ export function compileProject(input: unknown, providerOverride?: ProviderName):
       seed: spec.seed,
       watermark: spec.watermark,
     },
-    referenceMap: refs.map((r) => ({ id: r.id, token: r.token!, role: r.role, note: r.note, anchors: r.anchors })),
+    referenceMap: refs.map((r) => ({ id: r.id, token: r.token!, role: r.role, note: r.note, anchors: r.anchors, identitySource: r.identitySource })),
     warnings: [...lintPrompt(prompt, spec), ...officialWarnings],
     officialCompliance,
   };
