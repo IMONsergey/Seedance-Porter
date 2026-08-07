@@ -20,11 +20,15 @@ export const ReferenceSchema = z.object({
 });
 
 export const ShotSchema = z.object({
+  // Timing is retained as internal planning metadata. The official Seedance 2.0
+  // guide warns that hard per-shot timestamps are unstable, so the compiled
+  // model prompt renders ordered Shot N blocks rather than these second ranges.
   start: z.number().min(0),
   end: z.number().positive(),
   shotSize: z.string().min(1).optional(),
   action: z.string().min(1),
   camera: z.string().min(1).optional(),
+  position: z.string().min(1).optional(),
   lighting: z.string().min(1).optional(),
   sound: z.string().min(1).optional(),
   endpoint: z.string().min(1).optional(),
@@ -42,6 +46,12 @@ export const DirectorReadSchema = z.object({
   genreRefusal: z.string().min(1).optional(),
 }).optional();
 
+export const OutputPolicySchema = z.object({
+  generatedText: z.enum(["forbid", "allow"]).default("forbid"),
+  generatedLogo: z.enum(["forbid", "reference-only", "allow"]).default("forbid"),
+  generatedWatermark: z.enum(["forbid", "allow"]).default("forbid"),
+}).default({ generatedText: "forbid", generatedLogo: "forbid", generatedWatermark: "forbid" });
+
 export const ProjectSchema = z.object({
   project: z.string().min(1),
   label: z.string().min(1).optional(),
@@ -54,6 +64,7 @@ export const ProjectSchema = z.object({
   generateAudio: z.boolean().default(true),
   seed: z.number().int().min(-1).max(4294967295).optional(),
   watermark: z.boolean().default(false),
+  outputPolicy: OutputPolicySchema,
   brief: z.object({
     objective: z.string().min(1),
     subject: z.string().min(1),
@@ -64,6 +75,8 @@ export const ProjectSchema = z.object({
     sound: z.string().min(1).optional(),
     endpoint: z.string().min(1).optional(),
     style: z.string().min(1).optional(),
+    imageQuality: z.string().min(1).optional(),
+    colorTone: z.string().min(1).optional(),
     beats: z.array(z.string().min(1)).default([]),
     constraints: z.array(z.string().min(1)).default([]),
   }),
