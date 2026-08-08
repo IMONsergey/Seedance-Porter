@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seedance-porter.local/schemas/final-evidence-package.schema.json",
+  "title": "Seedance Porter Final Evidence Package",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "candidateId", "createdAt", "source", "candidate", "deepReview", "mediaEvidence", "evidenceState", "integrity", "packageBoundary"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "seedance-porter-final-evidence-package" },
+    "candidateId": { "type": "string", "minLength": 1 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["app", "purpose", "autoCurate", "autoPublish", "autoGitHubWrite"],
+      "properties": {
+        "app": { "const": "Seedance Porter" },
+        "purpose": { "const": "final-evidence-handoff" },
+        "autoCurate": { "const": false },
+        "autoPublish": { "const": false },
+        "autoGitHubWrite": { "const": false }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "author", "authorUrl", "sourcePool", "sourcePoolLabel", "sourceUrl", "archiveUrl", "previewUrl", "sourceVideoUrl", "collections", "riskFlags", "score", "sourceTraceability"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "authorUrl": { "type": "string" },
+        "sourcePool": { "type": "string" },
+        "sourcePoolLabel": { "type": "string" },
+        "sourceUrl": { "type": "string" },
+        "archiveUrl": { "type": "string" },
+        "previewUrl": { "type": "string" },
+        "sourceVideoUrl": { "type": "string" },
+        "collections": { "type": "array", "items": { "type": "string" } },
+        "riskFlags": { "type": "array", "items": { "type": "string" } },
+        "score": { "type": "number" },
+        "sourceTraceability": { "type": "number" }
+      }
+    },
+    "deepReview": {
+      "allOf": [
+        { "$ref": "./case-review.schema.json" }
+      ]
+    },
+    "mediaEvidence": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "./review-media-evidence.schema.json" }
+      ]
+    },
+    "evidenceState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewStatus", "completeVideoWatched", "reviewMethod", "reviewedAt", "attestedAt"],
+      "properties": {
+        "reviewStatus": { "const": "deep-reviewed" },
+        "completeVideoWatched": { "const": true },
+        "reviewMethod": { "const": "manual-complete-video-review" },
+        "reviewedAt": { "type": "string", "format": "date-time" },
+        "attestedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "canonicalization", "components", "packageHash"],
+      "properties": {
+        "algorithm": { "const": "SHA-256" },
+        "canonicalization": { "const": "stable-json-v1" },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["candidate", "deepReview"],
+          "properties": {
+            "candidate": { "$ref": "#/$defs/sha256" },
+            "deepReview": { "$ref": "#/$defs/sha256" },
+            "mediaEvidence": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "packageHash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "packageBoundary": { "type": "string", "minLength": 100 }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}
