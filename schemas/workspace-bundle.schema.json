@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seedance-porter.local/schemas/workspace-bundle.schema.json",
+  "title": "Seedance Porter Workspace Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "candidateId", "exportedAt", "source", "candidate", "components", "componentManifest", "evidenceBoundary"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "seedance-porter-workspace-bundle" },
+    "candidateId": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "exportedAt": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["app", "transport", "autoApproval", "autoGitHubWrite"],
+      "properties": {
+        "app": { "const": "Seedance Porter" },
+        "transport": { "const": "browser-local-workspace-bundle" },
+        "autoApproval": { "const": false },
+        "autoGitHubWrite": { "const": false }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "author", "sourcePool", "sourcePoolLabel", "sourceUrl", "archiveUrl", "previewUrl", "sourceVideoUrl", "collections"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "sourcePool": { "type": "string" },
+        "sourcePoolLabel": { "type": "string" },
+        "sourceUrl": { "type": "string" },
+        "archiveUrl": { "type": "string" },
+        "previewUrl": { "type": "string" },
+        "sourceVideoUrl": { "type": "string" },
+        "collections": { "type": "array", "maxItems": 12, "items": { "type": "string" } }
+      }
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "deepReviewDraft": { "type": "object" },
+        "mediaEvidence": { "type": "object" },
+        "promotionDraft": { "type": "object" }
+      }
+    },
+    "componentManifest": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "bytes"],
+        "properties": {
+          "key": { "enum": ["deepReviewDraft", "mediaEvidence", "promotionDraft"] },
+          "bytes": { "type": "integer", "minimum": 0, "maximum": 1000000 }
+        }
+      }
+    },
+    "evidenceBoundary": { "type": "string", "minLength": 80 }
+  }
+}

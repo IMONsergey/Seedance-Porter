@@ -1,0 +1,42 @@
+name: Workspace Evidence Bundle CI
+
+on:
+  pull_request:
+    paths:
+      - 'studio/workspace-bundle-*.js'
+      - 'studio/workspace-bundle.css'
+      - 'studio/sidebar.js'
+      - 'schemas/workspace-bundle.schema.json'
+      - 'scripts/validate-workspace-bundles.mjs'
+      - 'scripts/validate-workspace-bundles-production.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/workspace-bundle-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate transport safety contract
+        run: node scripts/validate-workspace-bundles.mjs
+      - name: Validate production wiring
+        run: node scripts/validate-workspace-bundles-production.mjs
+      - name: Validate exact 100-card browser contract
+        run: npm run validate:render
+      - name: Syntax check Bundle modules
+        run: |
+          node --check studio/workspace-bundle-bootstrap.js
+          node --check studio/workspace-bundle-engine.js
+          node --check studio/workspace-bundle-ui.js
+          node --check scripts/validate-workspace-bundles.mjs
+          node --check scripts/validate-workspace-bundles-production.mjs
