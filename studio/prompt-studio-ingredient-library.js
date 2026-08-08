@@ -21,9 +21,33 @@ export function upsertPromptStudioLibraryIngredient(ingredient){
   const items=loadPromptStudioIngredientLibrary();
   const normalized=normalizeIngredients([ingredient])[0];
   if(!normalized)throw new Error('Invalid ingredient.');
-  const index=items.findIndex(item=>item.id===normalized.id);
-  if(index>=0)items[index]={...normalized,updatedAt:new Date().toISOString()};
-  else items.unshift({...normalized,id:normalized.id||`library-${randomId()}`,updatedAt:new Date().toISOString()});
+
+  // A project ingredient carries a stable createdAt. Re-saving that same source
+  // updates its previous shared copy even when another recipe has the same label/ID.
+  const sourceIndex=normalized.createdAt
+    ? items.findIndex(item=>item.createdAt===normalized.createdAt&&item.label===normalized.label)
+    : -1;
+  if(sourceIndex>=0){
+    const existing=items[sourceIndex];
+    items[sourceIndex]={...normalized,id:existing.id,createdAt:existing.createdAt,updatedAt:new Date().toISOString()};
+    return savePromptStudioIngredientLibrary(items);
+  }
+
+  const idIndex=items.findIndex(item=>item.id===normalized.id);
+  if(idIndex>=0){
+    // Same explicit library ID without source identity is an intentional upsert.
+    // If both entries carry different source timestamps, protect the incumbent and
+    // allocate a collision-safe ID instead of silently overwriting another recipe.
+    const existing=items[idIndex];
+    if(normalized.createdAt&&existing.createdAt&&normalized.createdAt!==existing.createdAt){
+      const uniqueId=uniqueLibraryId(normalized.id,items);
+      items.unshift({...normalized,id:uniqueId,updatedAt:new Date().toISOString()});
+    }else{
+      items[idIndex]={...normalized,id:existing.id,createdAt:existing.createdAt||normalized.createdAt,updatedAt:new Date().toISOString()};
+    }
+  }else{
+    items.unshift({...normalized,id:normalized.id||`library-${randomId()}`,updatedAt:new Date().toISOString()});
+  }
   return savePromptStudioIngredientLibrary(items);
 }
 
@@ -55,6 +79,13 @@ export function promptStudioIngredientLibraryStats(){
   };
 }
 
+function uniqueLibraryId(base,items){
+  const root=String(base||'library').replace(/-+$/,'');
+  const used=new Set(items.map(item=>item.id));
+  let id=`${root}-${randomId()}`;
+  while(used.has(id))id=`${root}-${randomId()}`;
+  return id;
+}
 function dispatchChange(detail){
   try{window.dispatchEvent(new CustomEvent('porter-prompt-studio-ingredient-library-change',{detail}));}catch{}
 }
