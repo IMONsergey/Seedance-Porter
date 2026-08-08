@@ -1,0 +1,82 @@
+name: Prompt Studio v7 Generation Results CI
+
+on:
+  pull_request:
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'schemas/prompt-studio*.json'
+      - 'scripts/seedance-modelark-runner*.mjs'
+      - 'scripts/validate-prompt-studio*.mjs'
+      - 'scripts/validate-seedance-modelark-runner*.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v7-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'schemas/prompt-studio*.json'
+      - 'scripts/seedance-modelark-runner*.mjs'
+      - 'scripts/validate-prompt-studio*.mjs'
+      - 'scripts/validate-seedance-modelark-runner*.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v7-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  v7:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20,22,24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate Prompt Studio v5 baseline
+        run: node scripts/validate-prompt-studio-v5-engines.mjs
+      - name: Validate Prompt Studio v5 workflow guard baseline
+        run: node scripts/validate-prompt-studio-v5-workflow-guard.mjs
+      - name: Validate Prompt Studio v6 audio baseline
+        run: node scripts/validate-prompt-studio-v6-audio.mjs
+      - name: Validate Prompt Studio v6 UI baseline
+        run: node scripts/validate-prompt-studio-v6-audio-ui.mjs
+      - name: Validate external ModelArk Runner baseline
+        run: npm run validate:seedance-runner
+      - name: Validate external ModelArk Runner production boundary
+        run: node scripts/validate-seedance-modelark-runner-production.mjs
+      - name: Validate Prompt Studio v7 Generation Results engine
+        run: node scripts/validate-prompt-studio-v7-generation-results.mjs
+      - name: Validate Prompt Studio v7 staged UI and guards
+        run: node scripts/validate-prompt-studio-v7-ui.mjs
+      - name: Validate Prompt Studio v7 production wiring
+        run: node scripts/validate-prompt-studio-v7-production.mjs
+      - name: Validate generalized Pages/module graph
+        run: node scripts/validate-pages-contract.mjs
+      - name: Validate protected exact-100 renderer
+        run: npm run validate:render
+      - name: Parse lineage schemas
+        run: |
+          node -e "for (const file of ['schemas/prompt-studio-seedance-export.schema.json','schemas/prompt-studio-generation-job.schema.json','schemas/prompt-studio-generation-result.schema.json']) JSON.parse(require('fs').readFileSync(file,'utf8'));"
+      - name: Syntax-check v7 runtime and contracts
+        run: |
+          node --check studio/prompt-studio-generation-handoff.js
+          node --check studio/prompt-studio-seedance-adapter.js
+          node --check studio/prompt-studio-generation-results.js
+          node --check studio/prompt-studio-v7-workflow-guard.js
+          node --check studio/prompt-studio-v7-results-ui.js
+          node --check studio/prompt-studio-v7-bootstrap.js
+          node --check scripts/seedance-modelark-runner-engine.mjs
+          node --check scripts/validate-prompt-studio-v7-generation-results.mjs
+          node --check scripts/validate-prompt-studio-v7-ui.mjs
+          node --check scripts/validate-prompt-studio-v7-production.mjs
