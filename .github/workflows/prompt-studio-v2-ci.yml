@@ -1,0 +1,58 @@
+name: Prompt Studio v2 Rule Packs CI
+
+on:
+  pull_request:
+    paths:
+      - 'studio/prompt-studio-profiles.js'
+      - 'studio/prompt-studio-profile-panel.js'
+      - 'studio/prompt-studio-rule-packs-bootstrap.js'
+      - 'studio/prompt-studio-rule-packs.css'
+      - 'studio/prompt-studio-ui.js'
+      - 'studio/sidebar.js'
+      - 'scripts/validate-prompt-studio-v2-rule-packs.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v2-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/prompt-studio-profiles.js'
+      - 'studio/prompt-studio-profile-panel.js'
+      - 'studio/prompt-studio-rule-packs-bootstrap.js'
+      - 'studio/prompt-studio-rule-packs.css'
+      - 'studio/prompt-studio-ui.js'
+      - 'studio/sidebar.js'
+      - 'scripts/validate-prompt-studio-v2-rule-packs.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v2-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  rule-packs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20,22,24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate Prompt Studio v1 baseline
+        run: node scripts/validate-prompt-studio.mjs
+      - name: Validate Prompt Studio local AI baseline
+        run: node scripts/validate-prompt-studio-ai.mjs
+      - name: Validate Rule Pack isolation and project mutation API
+        run: node scripts/validate-prompt-studio-v2-rule-packs.mjs
+      - name: Validate generalized Pages/module graph contract
+        run: node scripts/validate-pages-contract.mjs
+      - name: Validate protected exact-100 browser contract
+        run: npm run validate:render
+      - name: Syntax-check v2 modules
+        run: |
+          node --check studio/prompt-studio-profiles.js
+          node --check studio/prompt-studio-profile-panel.js
+          node --check studio/prompt-studio-rule-packs-bootstrap.js
+          node --check scripts/validate-prompt-studio-v2-rule-packs.mjs

@@ -1,0 +1,111 @@
+name: Prompt Studio v2 release finalizer
+
+on:
+  push:
+    branches: [feat/prompt-studio-v2-rule-packs]
+    paths:
+      - 'scripts/finalize-prompt-studio-v2-release.mjs'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/prompt-studio-v2-rule-packs
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: node scripts/finalize-prompt-studio-v2-release.mjs
+      - run: node scripts/validate-prompt-studio-v2-rule-packs.mjs
+      - run: node scripts/validate-prompt-studio-v2-production.mjs
+      - run: node scripts/validate-pages-contract.mjs
+      - run: npm run validate:render
+      - name: Write release documentation
+        run: |
+          cat > docs/PROMPT-STUDIO-V2-RULE-PACKS.md <<'EOF'
+          # Prompt Studio v2 — Rule Packs
+
+          Prompt Studio v2 introduces a public project mutation boundary and first-class production Rule Packs.
+
+          ## Project API
+
+          `window.porterPromptStudio` now exposes:
+
+          - `replaceProject(nextProject, options)`
+          - `updateProject(partial, options)`
+          - `createRevision(reason)`
+
+          External project replacement creates a revision before mutation by default. Extensions do not reach into private Studio state.
+
+          ## Rule Packs
+
+          - General Production
+          - Product Precision
+          - Character Continuity
+          - UI / Interface Motion
+          - First / Last Frame
+          - Material / Beauty
+
+          Applying a Rule Pack changes only `modelProfile` and the known profile portion of `customRules`.
+
+          It does not rewrite prompt sections, references or source provenance.
+
+          User-authored rules survive profile switching.
+
+          ## Recommendation
+
+          Prompt Studio can recommend a profile from project mode, tags and source cues. Recommendation is informational only; the user must explicitly apply the pack.
+
+          ## AI integration
+
+          The active Rule Pack is automatically part of AI editing policy because Prompt Studio AI already receives `project.customRules`.
+
+          The AI remains patch-only. Rule Packs do not change the Apply boundary.
+
+          ## Safety
+
+          - revision before external project replacement;
+          - no hidden click/change automation;
+          - no direct access to internal `state.project` from the plugin;
+          - no automatic prompt-section rewrite;
+          - no automatic profile application;
+          - exact 100 curated cases and 192 Porter Originals remain unchanged.
+
+          ## Production contracts
+
+          Node 20/22/24 CI verifies profile isolation, user-rule preservation, the public project API, idempotent plugin rendering, Pages/module publication and the protected exact-100 browser renderer.
+          EOF
+      - name: Remove all one-shot migration scaffolding
+        run: |
+          rm -f .prompt-studio-v2-migration-ok
+          git rm -f \
+            .github/workflows/prompt-studio-v2-migration.yml \
+            .github/workflows/prompt-studio-v2-wiring.yml \
+            .github/workflows/prompt-studio-v2-migration-verify.yml \
+            .github/workflows/prompt-studio-v2-pages-migration.yml \
+            .github/workflows/prompt-studio-v2-panel-migration.yml \
+            .github/workflows/prompt-studio-v2-production-wiring.yml \
+            .github/workflows/prompt-studio-v2-finalize.yml \
+            .github/workflows/prompt-studio-v2-release-finalizer.yml \
+            scripts/apply-prompt-studio-v2-api-migration.mjs \
+            scripts/apply-prompt-studio-v2-wiring.mjs \
+            scripts/verify-prompt-studio-v2-migration-state.mjs \
+            scripts/apply-prompt-studio-v2-pages-migration.mjs \
+            scripts/apply-prompt-studio-v2-panel-migration.mjs \
+            scripts/apply-prompt-studio-v2-production-wiring.mjs \
+            scripts/finalize-prompt-studio-v2-branch.mjs \
+            scripts/finalize-prompt-studio-v2-release.mjs \
+            2>/dev/null || true
+          git add -A
+      - name: Commit release-ready branch state
+        run: |
+          git config user.name 'seedance-porter-bot'
+          git config user.email 'seedance-porter-bot@users.noreply.github.com'
+          git commit -m 'docs: finalize Prompt Studio v2 Rule Packs release'
+          git push origin HEAD:feat/prompt-studio-v2-rule-packs

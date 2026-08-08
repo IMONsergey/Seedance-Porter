@@ -1,0 +1,38 @@
+name: Prompt Studio v2 plugin wiring
+
+on:
+  push:
+    branches: [feat/prompt-studio-v2-rule-packs]
+    paths:
+      - 'scripts/apply-prompt-studio-v2-wiring.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/prompt-studio-v2-rule-packs
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply exact plugin wiring
+        run: node scripts/apply-prompt-studio-v2-wiring.mjs
+      - name: Syntax-check changed shell
+        run: node --check studio/sidebar.js
+      - name: Commit shell wiring only
+        run: |
+          if git diff --quiet -- studio/sidebar.js; then
+            echo 'Prompt Studio v2 shell already wired.'
+            exit 0
+          fi
+          git config user.name 'seedance-porter-bot'
+          git config user.email 'seedance-porter-bot@users.noreply.github.com'
+          git add studio/sidebar.js
+          git commit -m 'feat: mount Prompt Studio Rule Pack plugin'
+          git push origin HEAD:feat/prompt-studio-v2-rule-packs

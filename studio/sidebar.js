@@ -1,6 +1,7 @@
 import './workspace-router.js';
 import './operations-bootstrap.js';
 import './prompt-studio-bootstrap.js';
+import './prompt-studio-rule-packs-bootstrap.js';
 import './command-palette-bootstrap.js';
 import './workspace-bundle-bootstrap.js';
 import './experience.js';

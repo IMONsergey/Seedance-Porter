@@ -1,0 +1,38 @@
+name: Prompt Studio v2 API migration
+
+on:
+  push:
+    branches: [feat/prompt-studio-v2-rule-packs]
+    paths:
+      - 'scripts/apply-prompt-studio-v2-api-migration.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/prompt-studio-v2-rule-packs
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply exact Prompt Studio API migration
+        run: node scripts/apply-prompt-studio-v2-api-migration.mjs
+      - name: Verify migrated UI syntax
+        run: node --check studio/prompt-studio-ui.js
+      - name: Commit migrated UI only
+        run: |
+          if git diff --quiet -- studio/prompt-studio-ui.js; then
+            echo 'Prompt Studio UI already migrated.'
+            exit 0
+          fi
+          git config user.name 'seedance-porter-bot'
+          git config user.email 'seedance-porter-bot@users.noreply.github.com'
+          git add studio/prompt-studio-ui.js
+          git commit -m 'refactor: expose Prompt Studio project mutation API'
+          git push origin HEAD:feat/prompt-studio-v2-rule-packs

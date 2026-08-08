@@ -1,0 +1,57 @@
+name: Prompt Studio v2 branch finalizer
+
+on:
+  push:
+    branches: [feat/prompt-studio-v2-rule-packs]
+    paths:
+      - 'scripts/finalize-prompt-studio-v2-branch.mjs'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/prompt-studio-v2-rule-packs
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: node scripts/finalize-prompt-studio-v2-branch.mjs
+      - run: node scripts/validate-prompt-studio.mjs
+      - run: node scripts/validate-prompt-studio-ai.mjs
+      - run: node scripts/validate-prompt-studio-v2-rule-packs.mjs
+      - run: node scripts/validate-prompt-studio-v2-production.mjs
+      - run: node scripts/validate-pages-contract.mjs
+      - run: npm run validate:render
+      - name: Remove one-shot migration infrastructure
+        run: |
+          git rm -f \
+            .github/workflows/prompt-studio-v2-migration.yml \
+            .github/workflows/prompt-studio-v2-wiring.yml \
+            .github/workflows/prompt-studio-v2-migration-verify.yml \
+            .github/workflows/prompt-studio-v2-pages-migration.yml \
+            .github/workflows/prompt-studio-v2-panel-migration.yml \
+            .github/workflows/prompt-studio-v2-production-wiring.yml \
+            .github/workflows/prompt-studio-v2-finalize.yml \
+            scripts/apply-prompt-studio-v2-api-migration.mjs \
+            scripts/apply-prompt-studio-v2-wiring.mjs \
+            scripts/verify-prompt-studio-v2-migration-state.mjs \
+            scripts/apply-prompt-studio-v2-pages-migration.mjs \
+            scripts/apply-prompt-studio-v2-panel-migration.mjs \
+            scripts/apply-prompt-studio-v2-production-wiring.mjs \
+            scripts/finalize-prompt-studio-v2-branch.mjs \
+            2>/dev/null || true
+          rm -f .prompt-studio-v2-migration-ok
+          git add -A
+      - name: Commit final clean branch state
+        run: |
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'seedance-porter-bot'
+          git config user.email 'seedance-porter-bot@users.noreply.github.com'
+          git commit -m 'chore: remove Prompt Studio v2 migration scaffolding'
+          git push origin HEAD:feat/prompt-studio-v2-rule-packs

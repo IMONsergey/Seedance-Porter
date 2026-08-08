@@ -484,11 +484,42 @@ function aiStatusHtml(){
   return `<div class="studio-ai-status"><span>${esc(progress.detail||progress.phase||'working')}</span></div>`;
 }
 
+function replaceProjectFromExtension(nextProject,options={}){
+  if(!nextProject||typeof nextProject!=='object')throw new Error('Prompt Studio replaceProject requires a project object.');
+  if(!state.project)throw new Error('Prompt Studio has no active project.');
+  const reason=String(options.reason||'external project update');
+  const preserveIdentity=options.preserveIdentity!==false;
+  if(options.snapshot!==false)createPromptStudioRevision(state.project,`before ${reason}`);
+  const candidate={
+    ...JSON.parse(JSON.stringify(nextProject)),
+    id:preserveIdentity?state.project.id:nextProject.id,
+    createdAt:preserveIdentity?state.project.createdAt:nextProject.createdAt
+  };
+  state.project=refreshPromptStudioProject(candidate,options.now||Date.now());
+  state.project=savePromptStudioProject(state.project,{revision:false,reason});
+  state.stagedPatch=null;
+  state.error='';
+  refreshDerived();
+  reloadAssets().then(renderStudio);
+  renderStudio();
+  try{window.dispatchEvent(new CustomEvent('porter-prompt-studio-project-replaced',{detail:{projectId:state.project.id,reason}}));}catch{}
+  return JSON.parse(JSON.stringify(state.project));
+}
+
+function updateProjectFromExtension(partial,options={}){
+  const patch=partial&&typeof partial==='object'?partial:{};
+  const next={...JSON.parse(JSON.stringify(state.project)),...JSON.parse(JSON.stringify(patch))};
+  return replaceProjectFromExtension(next,{...options,preserveIdentity:true});
+}
+
 function exposePublicApi(){
   window.porterPromptStudio={
     open:showStudio,
     openSource:(detail)=>openStudioFromDetail(detail||{}),
     getProject:()=>JSON.parse(JSON.stringify(state.project)),
+    replaceProject:(nextProject,options)=>replaceProjectFromExtension(nextProject,options||{}),
+    updateProject:(partial,options)=>updateProjectFromExtension(partial,options||{}),
+    createRevision:(reason='extension snapshot')=>{createPromptStudioRevision(state.project,String(reason));return listPromptStudioRevisions(state.project.id);},
     compile:()=>compilePromptProject(state.project),
     lint:()=>lintPromptProject(state.project)
   };
