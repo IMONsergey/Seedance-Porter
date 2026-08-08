@@ -1,5 +1,6 @@
 const CORE_MUTATIONS=new Set(['new','duplicate','snapshot','export','import-project','delete-project']);
 const V9_MUTATIONS=new Set(['save-evaluation','create-comparison','mark-winner','attach-winner-video','attach-winner-last','save-retake']);
+const OPEN_SOURCE_GUARD='__porterV9OpenSourceGuarded';
 
 export function promptStudioV9ForeignStagedState(){
   const storyboardDirty=document.querySelector('#studioV4Dock [data-v4-dirty="true"]')!==null;
@@ -33,6 +34,13 @@ function bind(){
     if(event.target.id==='studioProjectImportFile'){event.preventDefault();event.stopImmediatePropagation();event.target.value='';showDraftBoundary();}
   },true);
   window.addEventListener('porter-open-prompt-studio',event=>{if(!promptStudioV9DraftDirty())return;event.preventDefault?.();event.stopImmediatePropagation();showDraftBoundary();},true);
+  for(const eventName of ['porter-prompt-studio-change','porter-prompt-studio-project-replaced','porter-workspace-change'])window.addEventListener(eventName,installOpenSourceGuard);
+  queueMicrotask(installOpenSourceGuard);
+}
+
+function installOpenSourceGuard(){
+  const api=window.porterPromptStudio,openSource=api?.openSource;if(typeof openSource!=='function'||openSource[OPEN_SOURCE_GUARD])return;
+  const original=openSource.bind(api);const guarded=function(...args){if(promptStudioV9DraftDirty()){showDraftBoundary();return null;}return original(...args);};guarded[OPEN_SOURCE_GUARD]=true;api.openSource=guarded;
 }
 
 function showBoundary(state){let text='Finish other staged work before changing Generation Console decisions.';if(state.storyboardDirty)text='Apply or discard the staged Storyboard first.';else if(state.repairStaged)text='Apply or discard the staged Repair proposal first.';else if(state.v7ResultStaged)text='Save or discard the staged Generation Result first.';else if(state.v8ResultStaged)text='Save or discard the staged Batch Result first.';show(text);}
