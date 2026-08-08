@@ -1,121 +1,151 @@
 # Prompt Studio v9 — Generation Console + Evaluation Loop
 
-Updated: 2026-08-08
+Updated: 2026-08-08  
+Active PR: #48  
+Status: release hardening
 
-V9 turns the completed authoring/execution/result-return loop into a **production decision system**.
+V9 turns Seedance Porter from a generation pipeline into a **production decision system**.
 
-Before V9 the product could:
+Before V9 the product already covered:
 
 ```text
 research
 → structured prompt
 → references
-→ timeline/storyboard
-→ A/B variants
-→ provider export
-→ secure single/batch generation
-→ local result return
-→ continuation references
+→ Variables / Ingredients / Timeline
+→ Storyboard
+→ A/B Variants
+→ provider-neutral Handoff
+→ verified Seedance export
+→ secure single/batch external execution
+→ local Generation Results return
+→ explicit continuation references
 ```
 
-The missing layer was deciding systematically **why one generated take is better than another** and carrying that evidence into the next controlled iteration.
+V9 adds the missing layer:
 
-## 1. V9 production loop
+> What actually happened in the generated footage, which controlled change produced the best production result, and what exactly should happen next?
+
+---
+
+## 1. V9 loop
 
 ```text
-Generation Results (V7/V8)
+V7/V8 Generation Results
   ↓
 Generation Console
   ↓
-structured Evaluation
+explicit opt-in Preview
+  ↓
+structured human Evaluation
+  ↓
+Decision Readiness
   ↓
 saved Comparison
   ↓
-explicit human Winner
+explicit human Winner + rationale
   ↓
-┌─────────────────┬──────────────────────┐
-│ explicit reuse  │ explicit Retake      │
-│ video/last frame│ one changed lever    │
-└─────────────────┴──────────────────────┘
+┌─────────────────────────┬─────────────────────────┐
+│ explicit continuation   │ evidence-driven Retake │
+│ video / last frame @ref │ one named lever        │
+└─────────────────────────┴─────────────────────────┘
   ↓
 next controlled iteration
 ```
 
-V9 does not add provider execution to the browser.
+There is no provider execution in the V9 browser layer.
 
-## 2. New extension-safe project state
+---
 
-V9 deliberately avoids a core project schema migration.
+## 2. Existing source of truth remains canonical
+
+V9 does not create another generation database.
+
+It reads existing project state:
+
+- V7 `generationResults`;
+- V8 `generationBatchLinks`;
+- V4 `variants` and frozen base/deltas;
+- V7 generated-output provenance.
+
+V9 stores only decision/evaluation extensions that reference canonical task/export lineage.
+
+---
+
+## 3. Extension state
 
 ### `generationEvaluations`
 
-Maximum 200 normalized evaluation records.
+Maximum: 200 canonical records.
 
-One canonical evaluation is upserted per generation task. It references:
+One canonical Evaluation per generation task.
+
+Stores:
 
 - task ID;
-- provider export SHA-256;
-- 13 dimension scores;
-- per-dimension note;
-- per-dimension evidence/observation;
-- verdict;
+- export SHA-256;
+- 13 dimension score objects;
+- transparent `overallScore`;
+- `ratedDimensions`;
+- `evidenceDimensions`;
+- `decisionReady`;
+- Evaluation verdict;
 - strengths;
 - weaknesses;
 - artifact flags;
 - reviewer notes;
 - timestamps.
 
-The generation result itself is not duplicated.
+Raw duplicate Evaluations are considered integrity errors by Decision Audit even though normalization can recover the newest canonical task record.
 
 ### `generationComparisons`
 
-Maximum 100 saved comparisons.
+Maximum: 100.
 
-A comparison stores only:
+Each saved Comparison contains:
 
-- comparison ID;
+- ID;
 - label;
-- 2–8 task IDs;
+- 2–8 **unique succeeded visual generation task IDs**;
 - timestamps.
 
-The visible comparison is derived at runtime from canonical history, batch lineage, v4 Variants and evaluations.
+Comparison does not copy result, evaluation or Variant payloads.
 
 ### `generationWinners`
 
-Winner state is separate from the numeric evaluation.
+Maximum: 100 keyed comparison decisions.
 
-Keyed by comparison ID and stores:
+Winner stores:
 
 - comparison ID;
 - winning task ID;
-- winning export hash;
-- explicit human rationale;
-- timestamp.
+- winning export SHA;
+- required human rationale;
+- selection timestamp.
 
-**No automatic winner selection exists.**
-
-A high average score may be informative, but the system does not silently convert it into a production decision.
+Winner is not an Evaluation verdict.
 
 ### `generationRetakes`
 
-Maximum 100 Retake Drafts.
+Maximum: 100.
 
-A Retake Draft stores:
+Retake Draft stores:
 
-- source task ID;
-- source export SHA;
-- exactly one named production lever;
+- source task/export;
+- one canonical named production lever;
 - explicit change instruction;
 - expected improvement;
 - retained locks;
 - `status: draft`;
 - timestamps.
 
-Saving a Retake Draft does **not** rewrite the prompt, create a Variant or submit generation.
+It does not contain or apply a rewritten prompt.
 
-## 3. Production evaluation rubric
+---
 
-V9 starts with 13 explicit dimensions, each scored 1–5 or left unrated.
+## 4. Production Evaluation
+
+V9 rubric has exactly 13 dimensions:
 
 1. Task adherence
 2. Identity consistency
@@ -133,108 +163,206 @@ V9 starts with 13 explicit dimensions, each scored 1–5 or left unrated.
 
 Each dimension supports:
 
-- score;
-- note;
-- evidence / observed moment.
+- score 1–5 or unrated;
+- reviewer note;
+- evidence / observed frame, moment or behavior.
 
-`overallScore` is a transparent arithmetic average of **rated dimensions only** and is rounded to two decimals.
+`overallScore` is the arithmetic average of **rated dimensions only**, rounded to two decimals.
 
-It is not an AI confidence score and does not select the winner.
+It is:
 
-## 4. Generation Console
+- not an AI confidence score;
+- not a provider metric;
+- not a winner selector.
 
-The V9 Console reads the existing V7/V8 production history.
+Evaluation verdict is one of:
 
-For each result it surfaces:
+- `candidate`;
+- `retake`;
+- `reject`.
 
-- task ID;
+There is deliberately no `winner` Evaluation verdict.
+
+---
+
+## 5. Decision Readiness
+
+Winner decisions require minimum review coverage.
+
+A saved Evaluation is `decisionReady:true` only when:
+
+- at least **5** dimensions are rated;
+- at least **3** dimensions contain note/evidence;
+- `production-readiness` is explicitly rated.
+
+The Console surfaces the coverage live:
+
+```text
+4.6 / 5
+7 / 13 rated
+5 evidence
+production readiness rated
+DECISION READY
+```
+
+These thresholds are Porter product rules, not ByteDance/ModelArk facts.
+
+Full contract: `docs/V9-DECISION-READINESS.md`.
+
+---
+
+## 6. Explicit Review Preview
+
+A serious evaluation tool must allow footage review without forcing tab hopping, but remote output should not silently load just because the project opened.
+
+V9 therefore uses an **explicit opt-in preview**.
+
+Initial state:
+
+- no remote `<video>` DOM;
+- no automatic media download;
+- no autoplay.
+
+After the user clicks `Preview` or explicitly opens `Evaluate` / `Retake` for a visual result:
+
+```html
+<video controls preload="none" playsinline ...>
+```
+
+Rules:
+
+- `preload="none"` is required;
+- autoplay is forbidden;
+- preview can be closed, removing video DOM;
+- last-frame remains an explicit safe external link;
+- V9 JavaScript still contains no provider/media `fetch()` path.
+
+This is a review UX feature, not a provider execution feature.
+
+---
+
+## 7. Generation Console
+
+For each canonical Generation Result the Console shows:
+
 - status;
-- provider export SHA;
-- batch/variant label when available;
-- current evaluation score;
-- safe external video/last-frame links;
-- comparison selection.
+- task ID;
+- export SHA;
+- V8 batch/Variant label when present;
+- Evaluation score;
+- rated/evidence coverage;
+- Decision Readiness;
+- explicit output links;
+- explicit Preview;
+- Evaluate/Review action;
+- comparison selection for succeeded visual outputs.
 
-Remote generated media is not embedded or automatically downloaded by V9. Existing output URLs remain explicit external links.
+Failed/cancelled/expired operational history stays visible but cannot enter visual comparison/winner decisions.
 
-## 5. Variant-aware comparison
+---
 
-When a result came from V8, V9 follows:
+## 8. Variant-aware comparison
+
+For V8 results, V9 derives:
 
 ```text
 taskId
 → generationBatchLinks
 → variantId / variantHash
-→ v4 normalized Variant
+→ V4 normalized Variant
 → frozen-base delta
 ```
 
-Comparison view derives:
+Runtime comparison view exposes:
 
-- result record;
+- Generation Result;
 - batch lineage;
-- variant identity;
-- variant delta / changed controls;
-- evaluation;
+- Variant identity;
+- changed Variant controls/delta;
+- Evaluation;
 - overall score;
-- winner state.
+- review coverage;
+- Decision Readiness;
+- Winner state.
 
-This is designed to answer:
+This answers:
 
 > Which controlled change produced the better result?
 
 rather than only:
 
-> Which output looks nicer?
+> Which video looks nicer?
 
-## 6. Explicit winner
+---
 
-Winner selection is a dedicated action on a saved comparison.
+## 9. Human Winner
 
-Rules:
+Winner selection requires all of the following:
 
-- task must belong to that comparison;
-- task/export lineage is persisted;
-- rationale is stored separately;
-- no score threshold auto-selects a winner;
-- changing a score does not silently change the winner.
+- saved Comparison exists;
+- candidate task belongs to it;
+- candidate is a succeeded visual generation;
+- task/export lineage still matches canonical Generation Results;
+- candidate has a `decisionReady:true` saved Evaluation;
+- user enters a non-empty human rationale;
+- user explicitly clicks Winner.
 
-## 7. Winner → continuation
+No numeric threshold or highest-score rule automatically selects a winner.
 
-After a winner is selected, V9 can explicitly reuse existing V7 continuation actions.
+Changing an Evaluation does not silently change Winner state.
 
-### Winning video
+Architecture decision: `docs/ADR-017-V9-HUMAN-WINNER.md`.
 
-Creates a new stable Prompt Studio reference:
+---
 
-- `mediaType: video`
-- `role: motion`
-- generated HTTPS video URL
-- new `@refNN`
-- V7 generated-output provenance retained.
+## 10. Winner → continuation
 
-### Winning last frame
+Winning output can explicitly reuse the existing V7 continuation path.
 
-Creates a new stable Prompt Studio reference:
+### Winner video
 
-- `mediaType: image`
-- `role: first-frame`
-- `locked: true`
-- generated HTTPS last-frame URL
-- new `@refNN`
-- V7 generated-output provenance retained.
+Creates a new stable reference:
 
-No output is automatically attached just because it became a winner.
+- `mediaType: video`;
+- `role: motion`;
+- generated HTTPS URL;
+- new `@refNN`;
+- V7 generation provenance retained.
 
-## 8. One-lever Retake
+### Winner last frame
 
-The Retake workflow exists to reduce ambiguous experimentation.
+Only shown if the result actually has a last-frame URL.
 
-Recommended rule:
+Creates:
 
-> When diagnosing a weak generation, change one named production lever and explicitly preserve the successful locks.
+- `mediaType: image`;
+- `role: first-frame`;
+- `locked: true`;
+- generated HTTPS URL;
+- new `@refNN`;
+- V7 provenance retained.
 
-Supported initial levers:
+Winner selection alone never auto-attaches either output.
+
+---
+
+## 11. Evidence-driven One-Lever Retake
+
+A Retake Draft may start only from:
+
+- a succeeded visual generation;
+- with a saved Evaluation;
+- containing at least one rated dimension;
+- containing at least one evidence-covered dimension.
+
+It requires:
+
+- exactly one named production lever;
+- change instruction;
+- expected improvement;
+- at least one retained lock.
+
+Canonical initial lever registry:
 
 - objective
 - subject
@@ -250,162 +378,224 @@ Supported initial levers:
 - constraints
 - avoid
 - references
-- provider settings
+- provider-settings
 - other
 
-Retake Draft records what should change; it does not apply the change automatically.
+Save does **not**:
 
-A later explicit action can turn the draft into a Variant/patch once that mutation path has its own safety contract.
+- rewrite prompt sections;
+- mutate references;
+- create a Variant;
+- call AI;
+- submit paid generation.
 
-## 9. Cross-layer staged-work safety
+Architecture decision: `docs/ADR-018-V9-ONE-LEVER-RETAKE.md`.
 
-V9 mutating actions are blocked while another production layer has staged work:
+---
 
-- V4 dirty Storyboard;
-- V5 staged Repair;
-- V7 staged Generation Result;
-- V8 staged Batch Result.
+## 12. Canonical registries
 
-V9 also tracks its own dirty Evaluation/Retake draft.
+To avoid UI/engine drift, V9 exports one canonical set for:
 
-While a V9 draft is dirty, capture-phase guard blocks project-changing actions such as:
+- `GENERATION_EVALUATION_VERDICTS`;
+- `GENERATION_RETAKE_LEVERS`;
+- `GENERATION_EVALUATION_DIMENSIONS`.
 
-- New / Duplicate / project import / delete;
-- project switch;
-- source Fork;
-- revision Restore;
-- mutations in V4/V5/V7/V8 layers.
+Console and Decision Audit consume these registries rather than maintaining independent hard-coded lists.
 
-User must Save or Discard the V9 draft first.
+---
 
-If the project changes through another external/public mutation despite the UI guard, V9 invalidates the unsaved draft visibly rather than applying it to a newer project state.
+## 13. Decision Integrity Audit
 
-## 10. Browser security boundary
+`prompt-studio-generation-evaluation-audit.js` audits **raw + normalized** decision state.
 
-Generation Console must remain credential-free.
+Hard errors include:
 
-No V9 browser module may contain:
+- raw Evaluation missing task/export;
+- invalid Evaluation verdict;
+- duplicate raw Evaluation task;
+- Evaluation export drift;
+- non-succeeded visual decision source;
+- invalid Comparison cardinality/duplicates;
+- orphan Comparison tasks;
+- Winner comparison-key mismatch;
+- Winner outside Comparison;
+- Winner task/export drift;
+- empty Winner rationale;
+- Winner without Decision Readiness;
+- invalid Retake lever;
+- Retake source/export drift;
+- Retake without Evaluation evidence;
+- Retake without instruction;
+- Retake without expected improvement;
+- Retake without retained locks;
+- V8 batch lineage ↔ V7 history export drift.
 
-- provider `fetch` execution;
-- XHR provider execution;
+A saved but incomplete Evaluation is reported as a warning, not silently upgraded.
+
+Audit never auto-fixes or auto-selects.
+
+---
+
+## 14. Cross-layer staged-work safety
+
+V9 cannot start or save a staged decision while these foreign layers are staged:
+
+- V4 Storyboard;
+- V5 Repair;
+- V7 Generation Result;
+- V8 Batch Result.
+
+This applies to starting `Evaluate` / `Retake`, not only their Save buttons.
+
+While a V9 Evaluation/Retake draft is dirty:
+
+- project New / Duplicate / Import / Delete are blocked;
+- project switch is blocked;
+- source Fork is blocked;
+- revision Restore is blocked;
+- conflicting V4/V5/V7/V8 staged actions are blocked;
+- V4 Storyboard field input/change is capture-blocked;
+- V7/V8 result import inputs are capture-blocked;
+- `porter-open-prompt-studio` event is blocked;
+- direct public `window.porterPromptStudio.openSource()` is wrapped and blocked.
+
+Ordinary prompt/reference edits inside the **same canonical project** are allowed because V9 Save reads the fresh project and overlays only its decision extensions.
+
+If an external mutation cannot be intercepted, V9 visibly invalidates its unsaved draft rather than applying stale decision state.
+
+---
+
+## 15. Browser / security boundary
+
+V9 keeps provider execution outside the browser.
+
+Browser V9 contains no:
+
+- provider `fetch()`;
+- XHR submission;
 - beacon submission;
 - `ARK_API_KEY`;
-- Authorization headers;
-- automatic result-media download.
+- Authorization header;
+- automatic paid request;
+- automatic Winner;
+- automatic output attachment;
+- automatic prompt mutation.
 
-V9 is a review/decision layer over already-returned result manifests.
+Explicit preview is the only new remote-media review surface and remains opt-in/preload-none.
 
-## 11. Public mutation boundary
+---
 
-Every saved decision uses the existing public Prompt Studio API:
+## 16. Public mutation boundary
+
+All persisted V9 decisions use:
 
 ```text
-window.porterPromptStudio.replaceProject(
-  nextProject,
-  {
-    snapshot: true,
-    preserveIdentity: true,
-    reason: ...
-  }
-)
+window.porterPromptStudio.replaceProject(next, {
+  snapshot: true,
+  preserveIdentity: true,
+  reason: ...
+})
 ```
 
-No private Prompt Studio state access.
+V9 does not access private Prompt Studio project state.
 
-Evaluation, Comparison, Winner, Retake and winner-continuation actions each create an explicit revisioned mutation.
+Evaluation, Comparison, Winner, Retake and winner-continuation are explicit revisioned actions.
 
-## 12. Evaluation schema
+---
 
-V9 adds:
+## 17. Closed schema
 
 `schemas/prompt-studio-generation-evaluation.schema.json`
 
-The schema is closed and models:
+Top-level `additionalProperties:false`.
 
-- max 200 evaluations;
-- max 100 comparisons;
-- winner map;
-- max 100 Retake Drafts;
-- 13 named dimension score structures;
-- bounded notes/evidence;
-- task/export hashes;
-- one-lever retake semantics.
+Bounds:
 
-## 13. Release contracts
+- evaluations ≤ 200;
+- comparisons ≤ 100;
+- winners ≤ 100;
+- retakes ≤ 100;
+- comparison candidate count 2–8;
+- bounded notes/evidence/list entries.
 
-V9 release must verify:
+Schema stores transparent decision-readiness counters and required winner/retake fields.
 
-### Engine
+---
 
-- 13 dimensions;
-- score average math;
-- task/export mismatch rejection;
-- saved comparison 2–8 task bound;
-- V8 batch → V4 variant lineage recovery;
-- winner must belong to comparison;
-- winner rationale persistence;
-- explicit winner continuation reference;
-- one-lever Retake Draft;
-- no prompt rewrite from Retake save;
-- extension persistence through core refresh.
+## 18. Release architecture
 
-### Browser UI
+One canonical V9 CI workflow:
 
-- zero `fetch` calls;
-- no automatic `<video>`/`<img>` output embedding;
-- revisioned evaluation save;
-- revisioned comparison save;
-- explicit human winner;
-- explicit winner continuation;
-- Retake Draft does not mutate sections;
-- staged V4/V5/V7/V8 blocks;
-- dirty V9 blocks core mutations;
-- project mutation invalidates unsaved draft visibly.
+`.github/workflows/prompt-studio-v9-ci.yml`
 
-### Production
+Node matrix:
 
-- mount order `v7 → v8 → v9 → Cmd-K`;
-- guard loaded before Console UI;
-- browser/provider boundary preserved;
-- schema closed;
-- Pages module graph includes V9;
-- project memory remains V9-current;
-- exact 100 curated runtime cases;
-- exact 192 Porter Originals.
+- 20
+- 22
+- 24
 
-## 14. What V9 intentionally does not do
+It runs:
 
-V9 does not yet:
+- TypeScript + Vitest;
+- V4 baseline;
+- V7 baseline;
+- V8 baseline;
+- V9 Evaluation/Readiness engine;
+- V9 adversarial Decision Audit;
+- V9 canonical Console JSDOM contract;
+- V9 production/project-memory contract;
+- central Pages module graph;
+- protected exact-100 renderer;
+- schema/memory parse;
+- syntax checks.
 
-- run automated vision scoring of remote video;
-- download generated video automatically;
-- decide winners algorithmically;
-- learn global rules from evaluations;
-- automatically rewrite a prompt from Retake Draft;
-- submit new paid generation;
-- aggregate across multiple providers.
+Duplicate V9 preflight/release workflows and superseded draft UI tests were removed.
 
-Those are separate future product decisions with different safety/data implications.
+The **real** `.github/workflows/pages.yml` also runs all four V9 contracts before deployment and asserts V9 runtime assets exist in `_site`.
 
-## 15. Next after V9
+The external paid Batch Runner remains server-only and is never executed by Pages.
 
-### V10 — Production Memory + Learning
+---
 
-Use accepted/rejected evaluations as evidence for reusable empirical production knowledge:
+## 19. Protected invariants
 
-- recurring failure signatures;
-- successful camera/motion/material recipes;
-- reference-role patterns;
-- model/provider-specific empirical rules;
-- confidence + evidence;
-- clear separation between official facts, Porter observations and project-specific preferences.
+V9 preserves:
 
-### V11 — Multi-provider execution abstraction
+- exactly 100 unique curated runtime cases;
+- exactly 192 Porter Originals;
+- no automatic curated mutation;
+- no browser provider credential;
+- no browser paid submission;
+- no automatic generated-output attachment;
+- no automatic Winner;
+- no automatic Retake prompt mutation;
+- extension-safe project persistence.
 
-Only after the evaluation/learning loop is mature.
+---
 
-## 16. Current product state
+## 20. V10 handoff
+
+V10 Production Memory + Learning must distinguish evidence classes:
+
+- ordinary Evaluation;
+- decision-ready Evaluation;
+- Winner decision;
+- Retake hypothesis;
+- subsequent outcome.
+
+It must never treat sparse/abandoned reviews as validated empirical knowledge.
+
+V10 must also preserve epistemic source class:
+
+- official ByteDance/BytePlus fact;
+- Porter empirical observation;
+- project/client-specific preference.
+
+---
+
+## Current product statement
 
 With V9, Seedance Porter becomes:
 
-**structured authoring + controlled variants + secure execution + returned generation history + evidence-based human evaluation + explicit winner/retake/continuation.**
+**structured authoring + controlled variants + secure execution + returned generation history + explicit footage review + evidence-based human evaluation + auditable winner + controlled retake + explicit continuation.**
