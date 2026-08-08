@@ -7,8 +7,10 @@ on:
       - 'studio/prompt-studio*.css'
       - 'studio/sidebar.js'
       - 'studio/workspace-router.js'
+      - 'schemas/prompt-studio-project.schema.json'
       - 'scripts/validate-prompt-studio.mjs'
       - 'scripts/validate-prompt-studio-production.mjs'
+      - 'docs/PROMPT-STUDIO.md'
       - '.github/workflows/pages.yml'
       - '.github/workflows/prompt-studio-ci.yml'
   push:
@@ -18,6 +20,7 @@ on:
       - 'studio/prompt-studio*.css'
       - 'studio/sidebar.js'
       - 'studio/workspace-router.js'
+      - 'schemas/prompt-studio-project.schema.json'
       - 'scripts/validate-prompt-studio.mjs'
       - 'scripts/validate-prompt-studio-production.mjs'
       - '.github/workflows/pages.yml'
