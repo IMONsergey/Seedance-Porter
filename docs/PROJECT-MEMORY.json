@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-08T18:45:00+03:00",
+  "repository": "IMONsergey/Seedance-Porter",
+  "sourceOfTruth": "github",
+  "freshnessRule": "This file supersedes older phase markers in PROJECT-CONTEXT.md, ROADMAP.md and PROJECT-STATE.json when this updatedAt is newer.",
+  "completedRelease": {
+    "phase": "prompt-studio-v8-variant-batch-generation",
+    "pullRequest": 46,
+    "status": "merged-to-main"
+  },
+  "active": {
+    "phase": "prompt-studio-v9-generation-console-evaluation-loop",
+    "status": "now",
+    "objective": "Turn single and batch generation results into an evidence-based comparison, scoring, winner-selection, continuation and retake workflow without moving provider credentials into the browser."
+  },
+  "protectedInvariants": {
+    "curatedCases": 100,
+    "curatedCasesMustBeUnique": true,
+    "porterOriginals": 192,
+    "automaticCuratedMutation": false,
+    "browserProviderSubmission": false,
+    "clientProviderCredentials": false,
+    "automaticGeneratedOutputAttachment": false,
+    "ambiguousPaidSubmissionAutoRetry": false,
+    "corruptResumableManifestMeansMissing": false,
+    "extensionSafeProjectPersistence": true
+  },
+  "completedCapabilities": [
+    "research-corpus-and-source-universe",
+    "deep-review-and-evidence-pipeline",
+    "promotion-quality-gates",
+    "curated-rotation-guard",
+    "operations-command-center",
+    "prompt-studio-v1-structured-editor",
+    "prompt-studio-v2-rule-packs-public-api",
+    "prompt-studio-v3-variables-ingredients-timeline",
+    "prompt-studio-v4-storyboard-variants-handoff",
+    "prompt-studio-v5-repair-blueprints-seedance-export",
+    "prompt-studio-v6-audio-references",
+    "secure-modelark-single-task-runner",
+    "prompt-studio-v7-generation-results-continuation",
+    "prompt-studio-v8-variant-batch-generation"
+  ],
+  "v8DurableGuarantees": [
+    "browser builds batch plans but never submits paid provider tasks",
+    "batch plan max 20 items",
+    "local runner concurrency 1-8 is not represented as provider quota",
+    "submission-uncertain is never automatically retried",
+    "known task IDs resume without another POST",
+    "every emitted batch snapshot is protocol-valid and resumable",
+    "corrupt existing batch job fails closed",
+    "explicit batch create refuses overwrite",
+    "batch job/result writes use atomic temp-file-to-rename persistence",
+    "project variant export and task lineage is cross-checked",
+    "batch results return explicitly into v7 generation history",
+    "generated output attachment remains explicit"
+  ],
+  "v9": {
+    "coreSurfaces": [
+      "generation-console",
+      "variant-result-comparison",
+      "structured-production-evaluation",
+      "winner-selection",
+      "retake-delta",
+      "explicit-continuation-actions"
+    ],
+    "evaluationDimensions": [
+      "task-adherence",
+      "identity-consistency",
+      "composition",
+      "camera",
+      "motion-action",
+      "timing-shot-readability",
+      "continuity",
+      "material-physics",
+      "lighting-color",
+      "graphics-text-logo",
+      "audio-fit",
+      "artifact-severity",
+      "production-readiness"
+    ],
+    "exitCriteria": [
+      "unified single and batch generation console",
+      "project-variant-handoff-export-task lineage visible per result",
+      "comparison against frozen variant base and deltas",
+      "structured reviewer scoring with notes/evidence",
+      "explicit winner selection",
+      "explicit continuation/reference/retake actions",
+      "no browser provider credential",
+      "no automatic output or prompt mutation",
+      "backward-compatible v7/v8 history",
+      "Node 20/22/24 browser and Pages contracts",
+      "exact-100 and 192 invariants preserved",
+      "project memory updated before merge"
+    ]
+  },
+  "next": [
+    {
+      "phase": "prompt-studio-v10-production-memory-learning",
+      "priority": 1
+    },
+    {
+      "phase": "prompt-studio-v11-multi-provider-execution-abstraction",
+      "priority": 2
+    },
+    {
+      "phase": "research-corpus-500-1000",
+      "priority": 3,
+      "parallel": true
+    }
+  ],
+  "canonicalCurrentMemory": {
+    "human": "docs/PROJECT-MEMORY.md",
+    "machine": "docs/PROJECT-MEMORY.json",
+    "architectureDecisions": "docs/ARCHITECTURE-DECISIONS.md",
+    "v8OperationalContract": "docs/PROMPT-STUDIO-V8-BATCH-GENERATION.md",
+    "v8HardeningLog": "docs/PROMPT-STUDIO-V8-RELEASE-HARDENING.md"
+  }
+}
