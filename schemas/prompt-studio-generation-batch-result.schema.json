@@ -1,0 +1,21 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"Seedance Porter Generation Batch Result",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["kind","schemaVersion","batchId","planHash","project","status","createdAt","completedAt","recordedAt","items","policy"],
+  "properties":{
+    "kind":{"const":"seedance-porter-generation-batch-result"},
+    "schemaVersion":{"const":1},
+    "batchId":{"type":"string","minLength":1},
+    "planHash":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "project":{"type":"object"},
+    "status":{"enum":["succeeded","completed-with-errors"]},
+    "createdAt":{"type":"string","format":"date-time"},
+    "completedAt":{"type":"string","format":"date-time"},
+    "recordedAt":{"type":"string","format":"date-time"},
+    "items":{"type":"array","minItems":1,"maxItems":20,"items":{"$ref":"#/$defs/item"}},
+    "policy":{"type":"object","additionalProperties":false,"required":["secretPersisted","externalExecution","automaticRetry"],"properties":{"secretPersisted":{"const":false},"externalExecution":{"const":true},"automaticRetry":{"const":false}}}
+  },
+  "$defs":{"item":{"type":"object","additionalProperties":false,"required":["itemId","variant","exportHash","taskId","status","result","error"],"properties":{"itemId":{"type":"string","minLength":1},"variant":{"type":"object","additionalProperties":false,"required":["id","label","status","isBase","variantHash"],"properties":{"id":{"type":"string"},"label":{"type":"string"},"status":{"type":"string"},"isBase":{"type":"boolean"},"variantHash":{"type":"string","pattern":"^[a-f0-9]{64}$"}}},"exportHash":{"type":"string","pattern":"^[a-f0-9]{64}$"},"taskId":{"type":"string"},"status":{"enum":["succeeded","failed","cancelled","expired","submission-uncertain","blocked"]},"result":{"type":["object","null"]},"error":{"type":["object","null"]}},"allOf":[{"if":{"properties":{"status":{"enum":["succeeded","failed","cancelled","expired"]}},"required":["status"]},"then":{"properties":{"taskId":{"type":"string","minLength":1},"result":{"type":"object"}}}},{"if":{"properties":{"status":{"enum":["submission-uncertain","blocked"]}},"required":["status"]},"then":{"properties":{"result":{"type":"null"}}}}]}}
+}
