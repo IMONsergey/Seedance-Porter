@@ -2,6 +2,7 @@
 import { readFile } from 'node:fs/promises';
 import { CASE_INTELLIGENCE } from '../studio/case-intelligence-runtime.js';
 import { MULTI_SOURCE_CASES } from '../studio/multi-source-index.js';
+import { workflowPublishesStudioAsset, workflowRunsValidator } from './pages-publish-policy.mjs';
 
 const [pages, sidebar, router, bootstrap, ui, engine] = await Promise.all([
   readFile('.github/workflows/pages.yml', 'utf8'),
@@ -16,10 +17,10 @@ const failures = [];
 const assert = (condition, message) => { if (!condition) failures.push(message); };
 
 for (const asset of ['operations.css','operations-bootstrap.js','operations-engine.js','operations-ui.js']) {
-  assert(pages.includes(`cp studio/${asset} _site/${asset}`), `Pages must publish ${asset}.`);
+  assert(workflowPublishesStudioAsset(pages, asset), `Pages must publish ${asset}.`);
 }
-assert(pages.includes('node scripts/validate-operations-command-center.mjs'), 'Pages must run Operations decision contract.');
-assert(pages.includes('node scripts/validate-operations-production.mjs'), 'Pages must run Operations production contract.');
+assert(workflowRunsValidator(pages,'validate-operations-command-center.mjs'), 'Pages must run Operations decision contract.');
+assert(workflowRunsValidator(pages,'validate-operations-production.mjs'), 'Pages must run Operations production contract.');
 assert(sidebar.includes("import './operations-bootstrap.js';"), 'Sidebar shell must mount Operations bootstrap.');
 assert(router.includes("operations: 'operationsView'"), 'Central router must register Operations workspace.');
 assert(bootstrap.includes("link.href = './operations.css'"), 'Operations bootstrap must load Operations CSS.');
@@ -44,5 +45,6 @@ console.log(JSON.stringify({
   productionAssets: ['operations.css','operations-bootstrap.js','operations-engine.js','operations-ui.js'],
   snapshots: ['case-candidates.json','case-review-queue.json','coverage-plan.json','source-health.json'],
   localNamespaces: ['porterDeepReviewDraft:*','porterDeepReviewMediaEvidence:*','porterPromotionEditorial:*'],
+  publicationPolicy:'shared',
   curatedMutation: false
 }, null, 2));
