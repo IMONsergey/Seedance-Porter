@@ -60,6 +60,9 @@ function renderPanel(){
   const userRules=getPromptStudioUserRules(project);
   const isCurrent=active.id===selected.id&&coverage.missing.length===0;
   const language=getLanguage();
+  const renderSignature=JSON.stringify([project.id,project.updatedAt,project.modelProfile,project.customRules,selected.id,recommended.id,language]);
+  if(panel.dataset.renderSignature===renderSignature)return;
+  panel.dataset.renderSignature=renderSignature;
 
   panel.innerHTML=`
     <div class="studio-panel-head">
