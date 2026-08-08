@@ -82,6 +82,9 @@ jobs:
       - name: Validate Prompt Studio engine and safety contract
         run: node scripts/validate-prompt-studio.mjs
 
+      - name: Validate Prompt Studio local AI contract
+        run: node scripts/validate-prompt-studio-ai.mjs
+
       - name: Validate Prompt Studio production wiring
         run: node scripts/validate-prompt-studio-production.mjs
 
