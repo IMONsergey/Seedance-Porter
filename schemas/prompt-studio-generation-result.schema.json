@@ -14,6 +14,7 @@
     "succeeded":{"type":"boolean"},
     "terminal":{"const":true},
     "exportHash":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "studioLink":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/studioLink"}]},
     "output":{"type":["object","null"],"additionalProperties":false,"properties":{"videoUrl":{"type":"string"},"lastFrameUrl":{"type":"string"}}},
     "usage":{"type":["object","null"],"additionalProperties":false,"properties":{"completionTokens":{"type":["number","null"]},"totalTokens":{"type":["number","null"]}}},
     "error":{"type":["object","null"],"additionalProperties":false,"properties":{"code":{"type":"string"},"message":{"type":"string","maxLength":1000}}},
@@ -23,6 +24,7 @@
     "recordedAt":{"type":"string","format":"date-time"},
     "policy":{"type":"object","additionalProperties":false,"required":["secretPersisted","externalExecution"],"properties":{"secretPersisted":{"const":false},"externalExecution":{"const":true}}}
   },
+  "$defs":{"studioLink":{"type":"object","additionalProperties":false,"required":["projectId","projectUpdatedAt","handoffHash"],"properties":{"projectId":{"type":"string","minLength":1},"projectUpdatedAt":{"type":"string","format":"date-time"},"handoffHash":{"type":"string","pattern":"^[a-f0-9]{64}$"}}}},
   "allOf":[
     {"if":{"properties":{"status":{"const":"succeeded"}},"required":["status"]},"then":{"properties":{"succeeded":{"const":true},"output":{"type":"object","required":["videoUrl","lastFrameUrl"]}}}},
     {"if":{"properties":{"status":{"enum":["failed","cancelled","expired"]}},"required":["status"]},"then":{"properties":{"succeeded":{"const":false}}}}
