@@ -20,6 +20,7 @@ on:
       - 'scripts/build-case-review-queue.mjs'
       - 'scripts/build-coverage-plan.mjs'
       - 'scripts/build-curation-draft.mjs'
+      - 'scripts/build-rotation-plan.mjs'
       - 'scripts/validate-pages-contract.mjs'
       - 'scripts/validate-deep-review-workspace.mjs'
       - 'scripts/validate-review-player.mjs'
@@ -32,6 +33,8 @@ on:
       - 'scripts/validate-command-palette-production.mjs'
       - 'scripts/validate-workspace-bundles.mjs'
       - 'scripts/validate-workspace-bundles-production.mjs'
+      - 'scripts/validate-rotation-planner.mjs'
+      - 'scripts/validate-rotation-production.mjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -83,6 +86,10 @@ jobs:
         run: node scripts/validate-workspace-bundles.mjs
       - name: Validate Workspace Bundle production wiring
         run: node scripts/validate-workspace-bundles-production.mjs
+      - name: Validate Curated Rotation Planner
+        run: node scripts/validate-rotation-planner.mjs
+      - name: Validate Curated Rotation production wiring
+        run: node scripts/validate-rotation-production.mjs
       - name: Build Research Corpus + strategic operations snapshots for Pages
         continue-on-error: true
         run: npm run case:refresh
@@ -104,6 +111,7 @@ jobs:
           cp studio/operations.css _site/operations.css
           cp studio/command-palette.css _site/command-palette.css
           cp studio/workspace-bundle.css _site/workspace-bundle.css
+          cp studio/rotation.css _site/rotation.css
           cp studio/experience.css _site/experience.css
           cp studio/multi-source.css _site/multi-source.css
           cp studio/coverage-audit.css _site/coverage-audit.css
@@ -119,6 +127,9 @@ jobs:
           cp studio/workspace-bundle-bootstrap.js _site/workspace-bundle-bootstrap.js
           cp studio/workspace-bundle-engine.js _site/workspace-bundle-engine.js
           cp studio/workspace-bundle-ui.js _site/workspace-bundle-ui.js
+          cp studio/rotation-bootstrap.js _site/rotation-bootstrap.js
+          cp studio/rotation-engine.js _site/rotation-engine.js
+          cp studio/rotation-ui.js _site/rotation-ui.js
           cp studio/case-ui.js _site/case-ui.js
           cp studio/case-corpus-ui.js _site/case-corpus-ui.js
           cp studio/deep-review-bootstrap.js _site/deep-review-bootstrap.js
