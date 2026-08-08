@@ -8,6 +8,7 @@ import './prompt-studio-v5-bootstrap.js';
 import './prompt-studio-v6-bootstrap.js';
 import './prompt-studio-v7-bootstrap.js';
 import './prompt-studio-v8-bootstrap.js';
+import './prompt-studio-v9-bootstrap.js';
 import './command-palette-bootstrap.js';
 import './workspace-bundle-bootstrap.js';
 import './experience.js';
@@ -30,26 +31,12 @@ const sidebarToggle = document.querySelector('#sidebarToggle');
 const sidebarClose = document.querySelector('#sidebarClose');
 const sidebarBackdrop = document.querySelector('#sidebarBackdrop');
 
-function openSidebar() {
-  if (sidebarState) sidebarState.checked = true;
-}
-
-function closeSidebar() {
-  if (sidebarState) sidebarState.checked = false;
-}
+function openSidebar() { if (sidebarState) sidebarState.checked = true; }
+function closeSidebar() { if (sidebarState) sidebarState.checked = false; }
 
 sidebarToggle?.addEventListener('click', openSidebar);
 sidebarClose?.addEventListener('click', closeSidebar);
 sidebarBackdrop?.addEventListener('click', closeSidebar);
-
-document.querySelectorAll('.nav-tab').forEach((tab) => {
-  tab.addEventListener('click', closeSidebar);
-});
-
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') closeSidebar();
-});
-
-window.addEventListener('resize', () => {
-  if (window.innerWidth > 980) closeSidebar();
-});
+document.querySelectorAll('.nav-tab').forEach((tab) => { tab.addEventListener('click', closeSidebar); });
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeSidebar(); });
+window.addEventListener('resize', () => { if (window.innerWidth > 980) closeSidebar(); });
