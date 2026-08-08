@@ -1,0 +1,31 @@
+name: Prompt Studio v2 production wiring
+
+on:
+  push:
+    branches: [feat/prompt-studio-v2-rule-packs]
+    paths:
+      - 'scripts/apply-prompt-studio-v2-production-wiring.mjs'
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/prompt-studio-v2-rule-packs
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/apply-prompt-studio-v2-production-wiring.mjs
+      - name: Commit production validation wiring
+        run: |
+          if git diff --quiet -- .github/workflows/pages.yml .github/workflows/prompt-studio-v2-ci.yml; then exit 0; fi
+          git config user.name 'seedance-porter-bot'
+          git config user.email 'seedance-porter-bot@users.noreply.github.com'
+          git add .github/workflows/pages.yml .github/workflows/prompt-studio-v2-ci.yml
+          git commit -m 'ci: enforce Prompt Studio v2 production contract'
+          git push origin HEAD:feat/prompt-studio-v2-rule-packs
