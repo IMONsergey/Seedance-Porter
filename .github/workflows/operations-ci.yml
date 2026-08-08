@@ -1,0 +1,42 @@
+name: Operations Command Center CI
+
+on:
+  pull_request:
+    paths:
+      - 'studio/operations-*.js'
+      - 'studio/operations.css'
+      - 'studio/sidebar.js'
+      - 'studio/workspace-router.js'
+      - 'scripts/validate-operations-command-center.mjs'
+      - 'scripts/validate-operations-production.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/operations-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  operations:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate Operations decision engine
+        run: node scripts/validate-operations-command-center.mjs
+      - name: Validate Operations production wiring
+        run: node scripts/validate-operations-production.mjs
+      - name: Validate exact 100-card browser contract
+        run: npm run validate:render
+      - name: Syntax check Operations modules
+        run: |
+          node --check studio/operations-bootstrap.js
+          node --check studio/operations-engine.js
+          node --check studio/operations-ui.js
+          node --check scripts/validate-operations-command-center.mjs
+          node --check scripts/validate-operations-production.mjs
