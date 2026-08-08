@@ -1,0 +1,35 @@
+name: Prompt Studio v2 Pages migration
+
+on:
+  push:
+    branches: [feat/prompt-studio-v2-rule-packs]
+    paths:
+      - 'scripts/apply-prompt-studio-v2-pages-migration.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/prompt-studio-v2-rule-packs
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/apply-prompt-studio-v2-pages-migration.mjs
+      - name: Commit Pages validator wiring only
+        run: |
+          if git diff --quiet -- .github/workflows/pages.yml; then
+            echo 'Prompt Studio v2 Pages validator already wired.'
+            exit 0
+          fi
+          git config user.name 'seedance-porter-bot'
+          git config user.email 'seedance-porter-bot@users.noreply.github.com'
+          git add .github/workflows/pages.yml
+          git commit -m 'ci: validate Prompt Studio v2 Rule Packs before Pages deploy'
+          git push origin HEAD:feat/prompt-studio-v2-rule-packs
