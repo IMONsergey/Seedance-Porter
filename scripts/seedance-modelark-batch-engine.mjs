@@ -32,6 +32,8 @@ export function validateSeedanceBatchJob(job,plan=null){
     if(item?.job&&String(item.job.exportHash||'')!==String(item.exportHash||''))errors.push(`job-export-hash-mismatch:${item.itemId}`);
     if(item?.job&&item?.result&&String(item.result.taskId||'')!==String(item.job.taskId||''))errors.push(`job-result-task-mismatch:${item.itemId}`);
     if(status==='submission-uncertain'&&item?.job?.taskId)errors.push(`submission-uncertain-has-task-id:${item.itemId}`);
+    if(REVIEW_STOP.has(status)&&item?.result)errors.push(`review-stop-result-present:${item.itemId}`);
+    if(REVIEW_STOP.has(status)&&!item?.completedAt)errors.push(`review-stop-completed-at-missing:${item.itemId}`);
     if(PROVIDER_TERMINAL.has(status)&&(!item?.job||!item?.result||String(item.result.status||'')!==status))errors.push(`terminal-result-invalid:${item.itemId}`);
     if(PROVIDER_TERMINAL.has(status)&&!item?.completedAt)errors.push(`terminal-completed-at-missing:${item.itemId}`);
   }
