@@ -1,0 +1,53 @@
+name: curated-swap-guard-ci
+
+on:
+  pull_request:
+    paths:
+      - 'studio/curated-swap-guard-engine.js'
+      - 'scripts/build-curated-swap-baseline.mjs'
+      - 'scripts/verify-curated-swap-implementation.mjs'
+      - 'scripts/validate-curated-swap-guard.mjs'
+      - 'docs/CURATED-SWAP-GUARD.md'
+      - '.github/workflows/curated-swap-guard-ci.yml'
+      - 'studio/digest-data.js'
+      - 'studio/multi-source-cases*.js'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/curated-swap-guard-engine.js'
+      - 'scripts/build-curated-swap-baseline.mjs'
+      - 'scripts/verify-curated-swap-implementation.mjs'
+      - 'scripts/validate-curated-swap-guard.mjs'
+      - '.github/workflows/curated-swap-guard-ci.yml'
+      - 'studio/digest-data.js'
+      - 'studio/multi-source-cases*.js'
+  workflow_dispatch:
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate exact staged Curated Swap Guard
+        run: node scripts/validate-curated-swap-guard.mjs
+      - name: Validate parent Curation Staging Pack
+        run: node scripts/validate-curation-staging-pack.mjs
+      - name: Validate parent Curated Rotation Planner
+        run: node scripts/validate-rotation-planner.mjs
+      - name: Validate protected exact-100 browser contract
+        run: npm run validate:render
+      - name: Syntax-check swap guard modules
+        run: |
+          node --check studio/curated-swap-guard-engine.js
+          node --check scripts/build-curated-swap-baseline.mjs
+          node --check scripts/verify-curated-swap-implementation.mjs
+          node --check scripts/validate-curated-swap-guard.mjs
