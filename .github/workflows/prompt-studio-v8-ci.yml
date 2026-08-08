@@ -1,0 +1,103 @@
+name: Prompt Studio v8 Variant Batch Generation CI
+
+on:
+  pull_request:
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'scripts/seedance-modelark-*.mjs'
+      - 'scripts/validate-prompt-studio-v7-*.mjs'
+      - 'scripts/validate-prompt-studio-v8-*.mjs'
+      - 'scripts/validate-seedance-modelark-*.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - 'schemas/prompt-studio-generation*.json'
+      - 'docs/PROJECT-CONTEXT.md'
+      - 'docs/ROADMAP.md'
+      - 'docs/ARCHITECTURE-DECISIONS.md'
+      - 'docs/PROJECT-STATE.json'
+      - 'docs/PROMPT-STUDIO-V8-BATCH-GENERATION.md'
+      - 'AGENTS.md'
+      - 'package.json'
+      - '.gitignore'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v8-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'scripts/seedance-modelark-*.mjs'
+      - 'scripts/validate-prompt-studio-v7-*.mjs'
+      - 'scripts/validate-prompt-studio-v8-*.mjs'
+      - 'scripts/validate-seedance-modelark-*.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - 'schemas/prompt-studio-generation*.json'
+      - 'docs/PROJECT-CONTEXT.md'
+      - 'docs/ROADMAP.md'
+      - 'docs/ARCHITECTURE-DECISIONS.md'
+      - 'docs/PROJECT-STATE.json'
+      - 'docs/PROMPT-STUDIO-V8-BATCH-GENERATION.md'
+      - 'AGENTS.md'
+      - 'package.json'
+      - '.gitignore'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v8-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  v8:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20,22,24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate v4 Variants/Handoff baseline
+        run: node scripts/validate-prompt-studio-v4-engines.mjs
+      - name: Validate v5 provider baseline
+        run: node scripts/validate-prompt-studio-v5-engines.mjs
+      - name: Validate v6 audio/provider baseline
+        run: node scripts/validate-prompt-studio-v6-audio.mjs
+      - name: Validate v7 result/continuation baseline
+        run: node scripts/validate-prompt-studio-v7-generation-results.mjs
+      - name: Validate secure single-task Runner baseline
+        run: npm run validate:seedance-runner
+      - name: Validate v8 browser batch plan engine
+        run: node scripts/validate-prompt-studio-v8-batch.mjs
+      - name: Validate external ModelArk Batch Runner
+        run: npm run validate:seedance-batch
+      - name: Validate v8 browser UI
+        run: node scripts/validate-prompt-studio-v8-ui.mjs
+      - name: Validate v8 production + project memory
+        run: node scripts/validate-prompt-studio-v8-production.mjs
+      - name: Validate generalized Pages/module graph
+        run: node scripts/validate-pages-contract.mjs
+      - name: Validate protected exact-100 renderer
+        run: npm run validate:render
+      - name: Parse generation protocol schemas and project state
+        run: |
+          node -e "for (const p of ['schemas/prompt-studio-generation-job.schema.json','schemas/prompt-studio-generation-result.schema.json','schemas/prompt-studio-generation-batch-plan.schema.json','schemas/prompt-studio-generation-batch-job.schema.json','schemas/prompt-studio-generation-batch-result.schema.json','docs/PROJECT-STATE.json']) JSON.parse(require('fs').readFileSync(p,'utf8')); console.log('json-ok')"
+      - name: Syntax-check v8 and Runner modules
+        run: |
+          node --check studio/prompt-studio-generation-results.js
+          node --check studio/prompt-studio-generation-batch.js
+          node --check studio/prompt-studio-v8-batch-ui.js
+          node --check studio/prompt-studio-v8-bootstrap.js
+          node --check studio/sidebar.js
+          node --check scripts/seedance-modelark-runner-lineage.mjs
+          node --check scripts/seedance-modelark-runner.mjs
+          node --check scripts/seedance-modelark-batch-engine.mjs
+          node --check scripts/seedance-modelark-batch.mjs
+          node --check scripts/validate-prompt-studio-v8-batch.mjs
+          node --check scripts/validate-seedance-modelark-batch.mjs
+          node --check scripts/validate-prompt-studio-v8-ui.mjs
+          node --check scripts/validate-prompt-studio-v8-production.mjs
