@@ -4,6 +4,7 @@ import './prompt-studio-bootstrap.js';
 import './prompt-studio-rule-packs-bootstrap.js';
 import './prompt-studio-production-tools-bootstrap.js';
 import './prompt-studio-v4-bootstrap.js';
+import './prompt-studio-v5-bootstrap.js';
 import './command-palette-bootstrap.js';
 import './workspace-bundle-bootstrap.js';
 import './experience.js';

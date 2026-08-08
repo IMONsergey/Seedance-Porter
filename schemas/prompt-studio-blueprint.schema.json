@@ -1,0 +1,31 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"Seedance Porter Prompt Studio Blueprint",
+  "type":"object",
+  "required":["id","label","category","mode","aspect","duration","modelProfile","requiredReferenceRoles","customRules","variables","ingredients","sections"],
+  "properties":{
+    "id":{"type":"string","minLength":1},
+    "label":{"type":"string","minLength":1},
+    "labelRu":{"type":"string"},
+    "category":{"type":"string"},
+    "description":{"type":"string"},
+    "mode":{"enum":["text-to-video","image-to-video","first-last-frame","multi-reference"]},
+    "aspect":{"type":"string"},
+    "duration":{"type":"number","minimum":1,"maximum":30},
+    "modelProfile":{"type":"string"},
+    "requiredReferenceRoles":{"type":"array","items":{"type":"string"}},
+    "customRules":{"type":"array","items":{"type":"string"}},
+    "variables":{"type":"array"},
+    "ingredients":{"type":"array"},
+    "timeline":{"type":["object","null"]},
+    "sections":{"type":"object","additionalProperties":{"type":"string"}},
+    "createdAt":{"type":"string"},
+    "updatedAt":{"type":"string"}
+  },
+  "not":{"anyOf":[
+    {"required":["source"]},
+    {"required":["references"]},
+    {"required":["storyboard"]},
+    {"required":["variants"]}
+  ]}
+}

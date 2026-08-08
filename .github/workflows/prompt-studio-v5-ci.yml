@@ -1,0 +1,74 @@
+name: Prompt Studio v5 Repair Blueprints Seedance CI
+
+on:
+  pull_request:
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'schemas/prompt-studio*.json'
+      - 'scripts/validate-prompt-studio*.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v5-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'schemas/prompt-studio*.json'
+      - 'scripts/validate-prompt-studio*.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v5-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  v5:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20,22,24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate Prompt Studio v1 baseline
+        run: node scripts/validate-prompt-studio.mjs
+      - name: Validate Prompt Studio v2 baseline
+        run: node scripts/validate-prompt-studio-v2-rule-packs.mjs
+      - name: Validate Prompt Studio v3 persistence baseline
+        run: node scripts/validate-prompt-studio-v3-persistence.mjs
+      - name: Validate Prompt Studio v4 engines baseline
+        run: node scripts/validate-prompt-studio-v4-engines.mjs
+      - name: Validate Prompt Studio v4 workflow guard baseline
+        run: node scripts/validate-prompt-studio-v4-workflow-guard.mjs
+      - name: Validate Prompt Studio v5 engines
+        run: node scripts/validate-prompt-studio-v5-engines.mjs
+      - name: Validate Prompt Studio v5 workflow guard
+        run: node scripts/validate-prompt-studio-v5-workflow-guard.mjs
+      - name: Validate Prompt Studio v5 production wiring
+        run: node scripts/validate-prompt-studio-v5-production.mjs
+      - name: Validate generalized Pages/module graph
+        run: node scripts/validate-pages-contract.mjs
+      - name: Validate protected exact-100 renderer
+        run: npm run validate:render
+      - name: Syntax-check v5 modules
+        run: |
+          node --check studio/prompt-studio-repair.js
+          node --check studio/prompt-studio-blueprints.js
+          node --check studio/prompt-studio-generation-handoff.js
+          node --check studio/prompt-studio-seedance-adapter.js
+          node --check studio/prompt-studio-v5-workflow-guard.js
+          node --check studio/prompt-studio-v5-ui.js
+          node --check studio/prompt-studio-v5-bootstrap.js
+          node --check studio/sidebar.js
+          node --check scripts/validate-prompt-studio-v5-engines.mjs
+          node --check scripts/validate-prompt-studio-v5-workflow-guard.mjs
+          node --check scripts/validate-prompt-studio-v5-production.mjs
