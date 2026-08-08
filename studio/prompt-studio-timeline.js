@@ -2,7 +2,21 @@ export const PROMPT_STUDIO_SHOT_TYPES = Object.freeze([
   'establishing','wide','medium','close-up','macro','overhead','pov','tracking','packshot','interface','transition','custom'
 ]);
 
-const CAMERA_TERMS=['orbit','pan','tilt','dolly','truck','tracking','push-in','push in','pull-back','pull back','zoom','crane','handheld','roll','arc'];
+const CAMERA_MOVE_PATTERNS=Object.freeze([
+  ['orbit',/\borbit(?:ing)?\b/],
+  ['pan',/\bpan(?:ning)?\b/],
+  ['tilt',/\btilt(?:ing)?\b/],
+  ['dolly',/\bdolly(?:ing)?\b/],
+  ['truck',/\btruck(?:ing)?\b/],
+  ['tracking',/\btrack(?:ing)?\b/],
+  ['push-in',/\bpush\s+in\b/],
+  ['pull-back',/\bpull\s+back\b/],
+  ['zoom',/\bzoom(?:ing)?\b/],
+  ['crane',/\bcrane\b/],
+  ['handheld',/\bhandheld\b/],
+  ['roll',/\broll(?:ing)?\b/],
+  ['arc',/\barc(?:ing)?\b/]
+]);
 const REF_TOKEN=/@ref\d{2,}/gi;
 
 export function normalizePromptStudioTimeline(projectOrTimeline) {
@@ -178,6 +192,11 @@ export function importTimelineFromTiming(project) {
   return next;
 }
 
+export function detectPromptStudioTimelineCameraMoves(value){
+  const text=normalizeText(value);
+  return CAMERA_MOVE_PATTERNS.filter(([,pattern])=>pattern.test(text)).map(([label])=>label);
+}
+
 export function lintPromptStudioTimeline(project) {
   const timeline=normalizePromptStudioTimeline(project);
   const ranges=timelineWithTimeRanges(project).filter(item=>item.enabled!==false);
@@ -193,7 +212,7 @@ export function lintPromptStudioTimeline(project) {
     if(beat.duration<0.45)push('warning','beat-too-short',`${beat.label} is only ${beat.duration}s.`,beat.id);
     if(!beat.purpose.trim())push('info','beat-purpose-missing',`${beat.label} has no explicit purpose.`,beat.id);
     if(!beat.action.trim())push('warning','beat-action-missing',`${beat.label} has no visible action/state change.`,beat.id);
-    const moves=uniqueStrings(CAMERA_TERMS.filter(term=>normalizeText(beat.camera).includes(term)));
+    const moves=detectPromptStudioTimelineCameraMoves(beat.camera);
     if(moves.length>1)push('warning','beat-camera-overload',`${beat.label} contains competing camera moves: ${moves.join(', ')}.`,beat.id);
     for(const token of beat.referenceTokens){if(!activeRefs.has(token.toLowerCase()))push('error','beat-reference-unresolved',`${beat.label} uses ${token}, but no enabled project reference matches it.`,beat.id);}
   }
