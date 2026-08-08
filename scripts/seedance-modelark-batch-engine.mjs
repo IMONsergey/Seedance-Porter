@@ -8,6 +8,8 @@ export const MAX_BATCH_CONCURRENCY=8;
 const PROVIDER_TERMINAL=new Set(['succeeded','failed','cancelled','expired']);
 const REVIEW_STOP=new Set(['submission-uncertain','blocked']);
 const ITEM_STATUSES=new Set(['pending','submitting','submitted','queued','running','unknown','interrupted','submission-uncertain','blocked','succeeded','failed','cancelled','expired']);
+const BATCH_STATUSES=new Set(['pending','running','needs-resume','needs-review','succeeded','completed-with-errors']);
+const BATCH_TERMINAL=new Set(['succeeded','completed-with-errors']);
 
 export class SeedanceBatchError extends Error{constructor(code,message,details={}){super(message);this.name='SeedanceBatchError';this.code=code;this.details=details;}}
 
@@ -37,6 +39,7 @@ export function validateSeedanceBatchJob(job,plan=null){
     if(PROVIDER_TERMINAL.has(status)&&(!item?.job||!item?.result||String(item.result.status||'')!==status))errors.push(`terminal-result-invalid:${item.itemId}`);
     if(PROVIDER_TERMINAL.has(status)&&!item?.completedAt)errors.push(`terminal-completed-at-missing:${item.itemId}`);
   }
+  const batchStatus=String(job?.status||''),complete=isBatchComplete(job?.items||[]);if(!BATCH_STATUSES.has(batchStatus))errors.push('invalid-batch-status');if(complete){if(!BATCH_TERMINAL.has(batchStatus))errors.push('complete-batch-status-mismatch');if(!job?.completedAt)errors.push('complete-batch-completed-at-missing');}else{if(BATCH_TERMINAL.has(batchStatus))errors.push('incomplete-batch-terminal-status');if(job?.completedAt!=null)errors.push('incomplete-batch-completed-at-present');}
   if(plan){
     if(String(plan?.integrity?.contentHash||'')!==String(job?.planHash||''))errors.push('plan-job-hash-mismatch');
     const byId=new Map((plan.items||[]).map(item=>[item.itemId,item]));for(const item of job?.items||[]){const planned=byId.get(item.itemId);if(!planned)errors.push(`job-item-not-in-plan:${item.itemId}`);else if(String(planned.exportHash)!==String(item.exportHash))errors.push(`job-item-export-hash-mismatch:${item.itemId}`);}
