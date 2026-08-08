@@ -27,6 +27,8 @@ on:
       - 'scripts/validate-source-adapters.mjs'
       - 'scripts/validate-operations-command-center.mjs'
       - 'scripts/validate-operations-production.mjs'
+      - 'scripts/validate-command-palette.mjs'
+      - 'scripts/validate-command-palette-production.mjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -41,7 +43,6 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
-# GitHub Pages is enabled with Source = GitHub Actions.
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -49,43 +50,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Install dependencies
         run: npm install
-
       - name: Validate Pages production artifact contract
         run: node scripts/validate-pages-contract.mjs
-
       - name: Validate Deep Review Workspace contract
         run: node scripts/validate-deep-review-workspace.mjs
-
       - name: Validate Review Player evidence boundary
         run: node scripts/validate-review-player.mjs
-
       - name: Validate Promotion Workspace contract
         run: node scripts/validate-promotion-workspace.mjs
-
       - name: Validate strategic Coverage Planner contract
         run: node scripts/validate-coverage-planner.mjs
-
       - name: Validate source adapter registry, risk policy and health engine
         run: node scripts/validate-source-adapters.mjs
-
       - name: Validate Operations Command Center
         run: node scripts/validate-operations-command-center.mjs
-
       - name: Validate Operations production wiring
         run: node scripts/validate-operations-production.mjs
-
+      - name: Validate global Command Palette
+        run: node scripts/validate-command-palette.mjs
+      - name: Validate Command Palette production wiring
+        run: node scripts/validate-command-palette-production.mjs
       - name: Build Research Corpus + strategic operations snapshots for Pages
         continue-on-error: true
         run: npm run case:refresh
-
       - name: Prepare static Pages site
         shell: bash
         run: |
@@ -102,6 +95,7 @@ jobs:
           cp studio/coverage-planner.css _site/coverage-planner.css
           cp studio/source-health.css _site/source-health.css
           cp studio/operations.css _site/operations.css
+          cp studio/command-palette.css _site/command-palette.css
           cp studio/experience.css _site/experience.css
           cp studio/multi-source.css _site/multi-source.css
           cp studio/coverage-audit.css _site/coverage-audit.css
@@ -111,6 +105,9 @@ jobs:
           cp studio/operations-bootstrap.js _site/operations-bootstrap.js
           cp studio/operations-engine.js _site/operations-engine.js
           cp studio/operations-ui.js _site/operations-ui.js
+          cp studio/command-palette-bootstrap.js _site/command-palette-bootstrap.js
+          cp studio/command-palette-engine.js _site/command-palette-engine.js
+          cp studio/command-palette-ui.js _site/command-palette-ui.js
           cp studio/case-ui.js _site/case-ui.js
           cp studio/case-corpus-ui.js _site/case-corpus-ui.js
           cp studio/deep-review-bootstrap.js _site/deep-review-bootstrap.js
@@ -149,9 +146,6 @@ jobs:
           cp studio/library-data.js _site/library-data.js
           cp studio/digest-data.js _site/digest-data.js
 
-          # Research operations snapshots are generated in the Pages workspace. If an
-          # upstream source is temporarily unavailable, deploy the curated app anyway
-          # and let research workspaces expose explicit pending/partial states.
           for snapshot in case-candidates.json case-review-queue.json coverage-plan.json source-health.json; do
             if [[ -f "studio/$snapshot" ]]; then
               cp "studio/$snapshot" "_site/$snapshot"
@@ -159,9 +153,6 @@ jobs:
           done
 
           touch _site/.nojekyll
-
-          # Project Pages is hosted under /Seedance-Porter/, so root-relative
-          # asset URLs used by the local Studio need to become relative here.
           sed -i 's|href="/library.css"|href="./library.css"|g' _site/index.html
           sed -i 's|href="/digest.css"|href="./digest.css"|g' _site/index.html
           sed -i 's|href="/case-intelligence.css"|href="./case-intelligence.css"|g' _site/index.html
@@ -169,10 +160,8 @@ jobs:
           sed -i 's|src="/library.js"|src="./library.js"|g' _site/index.html
           sed -i 's|src="/sidebar.js"|src="./sidebar.js"|g' _site/index.html
           sed -i 's|src="/case-ui.js"|src="./case-ui.js"|g' _site/index.html
-
       - name: Configure Pages
         uses: actions/configure-pages@v6
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:

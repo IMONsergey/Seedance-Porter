@@ -1,5 +1,6 @@
 import './workspace-router.js';
 import './operations-bootstrap.js';
+import './command-palette-bootstrap.js';
 import './experience.js';
 import './experience-stability.js';
 import './case-translation-runtime.js';
