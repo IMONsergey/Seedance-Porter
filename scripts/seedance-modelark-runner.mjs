@@ -11,6 +11,7 @@ import {
   submitSeedanceGeneration,
   waitForSeedanceGeneration
 } from './seedance-modelark-runner-engine.mjs';
+import { applyExportStudioLinkToJob, applyJobStudioLinkToResult } from './seedance-modelark-runner-lineage.mjs';
 
 const [command,...argv]=process.argv.slice(2);
 
@@ -31,20 +32,20 @@ try{
 
 async function submitCommand(args){
   const parsed=parseArgs(args);const input=requirePositional(parsed,0,'Seedance export JSON');const output=resolve(parsed.options.out||defaultPath(input,'.job.json'));
-  const bundle=await loadJson(input);const job=await submitSeedanceGeneration(bundle);await saveJson(output,job);printState('submitted',job,output);
+  const bundle=await loadJson(input);const job=applyExportStudioLinkToJob(await submitSeedanceGeneration(bundle),bundle);await saveJson(output,job);printState('submitted',job,output);
 }
 
 async function statusCommand(args){
   const parsed=parseArgs(args);const input=requirePositional(parsed,0,'generation job JSON');const output=resolve(parsed.options.out||input);const job=requireJob(await loadJson(input));
   const current=await retrieveSeedanceGeneration(job);await saveJson(output,current);printState('status',current,output);
-  if(current.terminal){const resultPath=parsed.options.result?resolve(parsed.options.result):'';if(resultPath){await saveJson(resultPath,buildGenerationResult(current));console.log(`result=${resultPath}`);}}
+  if(current.terminal){const resultPath=parsed.options.result?resolve(parsed.options.result):'';if(resultPath){await saveJson(resultPath,applyJobStudioLinkToResult(buildGenerationResult(current),current));console.log(`result=${resultPath}`);}}
 }
 
 async function waitCommand(args){
   const parsed=parseArgs(args);const input=requirePositional(parsed,0,'generation job JSON');const output=resolve(parsed.options.out||input),resultPath=resolve(parsed.options.result||defaultPath(output,'.result.json'));const job=requireJob(await loadJson(input));
   const pollMs=secondsOption(parsed.options.poll,10)*1000,timeoutMs=secondsOption(parsed.options.timeout,3600)*1000;
   const completed=await waitForSeedanceGeneration(job,{pollMs,timeoutMs,onPoll:async current=>{await saveJson(output,current);printPoll(current);}});
-  await saveJson(output,completed.job);await saveJson(resultPath,completed.result);printState('terminal',completed.job,output);console.log(`result=${resultPath}`);if(completed.job.status!=='succeeded')process.exitCode=2;
+  const result=applyJobStudioLinkToResult(completed.result,completed.job);await saveJson(output,completed.job);await saveJson(resultPath,result);printState('terminal',completed.job,output);console.log(`result=${resultPath}`);if(completed.job.status!=='succeeded')process.exitCode=2;
 }
 
 async function cancelCommand(args){
@@ -57,8 +58,8 @@ async function downloadCommand(args){
 
 async function runCommand(args){
   const parsed=parseArgs(args);const input=requirePositional(parsed,0,'Seedance export JSON');const jobPath=resolve(parsed.options.job||defaultPath(input,'.job.json')),resultPath=resolve(parsed.options.result||defaultPath(input,'.result.json')),videoPath=resolve(parsed.options.video||defaultPath(input,'.mp4'));const pollMs=secondsOption(parsed.options.poll,10)*1000,timeoutMs=secondsOption(parsed.options.timeout,3600)*1000;
-  const bundle=await loadJson(input);let job=await submitSeedanceGeneration(bundle);await saveJson(jobPath,job);printState('submitted',job,jobPath);
-  const completed=await waitForSeedanceGeneration(job,{pollMs,timeoutMs,onPoll:async current=>{job=current;await saveJson(jobPath,current);printPoll(current);}});job=completed.job;await saveJson(jobPath,job);await saveJson(resultPath,completed.result);printState('terminal',job,jobPath);console.log(`result=${resultPath}`);
+  const bundle=await loadJson(input);let job=applyExportStudioLinkToJob(await submitSeedanceGeneration(bundle),bundle);await saveJson(jobPath,job);printState('submitted',job,jobPath);
+  const completed=await waitForSeedanceGeneration(job,{pollMs,timeoutMs,onPoll:async current=>{job=current;await saveJson(jobPath,current);printPoll(current);}});job=completed.job;const result=applyJobStudioLinkToResult(completed.result,job);await saveJson(jobPath,job);await saveJson(resultPath,result);printState('terminal',job,jobPath);console.log(`result=${resultPath}`);
   if(job.status!=='succeeded'){process.exitCode=2;return;}
   const downloaded=await downloadSeedanceGenerationOutput(job);await ensureParent(videoPath);await writeFile(videoPath,downloaded.bytes);console.log(`downloaded task=${job.taskId} bytes=${downloaded.contentLength} file=${videoPath}`);
 }
@@ -73,4 +74,4 @@ async function ensureParent(path){await mkdir(dirname(path),{recursive:true});}
 function defaultPath(input,suffix){const absolute=resolve(input),extension=extname(absolute);return extension?`${absolute.slice(0,-extension.length)}${suffix}`:`${absolute}${suffix}`;}
 function printState(prefix,job,path){console.log(`${prefix} task=${job.taskId} status=${job.status} job=${resolve(path)}`);}
 function printPoll(job){console.log(`poll task=${job.taskId} status=${job.status}`);}
-function printHelp(){console.log(`Seedance Porter — external ModelArk generation runner\n\nCredentials:\n  ARK_API_KEY must be set in the process environment. There is intentionally no --api-key flag.\n\nCommands:\n  submit <export.json> [--out job.json]\n  status <job.json> [--out job.json] [--result result.json]\n  wait <job.json> [--out job.json] [--result result.json] [--poll 10] [--timeout 3600]\n  cancel <job.json> [--out job.json]\n  download <job.json> [--out video.mp4]\n  run <export.json> [--job job.json] [--result result.json] [--video video.mp4] [--poll 10] [--timeout 3600]\n\nSafety:\n  cancel only cancels queued tasks. It refuses running tasks and refuses to delete terminal provider records.\n  job/result manifests never persist ARK_API_KEY or Authorization headers.\n  generated video downloads do not send the ModelArk API key to the signed output URL.`);}
+function printHelp(){console.log(`Seedance Porter — external ModelArk generation runner\n\nCredentials:\n  ARK_API_KEY must be set in the process environment. There is intentionally no --api-key flag.\n\nCommands:\n  submit <export.json> [--out job.json]\n  status <job.json> [--out job.json] [--result result.json]\n  wait <job.json> [--out job.json] [--result result.json] [--poll 10] [--timeout 3600]\n  cancel <job.json> [--out job.json]\n  download <job.json> [--out video.mp4]\n  run <export.json> [--job job.json] [--result result.json] [--video video.mp4] [--poll 10] [--timeout 3600]\n\nSafety:\n  cancel only cancels queued tasks. It refuses running tasks and refuses to delete terminal provider records.\n  job/result manifests never persist ARK_API_KEY or Authorization headers.\n  Studio lineage is preserved when the provider export contains a valid studioLink.\n  generated video downloads do not send the ModelArk API key to the signed output URL.`);}
