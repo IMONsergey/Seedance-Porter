@@ -22,6 +22,7 @@ assert(workflowRunsValidator(pages,'validate-command-palette-production.mjs'),'P
 assert(sidebar.includes("import './command-palette-bootstrap.js';"),'Application shell must mount Command Palette.');
 assert(sidebar.indexOf("import './operations-bootstrap.js';") < sidebar.indexOf("import './command-palette-bootstrap.js';"),'Palette must mount after Operations so workspace navigation is indexed.');
 assert(bootstrap.includes("link.href = './command-palette.css'"),'Palette bootstrap must load CSS.');
+assert(bootstrap.includes("typeof Element.prototype.scrollIntoView !== 'function'")&&bootstrap.includes("value() {}"),'Palette bootstrap must degrade safely when scrollIntoView is unavailable in embedded/limited DOM environments.');
 assert(ui.includes('case-candidates.json')&&ui.includes('case-review-queue.json'),'Palette must gracefully enrich index from research snapshots.');
 assert(ui.includes('metaKey')&&ui.includes('ctrlKey'),'Palette must support Cmd/Ctrl+K.');
 assert(ui.includes("import { SOURCE_UNIVERSE } from './source-universe.js';"),'Palette must consume the canonical derived Source Universe export.');
@@ -33,4 +34,4 @@ const curated=[...CASE_INTELLIGENCE,...MULTI_SOURCE_CASES];
 assert(curated.length===100&&new Set(curated.map(item=>item.id)).size===100,`Palette production baseline must be exact 100 curated cases; got ${curated.length}.`);
 
 if(failures.length){console.error('Command Palette production contract failed:\n'+failures.map(item=>`- ${item}`).join('\n'));process.exit(1);}
-console.log(JSON.stringify({ok:true,curatedCases:curated.length,sourceUniverse:SOURCE_UNIVERSE.length,assets:['command-palette.css','command-palette-bootstrap.js','command-palette-engine.js','command-palette-ui.js','source-universe.js'],publicationPolicy:'shared',shortcut:'Cmd/Ctrl+K',curatedMutation:false},null,2));
+console.log(JSON.stringify({ok:true,curatedCases:curated.length,sourceUniverse:SOURCE_UNIVERSE.length,assets:['command-palette.css','command-palette-bootstrap.js','command-palette-engine.js','command-palette-ui.js','source-universe.js'],publicationPolicy:'shared',shortcut:'Cmd/Ctrl+K',scrollCapabilityFallback:true,curatedMutation:false},null,2));
