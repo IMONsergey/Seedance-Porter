@@ -6,7 +6,7 @@ export const SEEDANCE2_MODELARK_PROFILE=Object.freeze({
   endpoint:'https://ark.ap-southeast.bytepluses.com/api/v3/contents/generations/tasks',
   retrieveEndpoint:'https://ark.ap-southeast.bytepluses.com/api/v3/contents/generations/tasks/{task_id}',
   verifiedAt:'2026-08-08',
-  apiReferenceUpdatedAt:'2026-06-29',
+  apiReferenceUpdatedAt:'2026-08-07',
   capabilities:{images:9,videos:3,audios:3,duration:{min:4,max:15,auto:-1},ratios:['16:9','4:3','1:1','3:4','9:16','21:9','adaptive'],resolutions:['480p','720p','1080p','4k'],generateAudio:true,returnLastFrame:true,watermark:true,priority:{min:0,max:9}},
   unsupported:['seed','camera_fixed','frames','draft','service_tier']
 });
@@ -27,16 +27,18 @@ export async function buildSeedance2ModelArkExport(handoff,options={}){
   const safetyIdentifier=String(options.safetyIdentifier||'');if(safetyIdentifier&&(!isAscii(safetyIdentifier)||safetyIdentifier.length>64))errors.push('invalid-safety-identifier');
   const callbackUrl=String(options.callbackUrl||'');if(callbackUrl&&!/^https:\/\//i.test(callbackUrl))errors.push('invalid-callback-url');
 
-  const references=(handoff?.references||[]).filter(ref=>String(ref.token||''));const imageRefs=references.filter(ref=>ref.mediaType==='image'),videoRefs=references.filter(ref=>ref.mediaType==='video'),unknownRefs=references.filter(ref=>!['image','video'].includes(ref.mediaType));
-  if(imageRefs.length>9)errors.push(`too-many-images:${imageRefs.length}`);if(videoRefs.length>3)errors.push(`too-many-videos:${videoRefs.length}`);if(unknownRefs.length)errors.push(`unsupported-reference-media:${unknownRefs.map(ref=>ref.token).join(',')}`);
+  const references=(handoff?.references||[]).filter(ref=>String(ref.token||''));const imageRefs=references.filter(ref=>ref.mediaType==='image'),videoRefs=references.filter(ref=>ref.mediaType==='video'),audioRefs=references.filter(ref=>ref.mediaType==='audio'),unknownRefs=references.filter(ref=>!['image','video','audio'].includes(ref.mediaType));
+  if(imageRefs.length>9)errors.push(`too-many-images:${imageRefs.length}`);if(videoRefs.length>3)errors.push(`too-many-videos:${videoRefs.length}`);if(audioRefs.length>3)errors.push(`too-many-audios:${audioRefs.length}`);if(unknownRefs.length)errors.push(`unsupported-reference-media:${unknownRefs.map(ref=>ref.token).join(',')}`);
+  if(audioRefs.length&&imageRefs.length+videoRefs.length<1)errors.push('audio-reference-requires-image-or-video');
   for(const ref of references){if(ref.availability!=='url'||!/^https?:\/\//i.test(String(ref.uri||'')))errors.push(`non-portable-reference:${ref.token}`);}
-  validateModeReferences(handoff?.project?.mode,imageRefs,videoRefs,errors);
+  validateModeReferences(handoff?.project?.mode,imageRefs,videoRefs,audioRefs,errors);
 
-  const tokenMap=new Map();imageRefs.forEach((ref,index)=>tokenMap.set(String(ref.token).toLowerCase(),`[Image ${index+1}]`));videoRefs.forEach((ref,index)=>tokenMap.set(String(ref.token).toLowerCase(),`[Video ${index+1}]`));
+  const tokenMap=new Map();imageRefs.forEach((ref,index)=>tokenMap.set(String(ref.token).toLowerCase(),`[Image ${index+1}]`));videoRefs.forEach((ref,index)=>tokenMap.set(String(ref.token).toLowerCase(),`[Video ${index+1}]`));audioRefs.forEach((ref,index)=>tokenMap.set(String(ref.token).toLowerCase(),`[Audio ${index+1}]`));
   const prompt=replaceStudioReferenceTokens(String(handoff?.compiledPrompt||''),tokenMap);if(/@ref\d{2,}/i.test(prompt))errors.push('unmapped-studio-reference-token');
   const content=[{type:'text',text:prompt}];
   for(const ref of imageRefs)content.push({type:'image_url',image_url:{url:String(ref.uri)},role:imageRole(ref,handoff?.project?.mode)});
   for(const ref of videoRefs)content.push({type:'video_url',video_url:{url:String(ref.uri)},role:'reference_video'});
+  for(const ref of audioRefs)content.push({type:'audio_url',audio_url:{url:String(ref.uri)},role:'reference_audio'});
   const payload={model,content,resolution,ratio:ratio||'adaptive',duration,generate_audio:generateAudio,watermark,return_last_frame:returnLastFrame};
   if(priority!=null)payload.priority=priority;if(expires!=null)payload.execution_expires_after=expires;if(safetyIdentifier)payload.safety_identifier=safetyIdentifier;if(callbackUrl)payload.callback_url=callbackUrl;
   const cleanErrors=[...new Set(errors)],cleanWarnings=[...new Set(warnings)];const ready=cleanErrors.length===0;
@@ -48,10 +50,10 @@ export function seedance2ExportToCurl(exportBundle){if(!exportBundle?.previewPay
   -H "Authorization: Bearer $ARK_API_KEY" \\
   -d '${escapeSingleQuotes(JSON.stringify(exportBundle.previewPayload,null,2))}'`;}
 export function seedance2ExportToNodeFetch(exportBundle){if(!exportBundle?.previewPayload)throw new Error('Seedance export bundle is required.');if(!exportBundle.ready)throw new Error('Seedance export is blocked; resolve preflight errors before creating an execution snippet.');return`const requester = globalThis.fetch;\nconst response = await requester(${JSON.stringify(SEEDANCE2_MODELARK_PROFILE.endpoint)}, {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json', Authorization: \`Bearer \${process.env.ARK_API_KEY}\` },\n  body: JSON.stringify(${JSON.stringify(exportBundle.previewPayload,null,2)})\n});\nconst task = await response.json();\nconsole.log(task.id);`;}
-export function seedance2AdapterSummary(bundle){return{ready:Boolean(bundle?.ready),errors:[...(bundle?.errors||[])],warnings:[...(bundle?.warnings||[])],model:bundle?.previewPayload?.model||'',ratio:bundle?.previewPayload?.ratio||'',resolution:bundle?.previewPayload?.resolution||'',duration:bundle?.previewPayload?.duration??null,images:(bundle?.previewPayload?.content||[]).filter(item=>item.type==='image_url').length,videos:(bundle?.previewPayload?.content||[]).filter(item=>item.type==='video_url').length,generateAudio:bundle?.previewPayload?.generate_audio??null,networkRequest:false,apiKeyEmbedded:false};}
+export function seedance2AdapterSummary(bundle){return{ready:Boolean(bundle?.ready),errors:[...(bundle?.errors||[])],warnings:[...(bundle?.warnings||[])],model:bundle?.previewPayload?.model||'',ratio:bundle?.previewPayload?.ratio||'',resolution:bundle?.previewPayload?.resolution||'',duration:bundle?.previewPayload?.duration??null,images:(bundle?.previewPayload?.content||[]).filter(item=>item.type==='image_url').length,videos:(bundle?.previewPayload?.content||[]).filter(item=>item.type==='video_url').length,audios:(bundle?.previewPayload?.content||[]).filter(item=>item.type==='audio_url').length,generateAudio:bundle?.previewPayload?.generate_audio??null,networkRequest:false,apiKeyEmbedded:false};}
 
-function validateModeReferences(mode,images,videos,errors){const raw=String(mode||'');if(raw==='image-to-video'&&!images.length)errors.push('image-to-video-requires-image');if(raw==='first-last-frame'){if(!images.some(ref=>ref.role==='first-frame'))errors.push('first-last-requires-first-frame');if(!images.some(ref=>ref.role==='last-frame'))errors.push('first-last-requires-last-frame');}if(raw==='multi-reference'&&images.length+videos.length<1)errors.push('multi-reference-requires-media');}
-function imageRole(ref,mode){if(ref.role==='first-frame')return'first_frame';if(ref.role==='last-frame')return'last_frame';if(mode==='image-to-video'&&ref.role==='other')return'first_frame';return'reference_image';}
+function validateModeReferences(mode,images,videos,audios,errors){const raw=String(mode||'');if(raw==='image-to-video'){if(images.length!==1)errors.push(`image-to-video-requires-exactly-one-image:${images.length}`);if(videos.length||audios.length)errors.push('image-to-video-cannot-mix-reference-video-or-audio');}if(raw==='first-last-frame'){if(images.length!==2)errors.push(`first-last-requires-exactly-two-images:${images.length}`);if(!images.some(ref=>ref.role==='first-frame'))errors.push('first-last-requires-first-frame');if(!images.some(ref=>ref.role==='last-frame'))errors.push('first-last-requires-last-frame');if(videos.length||audios.length)errors.push('first-last-frame-cannot-mix-multimodal-references');}if(raw==='multi-reference'&&images.length+videos.length+audios.length<1)errors.push('multi-reference-requires-media');}
+function imageRole(ref,mode){if(mode==='first-last-frame'&&ref.role==='first-frame')return'first_frame';if(mode==='first-last-frame'&&ref.role==='last-frame')return'last_frame';if(mode==='image-to-video')return'first_frame';return'reference_image';}
 function replaceStudioReferenceTokens(prompt,map){return String(prompt||'').replace(/@ref\d{2,}/gi,token=>map.get(token.toLowerCase())||token);}
 function normalizeRatio(value){const raw=String(value||'').trim().toLowerCase();return SEEDANCE2_MODELARK_PROFILE.capabilities.ratios.find(item=>item.toLowerCase()===raw)||'';}
 function isAscii(value){return/^[\x20-\x7e]+$/.test(value);}

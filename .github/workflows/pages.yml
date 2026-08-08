@@ -124,6 +124,15 @@ jobs:
       - name: Validate Prompt Studio v5 production wiring
         run: node scripts/validate-prompt-studio-v5-production.mjs
 
+      - name: Validate Prompt Studio v6 audio reference engine
+        run: node scripts/validate-prompt-studio-v6-audio.mjs
+
+      - name: Validate Prompt Studio v6 audio reference UI
+        run: node scripts/validate-prompt-studio-v6-audio-ui.mjs
+
+      - name: Validate Prompt Studio v6 production wiring
+        run: node scripts/validate-prompt-studio-v6-production.mjs
+
       - name: Validate protected exact-100 browser render
         run: npm run validate:render
 
@@ -174,6 +183,8 @@ jobs:
           test -f _site/prompt-studio-v4.css
           test -f _site/prompt-studio-v5-bootstrap.js
           test -f _site/prompt-studio-v5.css
+          test -f _site/prompt-studio-v6-bootstrap.js
+          test -f _site/prompt-studio-v6.css
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

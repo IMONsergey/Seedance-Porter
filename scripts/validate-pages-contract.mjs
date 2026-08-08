@@ -65,11 +65,12 @@ const criticalAssets = [
   'workspace-router.js',
   'operations.css','operations-bootstrap.js','operations-engine.js','operations-ui.js',
   'prompt-studio.css','prompt-studio-bridge.css','prompt-studio-preview.css',
-  'prompt-studio-bootstrap.js','prompt-studio-engine.js','prompt-studio-store.js','prompt-studio-assets.js','prompt-studio-asset-lifecycle.js','prompt-studio-ai.js','prompt-studio-source-catalog.js','prompt-studio-source-bridge.js','prompt-studio-reference-preview.js','prompt-studio-ui.js',
+  'prompt-studio-bootstrap.js','prompt-studio-engine.js','prompt-studio-store.js','prompt-studio-assets.js','prompt-studio-asset-lifecycle.js','prompt-studio-ai.js','prompt-studio-source-catalog.js','prompt-studio-source-bridge.js','prompt-studio-reference-preview.js','prompt-studio-reference-media.js','prompt-studio-ui.js',
   'prompt-studio-rule-packs.css','prompt-studio-rule-packs-bootstrap.js','prompt-studio-profiles.js','prompt-studio-profile-panel.js',
   'prompt-studio-production-tools.css','prompt-studio-production-tools-bootstrap.js','prompt-studio-production-tools.js','prompt-studio-variable-key-guard.js','prompt-studio-ingredients.js','prompt-studio-timeline.js','prompt-studio-ingredient-library.js',
   'prompt-studio-v4.css','prompt-studio-v4-bootstrap.js','prompt-studio-v4-ui.js','prompt-studio-v4-workflow-guard.js','prompt-studio-storyboard.js','prompt-studio-variants.js','prompt-studio-generation-handoff.js',
   'prompt-studio-v5.css','prompt-studio-v5-bootstrap.js','prompt-studio-v5-ui.js','prompt-studio-v5-workflow-guard.js','prompt-studio-repair.js','prompt-studio-blueprints.js','prompt-studio-seedance-adapter.js',
+  'prompt-studio-v6.css','prompt-studio-v6-bootstrap.js','prompt-studio-v6-audio-ui.js',
   'command-palette.css','command-palette-bootstrap.js','command-palette-engine.js','command-palette-ui.js',
   'workspace-bundle.css','workspace-bundle-bootstrap.js','workspace-bundle-engine.js','workspace-bundle-ui.js',
   'case-corpus-ui.js','case-corpus.css',
@@ -120,13 +121,16 @@ const validators = [
   'validate-prompt-studio-v4-production.mjs',
   'validate-prompt-studio-v5-engines.mjs',
   'validate-prompt-studio-v5-workflow-guard.mjs',
-  'validate-prompt-studio-v5-production.mjs'
+  'validate-prompt-studio-v5-production.mjs',
+  'validate-prompt-studio-v6-audio.mjs',
+  'validate-prompt-studio-v6-audio-ui.mjs',
+  'validate-prompt-studio-v6-production.mjs'
 ];
 for (const validator of validators) {
   if (!workflowRunsValidator(workflow, validator)) fail(`Pages build must run ${validator} before deployment.`);
 }
 
-for (const builtAsset of ['sidebar.js','prompt-studio-ui.js','prompt-studio.css','prompt-studio-rule-packs-bootstrap.js','prompt-studio-production-tools-bootstrap.js','prompt-studio-v4-bootstrap.js','prompt-studio-v4.css','prompt-studio-v5-bootstrap.js','prompt-studio-v5.css']) {
+for (const builtAsset of ['sidebar.js','prompt-studio-ui.js','prompt-studio.css','prompt-studio-rule-packs-bootstrap.js','prompt-studio-production-tools-bootstrap.js','prompt-studio-v4-bootstrap.js','prompt-studio-v4.css','prompt-studio-v5-bootstrap.js','prompt-studio-v5.css','prompt-studio-v6-bootstrap.js','prompt-studio-v6.css']) {
   if (!workflow.includes(`test -f _site/${builtAsset}`)) fail(`Pages preparation must assert built artifact exists: ${builtAsset}`);
 }
 
@@ -145,6 +149,6 @@ console.log(JSON.stringify({
   researchSnapshotBuild:'best-effort',
   machineReadableSnapshots:['case-candidates.json','case-review-queue.json','coverage-plan.json','source-health.json'],
   exact100Render:'predeploy-required',
-  promptStudio:'v1+v2+v3+v4+v5 production-critical + staged-workflow-guarded + provider-export-only',
+  promptStudio:'v1+v2+v3+v4+v5+v6 production-critical + staged-workflow-guarded + multimodal-provider-export-only',
   curatedSiteFailureMode:'deploy remains available if external research generation fails'
 },null,2));
