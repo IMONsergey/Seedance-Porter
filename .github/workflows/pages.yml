@@ -133,6 +133,24 @@ jobs:
       - name: Validate Prompt Studio v6 production wiring
         run: node scripts/validate-prompt-studio-v6-production.mjs
 
+      - name: Validate Prompt Studio v7 Generation Results engine
+        run: node scripts/validate-prompt-studio-v7-generation-results.mjs
+
+      - name: Validate Prompt Studio v7 staged UI
+        run: node scripts/validate-prompt-studio-v7-ui.mjs
+
+      - name: Validate Prompt Studio v7 production wiring
+        run: node scripts/validate-prompt-studio-v7-production.mjs
+
+      - name: Validate Prompt Studio v8 variant batch plan
+        run: node scripts/validate-prompt-studio-v8-batch.mjs
+
+      - name: Validate Prompt Studio v8 batch UI
+        run: node scripts/validate-prompt-studio-v8-ui.mjs
+
+      - name: Validate Prompt Studio v8 production wiring
+        run: node scripts/validate-prompt-studio-v8-production.mjs
+
       - name: Validate protected exact-100 browser render
         run: npm run validate:render
 
@@ -185,6 +203,10 @@ jobs:
           test -f _site/prompt-studio-v5.css
           test -f _site/prompt-studio-v6-bootstrap.js
           test -f _site/prompt-studio-v6.css
+          test -f _site/prompt-studio-v7-bootstrap.js
+          test -f _site/prompt-studio-v7.css
+          test -f _site/prompt-studio-v8-bootstrap.js
+          test -f _site/prompt-studio-v8.css
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
