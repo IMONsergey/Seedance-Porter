@@ -5,11 +5,12 @@ import { MULTI_SOURCE_CASES } from '../studio/multi-source-index.js';
 import { PROMPTS } from '../studio/library-data.js';
 import { workflowPublishesStudioAsset, workflowRunsValidator } from './pages-publish-policy.mjs';
 
-const [pages,sidebar,bootstrap,tools,ingredients,timeline,library,schema]=await Promise.all([
+const [pages,sidebar,bootstrap,tools,guard,ingredients,timeline,library,schema]=await Promise.all([
   readFile('.github/workflows/pages.yml','utf8'),
   readFile('studio/sidebar.js','utf8'),
   readFile('studio/prompt-studio-production-tools-bootstrap.js','utf8'),
   readFile('studio/prompt-studio-production-tools.js','utf8'),
+  readFile('studio/prompt-studio-variable-key-guard.js','utf8'),
   readFile('studio/prompt-studio-ingredients.js','utf8'),
   readFile('studio/prompt-studio-timeline.js','utf8'),
   readFile('studio/prompt-studio-ingredient-library.js','utf8'),
@@ -18,31 +19,26 @@ const [pages,sidebar,bootstrap,tools,ingredients,timeline,library,schema]=await 
 const failures=[];
 const assert=(condition,message)=>{if(!condition)failures.push(message);};
 
-for(const asset of [
-  'prompt-studio-production-tools.css',
-  'prompt-studio-production-tools-bootstrap.js',
-  'prompt-studio-production-tools.js',
-  'prompt-studio-ingredients.js',
-  'prompt-studio-timeline.js',
-  'prompt-studio-ingredient-library.js'
-]) assert(workflowPublishesStudioAsset(pages,asset),`Pages must publish ${asset}.`);
-
+for(const asset of ['prompt-studio-production-tools.css','prompt-studio-production-tools-bootstrap.js','prompt-studio-production-tools.js','prompt-studio-variable-key-guard.js','prompt-studio-ingredients.js','prompt-studio-timeline.js','prompt-studio-ingredient-library.js']) {
+  assert(workflowPublishesStudioAsset(pages,asset),`Pages must publish ${asset}.`);
+}
 assert(workflowRunsValidator(pages,'validate-prompt-studio-production-tools.mjs'),'Pages must run v3 engine contract.');
 assert(workflowRunsValidator(pages,'validate-prompt-studio-v3-production.mjs'),'Pages must run v3 production contract.');
 assert(sidebar.includes("import './prompt-studio-production-tools-bootstrap.js';"),'Application shell must mount Production Tools plugin.');
 assert(sidebar.indexOf("import './prompt-studio-rule-packs-bootstrap.js';")<sidebar.indexOf("import './prompt-studio-production-tools-bootstrap.js';"),'Production Tools must mount after Rule Packs.');
-assert(sidebar.indexOf("import './prompt-studio-production-tools-bootstrap.js';")<sidebar.indexOf("import './command-palette-bootstrap.js';"),'Production Tools should be available before global navigation helpers finish Studio decoration.');
-assert(bootstrap.includes("link.href='./prompt-studio-production-tools.css'")||bootstrap.includes("link.href = './prompt-studio-production-tools.css'"),'Production Tools bootstrap must load CSS.');
+assert(sidebar.indexOf("import './prompt-studio-production-tools-bootstrap.js';")<sidebar.indexOf("import './command-palette-bootstrap.js';"),'Production Tools must mount before global navigation helpers.');
 assert(bootstrap.includes("await import('./prompt-studio-production-tools.js')"),'Production Tools bootstrap must mount the staged dock.');
+assert(bootstrap.includes("await import('./prompt-studio-variable-key-guard.js')"),'Production Tools bootstrap must mount the variable-key guard.');
 
-assert(tools.includes('const state={')&&tools.includes('draft:{variables:[],ingredients:[],timeline:null}'),'Production Tools must maintain a dedicated staged draft.');
-assert(tools.includes("api.replaceProject(next,{reason:'apply Production Tools draft',snapshot:true"),'Generic tools Apply must enter core through replaceProject with revision.');
-assert(tools.includes('syncTimelineToTimingSection(base)'),'Timeline sync must be explicit and use the timeline engine.');
-assert(tools.includes('insertIngredientIntoSection(base'),'Ingredient insertion must be explicit and use the ingredient engine.');
+assert(tools.includes('draft:{variables:[],ingredients:[],timeline:null}'),'Production Tools must maintain a staged draft.');
+assert(tools.includes("api.replaceProject(next,{reason:'apply Production Tools draft',snapshot:true"),'Generic tools Apply must use replaceProject with a revision.');
+assert(tools.includes('syncTimelineToTimingSection(base)'),'Timeline sync must be explicit.');
+assert(tools.includes('insertIngredientIntoSection(base'),'Ingredient insertion must be explicit.');
 assert(tools.includes('resolveVariablesInSection(base'),'Variable resolution must be explicit and section-scoped.');
-assert(!tools.includes('state.project'),'Production Tools plugin must not access Prompt Studio private state.');
-assert(!tools.includes('.click()')&&!tools.includes('dispatchEvent(new Event'),'Production Tools must not mutate projects through hidden DOM automation.');
-assert(tools.includes('data-variable-field="key"')&&tools.includes('readonly'),'Variable keys must be immutable in v3 UI to avoid silently breaking templates.');
+assert(!tools.includes('state.project'),'Production Tools must not access Prompt Studio private state.');
+assert(!tools.includes('.click()')&&!tools.includes('dispatchEvent(new Event'),'Production Tools must not use hidden DOM automation.');
+assert(guard.includes('field.readOnly=true')&&guard.includes("field.setAttribute('readonly','')"),'Variable key guard must make key fields immutable.');
+assert(guard.includes('field.dataset.variableKey'),'Variable key guard must restore the canonical key value.');
 
 assert(ingredients.includes('unresolved variables'),'Ingredient engine must block unresolved variables by default.');
 assert(ingredients.includes('insertIngredientIntoSection'),'Ingredient engine must expose isolated target-section insertion.');
