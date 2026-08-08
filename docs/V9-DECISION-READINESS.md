@@ -2,48 +2,19 @@
 
 Status: release contract  
 Date: 2026-08-08  
-PR: #48  
-Phase: Prompt Studio v9 — Generation Console + Evaluation Loop
+PR: #48
 
-## Why this exists
+## Three different states
 
-An arithmetic score is useful, but a sparse score cannot be treated as a production decision. V9 therefore separates three states:
+V9 deliberately separates:
 
-1. **Evaluation evidence** — what was observed and scored.
-2. **Decision readiness** — whether enough structured review exists to make a winner decision auditable.
-3. **Winner** — an explicit human production decision with rationale.
+1. **Evaluation evidence** — what was observed and scored in one generated take.
+2. **Decision readiness** — whether review coverage is sufficient for production comparison.
+3. **Winner** — an explicit human decision made only after every candidate is ready.
 
-None of these states is inferred from the others automatically.
+A high score never collapses these states into one automatic action.
 
-## Evaluation scope
-
-V9 evaluates succeeded visual generation outputs only. Operational failed/cancelled/expired history remains visible in the Console but cannot enter visual comparison/winner decisions.
-
-The 13 dimensions are:
-
-- task adherence;
-- identity consistency;
-- composition / framing;
-- camera behavior;
-- motion / action quality;
-- timing / shot readability;
-- continuity;
-- material / physics;
-- lighting / color;
-- graphics / text / logo;
-- audio fit;
-- artifact control;
-- production readiness.
-
-Each dimension supports:
-
-- score 1–5 or unrated;
-- reviewer note;
-- evidence / observed frame, moment or behavior.
-
-`overallScore` is the transparent arithmetic average of rated dimensions only.
-
-## Decision-ready rule
+## Per-result Evaluation readiness
 
 A saved Evaluation becomes `decisionReady:true` only when all conditions are true:
 
@@ -51,101 +22,185 @@ A saved Evaluation becomes `decisionReady:true` only when all conditions are tru
 - at least **3** dimensions contain note/evidence;
 - `production-readiness` is explicitly rated.
 
-The saved Evaluation also records:
+The saved record persists:
 
 - `ratedDimensions`;
 - `evidenceDimensions`;
-- `decisionReady`.
-
-These thresholds are **Porter product rules**, not ByteDance/ModelArk provider claims.
-
-## Winner gate
-
-A task can become Winner only when:
-
-- it belongs to the saved Comparison;
-- it is a succeeded visual generation;
-- its export SHA still matches canonical Generation Results history;
-- it has a saved `decisionReady:true` Evaluation;
-- the user provides a non-empty human rationale.
-
-Winner is stored separately from Evaluation. Evaluation verdict is limited to:
-
-- `candidate`;
-- `retake`;
-- `reject`.
+- `decisionReady`;
+- transparent `overallScore`;
+- verdict `candidate | retake | reject`.
 
 There is no Evaluation verdict named `winner`.
 
-No highest-score or threshold rule automatically selects a Winner.
+These thresholds are Porter product rules, not ByteDance/ModelArk facts.
 
-## Retake gate
+## Comparison-wide readiness
 
-A Retake Draft can only start from a succeeded visual generation with a saved Evaluation.
+A saved Comparison contains 2–8 unique succeeded visual generation tasks.
 
-It requires:
+The Comparison becomes decision-ready only when **every candidate** has a saved `decisionReady:true` Evaluation.
+
+Example:
+
+```text
+A = decision-ready
+B = not ready
+C = decision-ready
+
+Comparison = NOT READY
+Winner buttons = disabled for A, B and C
+```
+
+Only after all candidates pass review coverage:
+
+```text
+3 / 3 candidates decision-ready
+COMPARISON READY
+```
+
+can a human Winner be selected.
+
+This prevents a biased decision where the preferred take is deeply reviewed while alternatives are barely inspected.
+
+## Human Winner gate
+
+Winner requires:
+
+- saved Comparison;
+- every Comparison candidate decision-ready;
+- selected task belongs to the Comparison;
+- selected task/export still matches canonical Generation Results;
+- non-empty human rationale;
+- explicit user action.
+
+No highest-score rule or threshold selects Winner automatically.
+
+## Winner evidence snapshot
+
+When Winner is selected, V9 snapshots the Evaluation version of **every comparison candidate**.
+
+Each candidate snapshot stores:
+
+- task ID;
+- Evaluation ID;
+- Evaluation `updatedAt`;
+- overall score;
+- verdict;
+- rated-dimension count;
+- evidence-dimension count;
+- decision-ready flag.
+
+Winner therefore records both:
+
+- the selected outcome;
+- the exact review evidence state that existed when the selection was made.
+
+If an Evaluation changes later, the Winner record is not silently rewritten.
+
+Decision Audit emits:
+
+```text
+winner-evidence-drift
+```
+
+as a warning. The historical decision remains intact but is clearly marked as based on an older evidence version.
+
+A missing/malformed/incomplete candidate snapshot set is a hard integrity error.
+
+## Retake readiness
+
+Retake has a lower evidence threshold than Winner because it is a hypothesis, not a final production decision.
+
+Retake source must be:
+
+- succeeded visual generation;
+- saved Evaluation exists;
+- at least 1 rated dimension;
+- at least 1 evidence-covered dimension.
+
+Retake Draft then requires:
 
 - one named production lever;
-- non-empty change instruction;
-- non-empty expected improvement;
-- at least one retained lock;
-- source task/export lineage.
+- explicit change instruction;
+- explicit expected improvement;
+- at least one retained lock.
 
-Retake save does not mutate prompt sections, references, Variants or provider execution.
+## Retake source Evaluation snapshot
 
-## Decision integrity audit
+Retake stores the source Evaluation version that motivated the hypothesis:
 
-`prompt-studio-generation-evaluation-audit.js` audits raw + normalized project state and must detect:
+- task ID;
+- Evaluation ID;
+- Evaluation `updatedAt`;
+- score/verdict;
+- rated/evidence counts;
+- decision-ready state.
 
-- duplicate raw Evaluations;
-- Evaluation task/export drift;
-- non-succeeded visual decision sources;
-- saved Evaluation that is not decision-ready;
-- duplicate/orphan Comparisons;
-- Winner outside its Comparison;
-- Winner task/export drift;
-- empty Winner rationale;
-- Winner without decision-ready Evaluation;
-- duplicate/orphan Retakes;
-- Retake without instruction, expected improvement or retained locks;
-- Retake without a saved Evaluation;
-- V8 batch lineage ↔ V7 Generation Results export drift.
+If the source Evaluation changes later, Decision Audit emits:
 
-The audit does not auto-fix, auto-select or mutate decisions.
+```text
+retake-evidence-drift
+```
+
+as a warning rather than rewriting the Retake hypothesis.
+
+A missing/invalid/mismatched source snapshot is a hard integrity error.
+
+## Why snapshots matter for V10
+
+V10 Production Memory + Learning needs to answer:
+
+> What did we know when we made this decision?
+
+not only:
+
+> What does the project happen to say now?
+
+V9 snapshots make the causal record stable:
+
+```text
+variant delta
+→ generated result
+→ Evaluation version
+→ Comparison decision
+→ Winner or Retake hypothesis
+→ later outcome
+```
+
+This is the minimum trustworthy evidence graph for empirical production learning.
 
 ## Workflow safety
 
-V9 decisions are blocked while these foreign drafts are staged:
+V9 cannot start/save decision work over staged:
 
 - V4 Storyboard;
 - V5 Repair;
 - V7 Generation Result;
 - V8 Batch Result.
 
-While a V9 Evaluation/Retake draft is dirty, the capture-phase guard blocks project-changing actions and directly wraps `window.porterPromptStudio.openSource()` so source switching cannot silently discard the draft.
+While V9 Evaluation/Retake draft is dirty:
 
-If a project replacement happens through an un-interceptable external path, V9 invalidates the unsaved draft visibly rather than applying it to a newer project version.
+- project lifecycle/source/restore actions are blocked;
+- V7/V8 import staging is blocked;
+- V4 Storyboard staging is blocked;
+- direct public `porterPromptStudio.openSource()` is blocked.
 
-## Browser boundary
+Uninterceptable external project replacement invalidates the V9 draft visibly.
 
-V9 remains a local review/decision layer:
+## Browser review boundary
 
-- no provider key;
-- no paid provider submission;
-- no provider `fetch` / XHR / beacon;
-- no automatic remote media embedding;
-- no automatic generated-output attachment;
-- no automatic prompt mutation;
-- no automatic winner.
+Initial Console render loads no remote video DOM.
 
-## V10 handoff
+Only explicit `Preview`, `Evaluate` or `Retake` action may create:
 
-V10 Production Memory + Learning may consume only explicit, provenance-bearing V9 evidence. It must distinguish:
+```html
+<video controls preload="none" playsinline>
+```
 
-- ordinary Evaluation;
-- decision-ready Evaluation;
-- selected Winner;
-- Retake hypothesis;
-- subsequent outcome.
+Autoplay is forbidden.
 
-This distinction is required so empirical learning does not treat sparse or abandoned reviews as validated production knowledge.
+V9 still contains no provider submission/fetch/key path.
+
+## Core invariant
+
+**Review every candidate before deciding. Snapshot the evidence state at decision time. Never rewrite historical decisions because current reviews changed later.**
