@@ -12,6 +12,7 @@ on:
       - 'scripts/validate-prompt-studio-regressions.mjs'
       - 'scripts/validate-prompt-studio-production-tools.mjs'
       - 'scripts/validate-prompt-studio-ingredient-library.mjs'
+      - 'scripts/validate-prompt-studio-v3-persistence.mjs'
       - 'scripts/validate-prompt-studio-v3-production.mjs'
       - 'scripts/validate-command-palette-production.mjs'
       - 'scripts/validate-pages-contract.mjs'
@@ -29,6 +30,7 @@ on:
       - 'scripts/validate-prompt-studio-regressions.mjs'
       - 'scripts/validate-prompt-studio-production-tools.mjs'
       - 'scripts/validate-prompt-studio-ingredient-library.mjs'
+      - 'scripts/validate-prompt-studio-v3-persistence.mjs'
       - 'scripts/validate-prompt-studio-v3-production.mjs'
       - 'scripts/validate-command-palette-production.mjs'
       - 'scripts/validate-pages-contract.mjs'
@@ -61,6 +63,8 @@ jobs:
         run: node scripts/validate-prompt-studio-production-tools.mjs
       - name: Validate Shared Ingredient Library storage behavior
         run: node scripts/validate-prompt-studio-ingredient-library.mjs
+      - name: Validate Prompt Studio v3 extension persistence
+        run: node scripts/validate-prompt-studio-v3-persistence.mjs
       - name: Validate Production Tools wiring and staged mutation boundary
         run: node scripts/validate-prompt-studio-v3-production.mjs
       - name: Validate Source Universe / Command Palette runtime contract
@@ -72,6 +76,7 @@ jobs:
       - name: Syntax-check v3 modules
         run: |
           node --check studio/prompt-studio-engine.js
+          node --check studio/prompt-studio-store.js
           node --check studio/prompt-studio-ingredients.js
           node --check studio/prompt-studio-timeline.js
           node --check studio/prompt-studio-ingredient-library.js
@@ -82,5 +87,6 @@ jobs:
           node --check scripts/validate-prompt-studio-regressions.mjs
           node --check scripts/validate-prompt-studio-production-tools.mjs
           node --check scripts/validate-prompt-studio-ingredient-library.mjs
+          node --check scripts/validate-prompt-studio-v3-persistence.mjs
           node --check scripts/validate-prompt-studio-v3-production.mjs
           node --check scripts/validate-command-palette-production.mjs
