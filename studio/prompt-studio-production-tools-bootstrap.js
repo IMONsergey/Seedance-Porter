@@ -8,3 +8,4 @@ if(!existing){
 }
 
 await import('./prompt-studio-production-tools.js');
+await import('./prompt-studio-variable-key-guard.js');
