@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'studio/prompt-studio-production-tools*.js'
+      - 'studio/prompt-studio-variable-key-guard.js'
       - 'studio/prompt-studio-production-tools.css'
       - 'studio/prompt-studio-ingredients.js'
       - 'studio/prompt-studio-timeline.js'
@@ -11,13 +12,16 @@ on:
       - 'studio/sidebar.js'
       - 'schemas/prompt-studio-production-tools.schema.json'
       - 'scripts/validate-prompt-studio-production-tools.mjs'
+      - 'scripts/validate-prompt-studio-ingredient-library.mjs'
       - 'scripts/validate-prompt-studio-v3-production.mjs'
+      - 'scripts/validate-pages-contract.mjs'
       - '.github/workflows/pages.yml'
       - '.github/workflows/prompt-studio-v3-ci.yml'
   push:
     branches: [main]
     paths:
       - 'studio/prompt-studio-production-tools*.js'
+      - 'studio/prompt-studio-variable-key-guard.js'
       - 'studio/prompt-studio-production-tools.css'
       - 'studio/prompt-studio-ingredients.js'
       - 'studio/prompt-studio-timeline.js'
@@ -25,7 +29,9 @@ on:
       - 'studio/sidebar.js'
       - 'schemas/prompt-studio-production-tools.schema.json'
       - 'scripts/validate-prompt-studio-production-tools.mjs'
+      - 'scripts/validate-prompt-studio-ingredient-library.mjs'
       - 'scripts/validate-prompt-studio-v3-production.mjs'
+      - 'scripts/validate-pages-contract.mjs'
       - '.github/workflows/pages.yml'
       - '.github/workflows/prompt-studio-v3-ci.yml'
   workflow_dispatch:
@@ -50,6 +56,8 @@ jobs:
         run: node scripts/validate-prompt-studio-v2-rule-packs.mjs
       - name: Validate Variables Ingredients and Timeline engines
         run: node scripts/validate-prompt-studio-production-tools.mjs
+      - name: Validate Shared Ingredient Library storage behavior
+        run: node scripts/validate-prompt-studio-ingredient-library.mjs
       - name: Validate Production Tools wiring and staged mutation boundary
         run: node scripts/validate-prompt-studio-v3-production.mjs
       - name: Validate generalized Pages/module graph
@@ -62,6 +70,8 @@ jobs:
           node --check studio/prompt-studio-timeline.js
           node --check studio/prompt-studio-ingredient-library.js
           node --check studio/prompt-studio-production-tools.js
+          node --check studio/prompt-studio-variable-key-guard.js
           node --check studio/prompt-studio-production-tools-bootstrap.js
           node --check scripts/validate-prompt-studio-production-tools.mjs
+          node --check scripts/validate-prompt-studio-ingredient-library.mjs
           node --check scripts/validate-prompt-studio-v3-production.mjs
