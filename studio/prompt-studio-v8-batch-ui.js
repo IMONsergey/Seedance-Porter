@@ -54,5 +54,5 @@ function replaceProject(next,reason){const saved=window.porterPromptStudio?.repl
 function setMessage(text,kind=''){state.message=String(text||'');state.kind=kind;}
 function downloadJson(value,name){const blob=new Blob([`${JSON.stringify(value,null,2)}\n`],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),0);}
 function safeName(value){return String(value||'batch').toLowerCase().replace(/[^a-z0-9_-]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,64)||'batch';}
-function esc(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[char]));}
+function esc(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
 function attr(value){return esc(value);}
