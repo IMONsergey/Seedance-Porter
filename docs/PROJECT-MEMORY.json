@@ -1,18 +1,21 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-08T18:45:00+03:00",
+  "updatedAt": "2026-08-08T20:22:00+03:00",
   "repository": "IMONsergey/Seedance-Porter",
   "sourceOfTruth": "github",
   "freshnessRule": "This file supersedes older phase markers in PROJECT-CONTEXT.md, ROADMAP.md and PROJECT-STATE.json when this updatedAt is newer.",
   "completedRelease": {
     "phase": "prompt-studio-v8-variant-batch-generation",
     "pullRequest": 46,
+    "mergeCommit": "103b40eb24f0ae9b6543e77c3b31b62a2cdebfd0",
     "status": "merged-to-main"
   },
   "active": {
     "phase": "prompt-studio-v9-generation-console-evaluation-loop",
-    "status": "now",
-    "objective": "Turn single and batch generation results into an evidence-based comparison, scoring, winner-selection, continuation and retake workflow without moving provider credentials into the browser."
+    "branch": "feat/prompt-studio-v9-generation-console",
+    "pullRequest": 48,
+    "status": "release-hardening",
+    "objective": "Turn single and batch generation results into an evidence-based comparison, structured human evaluation, explicit winner, continuation and one-lever retake workflow without moving provider credentials or paid execution into the browser."
   },
   "protectedInvariants": {
     "curatedCases": 100,
@@ -22,6 +25,8 @@
     "browserProviderSubmission": false,
     "clientProviderCredentials": false,
     "automaticGeneratedOutputAttachment": false,
+    "automaticWinnerFromEvaluationScore": false,
+    "automaticRetakePromptMutation": false,
     "ambiguousPaidSubmissionAutoRetry": false,
     "corruptResumableManifestMeansMissing": false,
     "extensionSafeProjectPersistence": true
@@ -42,28 +47,16 @@
     "prompt-studio-v7-generation-results-continuation",
     "prompt-studio-v8-variant-batch-generation"
   ],
-  "v8DurableGuarantees": [
-    "browser builds batch plans but never submits paid provider tasks",
-    "batch plan max 20 items",
-    "local runner concurrency 1-8 is not represented as provider quota",
-    "submission-uncertain is never automatically retried",
-    "known task IDs resume without another POST",
-    "every emitted batch snapshot is protocol-valid and resumable",
-    "corrupt existing batch job fails closed",
-    "explicit batch create refuses overwrite",
-    "batch job/result writes use atomic temp-file-to-rename persistence",
-    "project variant export and task lineage is cross-checked",
-    "batch results return explicitly into v7 generation history",
-    "generated output attachment remains explicit"
-  ],
   "v9": {
     "coreSurfaces": [
       "generation-console",
       "variant-result-comparison",
       "structured-production-evaluation",
-      "winner-selection",
-      "retake-delta",
-      "explicit-continuation-actions"
+      "decision-readiness",
+      "human-winner-selection",
+      "explicit-continuation-actions",
+      "one-lever-retake-draft",
+      "decision-integrity-audit"
     ],
     "evaluationDimensions": [
       "task-adherence",
@@ -71,7 +64,7 @@
       "composition",
       "camera",
       "motion-action",
-      "timing-shot-readability",
+      "timing-readability",
       "continuity",
       "material-physics",
       "lighting-color",
@@ -80,41 +73,68 @@
       "artifact-severity",
       "production-readiness"
     ],
+    "decisionReadiness": {
+      "minimumRatedDimensions": 5,
+      "minimumEvidenceDimensions": 3,
+      "productionReadinessMustBeRated": true,
+      "winnerRequiresDecisionReadyEvaluation": true,
+      "winnerRequiresHumanRationale": true,
+      "scoreCanSelectWinnerAutomatically": false
+    },
+    "retakeContract": {
+      "sourceMustBeSucceededVisualGeneration": true,
+      "sourceMustHaveSavedEvaluation": true,
+      "exactlyOneNamedLever": true,
+      "changeInstructionRequired": true,
+      "expectedImprovementRequired": true,
+      "retainedLocksRequired": true,
+      "automaticPromptRewrite": false,
+      "automaticVariantCreation": false,
+      "automaticGeneration": false
+    },
+    "workflowSafety": {
+      "foreignV4V5V7V8DraftsBlockDecisions": true,
+      "dirtyV9DraftBlocksCoreMutations": true,
+      "dirtyV9DraftBlocksDirectOpenSource": true,
+      "externalProjectMutationInvalidatesDraft": true
+    },
+    "releaseArchitecture": {
+      "singleV9CiWorkflow": true,
+      "nodeMatrix": [20,22,24],
+      "realPagesDeployRunsV9Contracts": true,
+      "centralPagesModuleGraphIncludesV9": true,
+      "duplicatePreflightAndReleaseWorkflowsRemoved": true,
+      "canonicalUiContract": "scripts/validate-prompt-studio-v9-console-ui.mjs"
+    },
     "exitCriteria": [
       "unified single and batch generation console",
       "project-variant-handoff-export-task lineage visible per result",
       "comparison against frozen variant base and deltas",
-      "structured reviewer scoring with notes/evidence",
-      "explicit winner selection",
-      "explicit continuation/reference/retake actions",
-      "no browser provider credential",
+      "13-dimension reviewer scoring with notes/evidence",
+      "explicit decision-readiness coverage",
+      "human winner requires decision-ready evaluation and rationale",
+      "explicit winner continuation/reference actions",
+      "one-lever retake requires expected improvement and retained locks",
+      "decision integrity audit catches raw duplicate/orphan/drift state",
+      "no browser provider credential or paid submission",
       "no automatic output or prompt mutation",
       "backward-compatible v7/v8 history",
-      "Node 20/22/24 browser and Pages contracts",
+      "Node 20/22/24 and real Pages contracts",
       "exact-100 and 192 invariants preserved",
       "project memory updated before merge"
     ]
   },
   "next": [
-    {
-      "phase": "prompt-studio-v10-production-memory-learning",
-      "priority": 1
-    },
-    {
-      "phase": "prompt-studio-v11-multi-provider-execution-abstraction",
-      "priority": 2
-    },
-    {
-      "phase": "research-corpus-500-1000",
-      "priority": 3,
-      "parallel": true
-    }
+    {"phase":"prompt-studio-v10-production-memory-learning","priority":1},
+    {"phase":"prompt-studio-v11-multi-provider-execution-abstraction","priority":2},
+    {"phase":"research-corpus-500-1000","priority":3,"parallel":true}
   ],
   "canonicalCurrentMemory": {
     "human": "docs/PROJECT-MEMORY.md",
     "machine": "docs/PROJECT-MEMORY.json",
-    "architectureDecisions": "docs/ARCHITECTURE-DECISIONS.md",
-    "v8OperationalContract": "docs/PROMPT-STUDIO-V8-BATCH-GENERATION.md",
-    "v8HardeningLog": "docs/PROMPT-STUDIO-V8-RELEASE-HARDENING.md"
+    "v9State": "docs/PROMPT-STUDIO-V9-STATE.json",
+    "v9ProductContract": "docs/PROMPT-STUDIO-V9-GENERATION-CONSOLE.md",
+    "architectureDecisions": ["docs/ADR-017-V9-HUMAN-WINNER.md","docs/ADR-018-V9-ONE-LEVER-RETAKE.md"],
+    "v9ReleaseAudit": "docs/V9-RELEASE-AUDIT.md"
   }
 }
