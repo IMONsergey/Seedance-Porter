@@ -1,0 +1,50 @@
+name: Prompt Studio v5 semantic hardening
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/apply-prompt-studio-v5-hardening.mjs'
+      - '.github/workflows/prompt-studio-v5-hardening.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/prompt-studio-v5-repair-blueprints-seedance-adapter
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - name: Apply wiring if the earlier finalizer has not landed yet
+        run: |
+          if [[ -f scripts/apply-prompt-studio-v5-wiring.mjs ]]; then node scripts/apply-prompt-studio-v5-wiring.mjs; fi
+      - name: Apply semantic hardening
+        run: node scripts/apply-prompt-studio-v5-hardening.mjs
+      - name: Validate v5 engines
+        run: node scripts/validate-prompt-studio-v5-engines.mjs
+      - name: Validate v5 staged workflow guard
+        run: node scripts/validate-prompt-studio-v5-workflow-guard.mjs
+      - name: Validate v5 production wiring
+        run: node scripts/validate-prompt-studio-v5-production.mjs
+      - name: Validate Pages module graph
+        run: node scripts/validate-pages-contract.mjs
+      - name: Validate protected exact-100 render
+        run: npm run validate:render
+      - name: Remove all one-shot v5 finalizer scaffolding and commit product state
+        run: |
+          rm -f scripts/apply-prompt-studio-v5-wiring.mjs .github/workflows/prompt-studio-v5-wiring.yml
+          rm -f scripts/apply-prompt-studio-v5-hardening.mjs .github/workflows/prompt-studio-v5-hardening.yml
+          git add -A
+          git config user.name 'seedance-porter-bot'
+          git config user.email 'seedance-porter-bot@users.noreply.github.com'
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'fix: finalize Prompt Studio v5 production semantics and wiring'
+          git push origin HEAD:feat/prompt-studio-v5-repair-blueprints-seedance-adapter
