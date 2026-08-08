@@ -62,15 +62,16 @@ export function deletePromptStudioProject(id) {
 export function duplicatePromptStudioProject(id, now = Date.now()) {
   const source = loadPromptStudioProject(id);
   if (!source) return null;
-  const copy = createPromptStudioProject({
+  const createdAt = new Date(now).toISOString();
+  const copy = refreshPromptStudioProject({
     ...projectSnapshot(source),
-    id:undefined,
+    id:newProjectId(),
     title:`${source.title} — Copy`,
-    createdAt:undefined,
-    updatedAt:undefined,
-    now
-  });
-  savePromptStudioProject(copy, { revision:false, reason:'duplicated' });
+    createdAt,
+    updatedAt:createdAt,
+    lastPatch:null
+  }, now);
+  savePromptStudioProject(copy, { revision:false, reason:'duplicated', now });
   return copy;
 }
 
@@ -92,7 +93,7 @@ export function restorePromptStudioRevision(projectId, revisionId, now = Date.no
   const current = loadPromptStudioProject(projectId);
   if (current) saveRevision(current, 'before revision restore');
   const restored = refreshPromptStudioProject({ ...revision.project, id:projectId }, now);
-  return savePromptStudioProject(restored, { revision:false, reason:`restored ${revisionId}` });
+  return savePromptStudioProject(restored, { revision:false, reason:`restored ${revisionId}`, now });
 }
 
 export function exportPromptStudioProject(project) {
@@ -108,15 +109,16 @@ export function importPromptStudioProject(payload, now = Date.now()) {
   const value = typeof payload === 'string' ? JSON.parse(payload) : payload;
   const raw = value?.kind === 'seedance-porter-prompt-studio-export' ? value.project : value;
   if (!raw || raw.kind !== PROMPT_STUDIO_PROJECT_KIND) throw new Error('Not a Seedance Porter Prompt Studio project.');
-  const imported = createPromptStudioProject({
-    ...raw,
-    id:undefined,
+  const createdAt = new Date(now).toISOString();
+  const imported = refreshPromptStudioProject({
+    ...projectSnapshot(raw),
+    id:newProjectId(),
     title:`${raw.title || 'Imported project'} — Imported`,
-    createdAt:undefined,
-    updatedAt:undefined,
-    now
-  });
-  savePromptStudioProject(imported, { revision:false, reason:'imported' });
+    createdAt,
+    updatedAt:createdAt,
+    lastPatch:null
+  }, now);
+  savePromptStudioProject(imported, { revision:false, reason:'imported', now });
   return imported;
 }
 
@@ -180,4 +182,9 @@ function writeJson(key, value) {
 
 function dispatchChange(type, projectId) {
   try { window.dispatchEvent(new CustomEvent('porter-prompt-studio-change', { detail:{ type, projectId } })); } catch {}
+}
+
+function newProjectId() {
+  try { return `studio-${globalThis.crypto?.randomUUID?.().slice(0,12) || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`}`; }
+  catch { return `studio-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`; }
 }
