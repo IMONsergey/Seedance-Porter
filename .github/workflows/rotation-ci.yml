@@ -1,0 +1,54 @@
+name: curated-rotation-ci
+
+on:
+  pull_request:
+    paths:
+      - 'studio/rotation-*.js'
+      - 'studio/rotation.css'
+      - 'studio/sidebar.js'
+      - 'scripts/build-rotation-plan.mjs'
+      - 'scripts/validate-rotation-planner.mjs'
+      - 'scripts/validate-rotation-production.mjs'
+      - 'docs/CURATED-ROTATION-PLANNER.md'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/rotation-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/rotation-*.js'
+      - 'studio/rotation.css'
+      - 'scripts/build-rotation-plan.mjs'
+      - 'scripts/validate-rotation-planner.mjs'
+      - 'scripts/validate-rotation-production.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/rotation-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  rotation:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate Curated Rotation Planner decision engine
+        run: node scripts/validate-rotation-planner.mjs
+      - name: Validate Curated Rotation Planner production wiring
+        run: node scripts/validate-rotation-production.mjs
+      - name: Validate protected exact-100 browser contract
+        run: npm run validate:render
+      - name: Syntax-check Rotation modules
+        run: |
+          node --check studio/rotation-engine.js
+          node --check studio/rotation-ui.js
+          node --check studio/rotation-bootstrap.js
+          node --check scripts/build-rotation-plan.mjs
+          node --check scripts/validate-rotation-planner.mjs
+          node --check scripts/validate-rotation-production.mjs

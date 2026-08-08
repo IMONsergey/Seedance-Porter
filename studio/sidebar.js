@@ -15,6 +15,7 @@ import './case-corpus-ui.js';
 import './deep-review-bootstrap.js';
 import './deep-review-player-bootstrap.js';
 import './promotion-bootstrap.js';
+import './rotation-bootstrap.js';
 
 const sidebarState = document.querySelector('#sidebarState');
 const sidebarToggle = document.querySelector('#sidebarToggle');
