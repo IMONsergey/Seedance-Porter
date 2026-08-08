@@ -1,0 +1,41 @@
+name: Command Palette CI
+
+on:
+  pull_request:
+    paths:
+      - 'studio/command-palette-*.js'
+      - 'studio/command-palette.css'
+      - 'studio/sidebar.js'
+      - 'scripts/validate-command-palette.mjs'
+      - 'scripts/validate-command-palette-production.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/command-palette-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  palette:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate search/ranking/routing contract
+        run: node scripts/validate-command-palette.mjs
+      - name: Validate production wiring
+        run: node scripts/validate-command-palette-production.mjs
+      - name: Validate exact 100-card browser contract
+        run: npm run validate:render
+      - name: Syntax check Palette modules
+        run: |
+          node --check studio/command-palette-bootstrap.js
+          node --check studio/command-palette-engine.js
+          node --check studio/command-palette-ui.js
+          node --check scripts/validate-command-palette.mjs
+          node --check scripts/validate-command-palette-production.mjs
