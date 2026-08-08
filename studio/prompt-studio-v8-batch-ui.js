@@ -31,7 +31,7 @@ function bind(){
 }
 
 function scheduleMount(){if(state.queued)return;state.queued=true;queueMicrotask(()=>{state.queued=false;mount();});}
-function mount(){const editor=document.querySelector('#promptStudioView .studio-editor');if(!editor)return;let root=document.querySelector('#studioV8BatchDock');if(!root){root=document.createElement('section');root.id='studioV8BatchDock';root.className='studio-v8-batch';const anchor=document.querySelector('#studioV7ResultsDock')||document.querySelector('#studioV5Dock')||editor.querySelector('.studio-project-toolbar');anchor?.insertAdjacentElement('afterend',root);}syncSelection();render();}
+function mount(){const editor=document.querySelector('#promptStudioView .studio-editor');if(!editor)return;if(document.querySelector('#studioV8BatchDock'))return;const root=document.createElement('section');root.id='studioV8BatchDock';root.className='studio-v8-batch';const anchor=document.querySelector('#studioV7ResultsDock')||document.querySelector('#studioV5Dock')||editor.querySelector('.studio-project-toolbar');anchor?.insertAdjacentElement('afterend',root);syncSelection();render();}
 function syncSelection(){const ids=new Set(listPromptStudioBatchVariants(project()).map(item=>item.id));for(const id of [...state.selected])if(!ids.has(id))state.selected.delete(id);}
 
 async function buildPlan(){const current=project();if(!current)throw new Error('Prompt Studio project is unavailable.');if(!state.selected.size)throw new Error('Select at least one A/B variant.');setMessage('Building provider exports locally…','');render();state.plan=await buildPromptStudioVariantBatchPlan(current,[...state.selected],{provider:{resolution:state.resolution,durationAuto:state.durationAuto,generateAudio:state.generateAudio}});setMessage(state.plan.ready?'Batch plan ready for external Runner.':`Plan blocked: ${state.plan.errors.join(', ')}`,state.plan.ready?'ok':'error');render();}
@@ -54,5 +54,5 @@ function replaceProject(next,reason){const saved=window.porterPromptStudio?.repl
 function setMessage(text,kind=''){state.message=String(text||'');state.kind=kind;}
 function downloadJson(value,name){const blob=new Blob([`${JSON.stringify(value,null,2)}\n`],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),0);}
 function safeName(value){return String(value||'batch').toLowerCase().replace(/[^a-z0-9_-]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,64)||'batch';}
-function esc(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function esc(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[char]));}
 function attr(value){return esc(value);}
