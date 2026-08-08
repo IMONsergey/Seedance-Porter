@@ -33,5 +33,16 @@ export const SOURCE_PLATFORMS = [
 ];
 
 export const SOURCE_PLATFORM_MAP = Object.fromEntries(SOURCE_PLATFORMS.map(item => [item.id, item]));
-
 export const SOURCE_FAMILIES = [...new Set(SOURCE_PLATFORMS.map(item => item.family))];
+
+// Search/navigation projection of the same canonical platform registry.
+// This is deliberately derived rather than separately authored so Sources UI,
+// Command Palette and future Studio tools cannot drift into different universes.
+export const SOURCE_UNIVERSE = SOURCE_PLATFORMS.map(item => ({
+  ...item,
+  title:item.label,
+  type:item.family,
+  kind:'source-platform',
+  platform:item.id,
+  description:item.discovery
+}));
