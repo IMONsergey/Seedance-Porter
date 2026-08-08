@@ -1,4 +1,5 @@
 import { promptStudioAssetObjectUrl, revokePromptStudioAssetObjectUrl } from './prompt-studio-assets.js';
+import { effectiveReferenceMediaType } from './prompt-studio-reference-media.js';
 
 const objectUrls = new Map();
 let queued = false;
@@ -36,7 +37,8 @@ async function renderVisibleReferencePreviews() {
     if (currentGeneration !== generation) return;
     const ref = byId.get(card.dataset.refId);
     if (!ref) continue;
-    const signature = previewSignature(ref);
+    const mediaType = effectiveReferenceMediaType(project, ref);
+    const signature = previewSignature(ref, mediaType);
     const existing = card.querySelector('.studio-reference-preview');
     if (existing?.dataset.previewSignature === signature) continue;
     existing?.remove();
@@ -44,26 +46,29 @@ async function renderVisibleReferencePreviews() {
     const preview = document.createElement('div');
     preview.className = 'studio-reference-preview';
     preview.dataset.previewSignature = signature;
-    preview.dataset.mediaType = ref.mediaType || 'unknown';
+    preview.dataset.mediaType = mediaType;
 
     const mediaUrl = await resolveMediaUrl(ref);
     if (currentGeneration !== generation) return;
     if (mediaUrl) {
-      const media = ref.mediaType === 'video' ? document.createElement('video') : document.createElement('img');
+      const media = mediaType === 'video' ? document.createElement('video') : mediaType === 'audio' ? document.createElement('audio') : document.createElement('img');
       media.src = mediaUrl;
       if (media.tagName === 'VIDEO') {
         media.controls = true;
         media.muted = true;
         media.playsInline = true;
         media.preload = 'metadata';
+      } else if (media.tagName === 'AUDIO') {
+        media.controls = true;
+        media.preload = 'metadata';
       } else {
         media.alt = ref.name || ref.token || 'Prompt Studio reference';
         media.loading = 'lazy';
       }
-      media.addEventListener('error', () => showFallback(preview, ref), { once:true });
+      media.addEventListener('error', () => showFallback(preview, ref, mediaType), { once:true });
       preview.appendChild(media);
     } else {
-      showFallback(preview, ref);
+      showFallback(preview, ref, mediaType);
     }
 
     const caption = document.createElement('div');
@@ -71,7 +76,7 @@ async function renderVisibleReferencePreviews() {
     const title = document.createElement('strong');
     title.textContent = ref.token || 'reference';
     const detail = document.createElement('span');
-    detail.textContent = [ref.role || 'other', ref.locked ? 'LOCKED' : '', ref.localAssetKey ? 'local' : ref.uri ? 'URL' : ''].filter(Boolean).join(' · ');
+    detail.textContent = [mediaType, ref.role || 'other', ref.locked ? 'LOCKED' : '', ref.localAssetKey ? 'local' : ref.uri ? 'URL' : ''].filter(Boolean).join(' · ');
     caption.append(title, detail);
     preview.appendChild(caption);
 
@@ -96,21 +101,21 @@ async function resolveMediaUrl(ref) {
   return uri;
 }
 
-function showFallback(root, ref) {
-  root.querySelector('img,video')?.remove();
+function showFallback(root, ref, mediaType) {
+  root.querySelector('img,video,audio')?.remove();
   if (root.querySelector('.studio-reference-preview-empty')) return;
   const empty = document.createElement('div');
   empty.className = 'studio-reference-preview-empty';
   const icon = document.createElement('span');
-  icon.textContent = ref.mediaType === 'video' ? '▶' : ref.mediaType === 'image' ? '▧' : '◇';
+  icon.textContent = mediaType === 'audio' ? '♪' : mediaType === 'video' ? '▶' : mediaType === 'image' ? '▧' : '◇';
   const label = document.createElement('small');
-  label.textContent = ref.localAssetKey ? 'Local asset unavailable' : ref.uri ? 'Preview unavailable' : 'Attach a local file or URL';
+  label.textContent = ref.localAssetKey ? 'Local asset unavailable' : ref.uri ? 'Preview unavailable' : mediaType === 'audio' ? 'Attach WAV/MP3 or a public URL' : 'Attach a local file or URL';
   empty.append(icon, label);
   root.prepend(empty);
 }
 
-function previewSignature(ref) {
-  return [ref.localAssetKey, ref.uri, ref.mediaType, ref.role, ref.locked, ref.name].map(value => String(value ?? '')).join('|');
+function previewSignature(ref, mediaType) {
+  return [ref.localAssetKey, ref.uri, mediaType, ref.role, ref.locked, ref.name].map(value => String(value ?? '')).join('|');
 }
 
 function revokeAll() {
