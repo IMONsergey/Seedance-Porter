@@ -1,16 +1,31 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-08T21:00:00+03:00",
+  "updatedAt": "2026-08-08T20:20:00+03:00",
   "phase": "prompt-studio-v9-generation-console-evaluation-loop",
   "branch": "feat/prompt-studio-v9-generation-console",
   "pullRequest": 48,
-  "status": "implementation",
-  "goal": "Turn returned single/batch generations into an evidence-based human review, comparison, winner, retake and continuation system.",
+  "status": "release-hardening",
+  "goal": "Turn returned single/batch generations into an evidence-based human review, comparison, winner, retake and continuation system without adding provider execution to the browser.",
   "extensions": {
     "evaluations": "generationEvaluations",
     "comparisons": "generationComparisons",
     "winners": "generationWinners",
     "retakes": "generationRetakes"
+  },
+  "bounds": {
+    "evaluations": 200,
+    "comparisons": 100,
+    "winners": 100,
+    "retakes": 100,
+    "comparisonCandidatesMin": 2,
+    "comparisonCandidatesMax": 8
+  },
+  "decisionReadiness": {
+    "minimumRatedDimensions": 5,
+    "minimumEvidenceDimensions": 3,
+    "productionReadinessMustBeRated": true,
+    "automaticWinnerFromScore": false,
+    "winnerRequiresHumanRationale": true
   },
   "evaluationDimensions": [
     "task-adherence",
@@ -27,31 +42,41 @@
     "artifact-severity",
     "production-readiness"
   ],
-  "decisions": [
-    "numeric evaluation does not automatically select a winner",
-    "winner selection requires an explicit human action and rationale",
-    "retake draft changes one named production lever and preserves explicit locks",
-    "retake save does not rewrite prompt sections or submit generation",
-    "generated remote media is not automatically embedded or downloaded in the browser",
-    "winner continuation reuses the explicit V7 generated-output reference path",
-    "V9 project mutations use revisioned public Prompt Studio API only",
-    "foreign V4/V5/V7/V8 staged work blocks V9 decisions",
-    "dirty V9 draft blocks project-changing actions until save/discard"
+  "retakeContract": {
+    "oneNamedLever": true,
+    "requiresSavedEvaluation": true,
+    "requiresChangeInstruction": true,
+    "requiresExpectedImprovement": true,
+    "requiresRetainedLocks": true,
+    "automaticPromptMutation": false,
+    "automaticVariantCreation": false,
+    "automaticGeneration": false
+  },
+  "workflowSafety": [
+    "foreign V4 Storyboard staged work blocks V9 decisions",
+    "foreign V5 Repair staged work blocks V9 decisions",
+    "foreign V7 Generation Result staged work blocks V9 decisions",
+    "foreign V8 Batch Result staged work blocks V9 decisions",
+    "dirty V9 Evaluation/Retake draft blocks project-changing DOM actions",
+    "dirty V9 draft blocks direct public porterPromptStudio.openSource",
+    "uninterceptable external project replacement invalidates the unsaved V9 draft visibly"
   ],
-  "exitCriteria": [
-    "13-dimension evaluation engine and closed schema",
-    "unified Generation Console over V7/V8 history",
-    "variant-aware comparison against V4 lineage/deltas",
-    "explicit human winner selection with rationale",
-    "winner video/last-frame continuation actions",
-    "one-lever Retake Draft without hidden prompt mutation",
-    "cross-layer staged-work guard",
-    "zero browser provider execution and zero automatic media embedding",
-    "Node 20/22/24 engine/UI/production contracts",
-    "Pages browser module graph includes V9",
+  "releaseGates": [
+    "13-dimension evaluation/readiness engine contract",
+    "raw decision integrity audit",
+    "canonical JSDOM Generation Console/guard contract",
+    "production/project-memory contract",
+    "single Node 20/22/24 V9 CI workflow",
+    "real GitHub Pages deploy workflow runs V9 contracts",
+    "central Pages module graph includes V9 runtime",
     "exact 100 curated runtime cases",
-    "exact 192 Porter Originals",
-    "GitHub project memory updated before merge"
+    "exact 192 Porter Originals"
+  ],
+  "cleanup": [
+    "duplicate V9 Pages-preflight workflow removed",
+    "duplicate V9 release workflow removed",
+    "superseded early V9 UI tests removed",
+    "one canonical V9 Console UI contract retained"
   ],
   "next": [
     "prompt-studio-v10-production-memory-learning",
