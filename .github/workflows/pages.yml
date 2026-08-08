@@ -5,38 +5,8 @@ on:
     branches: [main]
     paths:
       - 'studio/**'
-      - 'schemas/case-review.schema.json'
-      - 'schemas/review-media-evidence.schema.json'
-      - 'schemas/curation-draft.schema.json'
-      - 'schemas/workspace-bundle.schema.json'
-      - 'scripts/import-case-candidates.mjs'
-      - 'scripts/augment-case-candidates.mjs'
-      - 'scripts/expand-case-candidates.mjs'
-      - 'scripts/source-adapter-registry.mjs'
-      - 'scripts/research-risk-policy.mjs'
-      - 'scripts/source-health-engine.mjs'
-      - 'scripts/build-source-health.mjs'
-      - 'scripts/refresh-case-corpus.mjs'
-      - 'scripts/build-case-review-queue.mjs'
-      - 'scripts/build-coverage-plan.mjs'
-      - 'scripts/build-curation-draft.mjs'
-      - 'scripts/build-rotation-plan.mjs'
-      - 'scripts/validate-pages-contract.mjs'
-      - 'scripts/validate-deep-review-workspace.mjs'
-      - 'scripts/validate-review-player.mjs'
-      - 'scripts/validate-promotion-workspace.mjs'
-      - 'scripts/validate-coverage-planner.mjs'
-      - 'scripts/validate-source-adapters.mjs'
-      - 'scripts/validate-operations-command-center.mjs'
-      - 'scripts/validate-operations-production.mjs'
-      - 'scripts/validate-command-palette.mjs'
-      - 'scripts/validate-command-palette-production.mjs'
-      - 'scripts/validate-workspace-bundles.mjs'
-      - 'scripts/validate-workspace-bundles-production.mjs'
-      - 'scripts/validate-rotation-planner.mjs'
-      - 'scripts/validate-rotation-production.mjs'
-      - 'scripts/validate-prompt-studio.mjs'
-      - 'scripts/validate-prompt-studio-production.mjs'
+      - 'schemas/**'
+      - 'scripts/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -44,7 +14,7 @@ on:
 
 permissions:
   contents: read
-n  pages: write
+  pages: write
   id-token: write
 
 concurrency:
@@ -58,135 +28,86 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Install dependencies
         run: npm install
+
       - name: Validate Pages production artifact contract
         run: node scripts/validate-pages-contract.mjs
+
       - name: Validate Deep Review Workspace contract
         run: node scripts/validate-deep-review-workspace.mjs
+
       - name: Validate Review Player evidence boundary
         run: node scripts/validate-review-player.mjs
+
       - name: Validate Promotion Workspace contract
         run: node scripts/validate-promotion-workspace.mjs
+
       - name: Validate strategic Coverage Planner contract
         run: node scripts/validate-coverage-planner.mjs
+
       - name: Validate source adapter registry, risk policy and health engine
         run: node scripts/validate-source-adapters.mjs
+
       - name: Validate Operations Command Center
         run: node scripts/validate-operations-command-center.mjs
+
       - name: Validate Operations production wiring
         run: node scripts/validate-operations-production.mjs
+
       - name: Validate global Command Palette
         run: node scripts/validate-command-palette.mjs
+
       - name: Validate Command Palette production wiring
         run: node scripts/validate-command-palette-production.mjs
+
       - name: Validate Workspace Evidence Bundles
         run: node scripts/validate-workspace-bundles.mjs
+
       - name: Validate Workspace Bundle production wiring
         run: node scripts/validate-workspace-bundles-production.mjs
+
       - name: Validate Curated Rotation Planner
         run: node scripts/validate-rotation-planner.mjs
+
       - name: Validate Curated Rotation production wiring
         run: node scripts/validate-rotation-production.mjs
+
       - name: Validate Prompt Studio engine and safety contract
         run: node scripts/validate-prompt-studio.mjs
+
       - name: Validate Prompt Studio production wiring
         run: node scripts/validate-prompt-studio-production.mjs
+
+      - name: Validate protected exact-100 browser render
+        run: npm run validate:render
+
       - name: Build Research Corpus + strategic operations snapshots for Pages
         continue-on-error: true
         run: npm run case:refresh
+
       - name: Prepare static Pages site
         shell: bash
         run: |
           set -euo pipefail
+          rm -rf _site
           mkdir -p _site
-          cp studio/library.html _site/index.html
-          cp studio/library.css _site/library.css
-          cp studio/digest.css _site/digest.css
-          cp studio/case-intelligence.css _site/case-intelligence.css
-          cp studio/case-corpus.css _site/case-corpus.css
-          cp studio/deep-review.css _site/deep-review.css
-          cp studio/deep-review-player.css _site/deep-review-player.css
-          cp studio/promotion.css _site/promotion.css
-          cp studio/coverage-planner.css _site/coverage-planner.css
-          cp studio/source-health.css _site/source-health.css
-          cp studio/operations.css _site/operations.css
-          cp studio/command-palette.css _site/command-palette.css
-          cp studio/workspace-bundle.css _site/workspace-bundle.css
-          cp studio/rotation.css _site/rotation.css
-          cp studio/prompt-studio.css _site/prompt-studio.css
-          cp studio/prompt-studio-bridge.css _site/prompt-studio-bridge.css
-          cp studio/prompt-studio-preview.css _site/prompt-studio-preview.css
-          cp studio/experience.css _site/experience.css
-          cp studio/multi-source.css _site/multi-source.css
-          cp studio/coverage-audit.css _site/coverage-audit.css
-          cp studio/library.js _site/library.js
-          cp studio/sidebar.js _site/sidebar.js
-          cp studio/workspace-router.js _site/workspace-router.js
-          cp studio/operations-bootstrap.js _site/operations-bootstrap.js
-          cp studio/operations-engine.js _site/operations-engine.js
-          cp studio/operations-ui.js _site/operations-ui.js
-          cp studio/prompt-studio-bootstrap.js _site/prompt-studio-bootstrap.js
-          cp studio/prompt-studio-engine.js _site/prompt-studio-engine.js
-          cp studio/prompt-studio-store.js _site/prompt-studio-store.js
-          cp studio/prompt-studio-assets.js _site/prompt-studio-assets.js
-          cp studio/prompt-studio-asset-lifecycle.js _site/prompt-studio-asset-lifecycle.js
-          cp studio/prompt-studio-ai.js _site/prompt-studio-ai.js
-          cp studio/prompt-studio-source-catalog.js _site/prompt-studio-source-catalog.js
-          cp studio/prompt-studio-source-bridge.js _site/prompt-studio-source-bridge.js
-          cp studio/prompt-studio-reference-preview.js _site/prompt-studio-reference-preview.js
-          cp studio/prompt-studio-ui.js _site/prompt-studio-ui.js
-          cp studio/command-palette-bootstrap.js _site/command-palette-bootstrap.js
-          cp studio/command-palette-engine.js _site/command-palette-engine.js
-          cp studio/command-palette-ui.js _site/command-palette-ui.js
-          cp studio/workspace-bundle-bootstrap.js _site/workspace-bundle-bootstrap.js
-          cp studio/workspace-bundle-engine.js _site/workspace-bundle-engine.js
-          cp studio/workspace-bundle-ui.js _site/workspace-bundle-ui.js
-          cp studio/rotation-bootstrap.js _site/rotation-bootstrap.js
-          cp studio/rotation-engine.js _site/rotation-engine.js
-          cp studio/rotation-ui.js _site/rotation-ui.js
-          cp studio/case-ui.js _site/case-ui.js
-          cp studio/case-corpus-ui.js _site/case-corpus-ui.js
-          cp studio/deep-review-bootstrap.js _site/deep-review-bootstrap.js
-          cp studio/deep-review-ui.js _site/deep-review-ui.js
-          cp studio/deep-review-player-bootstrap.js _site/deep-review-player-bootstrap.js
-          cp studio/deep-review-player.js _site/deep-review-player.js
-          cp studio/promotion-bootstrap.js _site/promotion-bootstrap.js
-          cp studio/promotion-engine.js _site/promotion-engine.js
-          cp studio/promotion-ui.js _site/promotion-ui.js
-          cp studio/coverage-planner-bootstrap.js _site/coverage-planner-bootstrap.js
-          cp studio/coverage-planner-engine.js _site/coverage-planner-engine.js
-          cp studio/coverage-planner-ui.js _site/coverage-planner-ui.js
-          cp studio/source-health-bootstrap.js _site/source-health-bootstrap.js
-          cp studio/source-health-ui.js _site/source-health-ui.js
-          cp studio/case-intelligence.js _site/case-intelligence.js
-          cp studio/case-intelligence-runtime.js _site/case-intelligence-runtime.js
-          cp studio/case-analysis-curated.js _site/case-analysis-curated.js
-          cp studio/case-intelligence-locales.js _site/case-intelligence-locales.js
-          cp studio/case-locales.js _site/case-locales.js
-          cp studio/case-translation-runtime.js _site/case-translation-runtime.js
-          cp studio/experience.js _site/experience.js
-          cp studio/experience-stability.js _site/experience-stability.js
-          cp studio/i18n.js _site/i18n.js
-          cp studio/media-embed.js _site/media-embed.js
-          cp studio/source-universe.js _site/source-universe.js
-          cp studio/multi-source-cases.js _site/multi-source-cases.js
-          cp studio/multi-source-cases-batch2.js _site/multi-source-cases-batch2.js
-          cp studio/multi-source-cases-batch3.js _site/multi-source-cases-batch3.js
-          cp studio/multi-source-cases-batch4.js _site/multi-source-cases-batch4.js
-          cp studio/multi-source-cases-batch5.js _site/multi-source-cases-batch5.js
-          cp studio/multi-source-index.js _site/multi-source-index.js
-          cp studio/multi-source-batch-runtime.js _site/multi-source-batch-runtime.js
-          cp studio/unified-curated-ui.js _site/unified-curated-ui.js
-          cp studio/multi-source-polish.js _site/multi-source-polish.js
-          cp studio/coverage-audit.js _site/coverage-audit.js
-          cp studio/library-data.js _site/library-data.js
-          cp studio/digest-data.js _site/digest-data.js
 
+          cp studio/library.html _site/index.html
+
+          # Every browser module and stylesheet in Studio is published automatically.
+          # `validate-pages-contract.mjs` verifies the import graph and critical assets
+          # before this step, so new workspaces cannot silently 404 in production.
+          find studio -maxdepth 1 -type f \( -name '*.js' -o -name '*.css' \) -exec cp {} _site/ \;
+
+          # Research/operations snapshots are best-effort. The curated app stays live
+          # if an upstream source is temporarily unavailable.
           for snapshot in case-candidates.json case-review-queue.json coverage-plan.json source-health.json; do
             if [[ -f "studio/$snapshot" ]]; then
               cp "studio/$snapshot" "_site/$snapshot"
@@ -194,6 +115,9 @@ jobs:
           done
 
           touch _site/.nojekyll
+
+          # Project Pages is hosted under /Seedance-Porter/, so local root-relative
+          # entry assets become relative in the published index.
           sed -i 's|href="/library.css"|href="./library.css"|g' _site/index.html
           sed -i 's|href="/digest.css"|href="./digest.css"|g' _site/index.html
           sed -i 's|href="/case-intelligence.css"|href="./case-intelligence.css"|g' _site/index.html
@@ -201,8 +125,14 @@ jobs:
           sed -i 's|src="/library.js"|src="./library.js"|g' _site/index.html
           sed -i 's|src="/sidebar.js"|src="./sidebar.js"|g' _site/index.html
           sed -i 's|src="/case-ui.js"|src="./case-ui.js"|g' _site/index.html
+
+          test -f _site/sidebar.js
+          test -f _site/prompt-studio-ui.js
+          test -f _site/prompt-studio.css
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
