@@ -8,6 +8,8 @@ on:
       - 'studio/sidebar.js'
       - 'studio/workspace-router.js'
       - 'schemas/prompt-studio-project.schema.json'
+      - 'scripts/pages-publish-policy.mjs'
+      - 'scripts/validate-pages-contract.mjs'
       - 'scripts/validate-prompt-studio.mjs'
       - 'scripts/validate-prompt-studio-production.mjs'
       - 'docs/PROMPT-STUDIO.md'
@@ -21,6 +23,8 @@ on:
       - 'studio/sidebar.js'
       - 'studio/workspace-router.js'
       - 'schemas/prompt-studio-project.schema.json'
+      - 'scripts/pages-publish-policy.mjs'
+      - 'scripts/validate-pages-contract.mjs'
       - 'scripts/validate-prompt-studio.mjs'
       - 'scripts/validate-prompt-studio-production.mjs'
       - '.github/workflows/pages.yml'
@@ -41,6 +45,8 @@ jobs:
       - run: npm install
       - run: npm run check
       - run: npm test
+      - name: Validate generalized Pages publication contract
+        run: node scripts/validate-pages-contract.mjs
       - name: Validate Prompt Studio engine, imports, lint and patch safety
         run: node scripts/validate-prompt-studio.mjs
       - name: Validate Prompt Studio production wiring and source bridge
@@ -52,10 +58,14 @@ jobs:
           node --check studio/prompt-studio-engine.js
           node --check studio/prompt-studio-store.js
           node --check studio/prompt-studio-assets.js
+          node --check studio/prompt-studio-asset-lifecycle.js
           node --check studio/prompt-studio-ai.js
           node --check studio/prompt-studio-source-catalog.js
           node --check studio/prompt-studio-source-bridge.js
+          node --check studio/prompt-studio-reference-preview.js
           node --check studio/prompt-studio-ui.js
           node --check studio/prompt-studio-bootstrap.js
+          node --check scripts/pages-publish-policy.mjs
+          node --check scripts/validate-pages-contract.mjs
           node --check scripts/validate-prompt-studio.mjs
           node --check scripts/validate-prompt-studio-production.mjs
