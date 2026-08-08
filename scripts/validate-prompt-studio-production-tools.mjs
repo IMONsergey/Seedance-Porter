@@ -20,7 +20,8 @@ import {
   syncTimelineToTimingSection,
   importTimelineFromTiming,
   lintPromptStudioTimeline,
-  timelineSyncState
+  timelineSyncState,
+  detectPromptStudioTimelineCameraMoves
 } from '../studio/prompt-studio-timeline.js';
 
 const failures=[];
@@ -60,9 +61,17 @@ try{insertIngredientIntoSection(missingIngredient,'missing','materials');}catch(
 assert(blocked,'Ingredient insertion must block unresolved variables by default.');
 const resolvedAction=resolveVariablesInSection(project,'action');
 assert(resolvedAction.project.sections.find(section=>section.id==='action')?.content.includes('Aster device'),'Explicit Resolve must update only requested section.');
-const variableReport=buildPromptStudioVariableReport(missingIngredient);
-assert(variableReport.unresolved.some(item=>item.key==='material'),'Variable report must expose unresolved tokens and scopes.');
+const reportFixture={...missingIngredient,timeline:{schemaVersion:1,beats:[{id:'variable-beat',label:'Beat {{beat_name}}',duration:1,purpose:'Use {{timeline_purpose}}',camera:'{{camera_rule}}',action:'Move {{product}} once.',notes:'Hold {{endpoint_hold}}.',referenceTokens:['@ref01'],enabled:true}]}};
+const variableReport=buildPromptStudioVariableReport(reportFixture);
+assert(variableReport.unresolved.some(item=>item.key==='material'),'Variable report must expose unresolved Ingredient tokens.');
+assert(variableReport.unresolved.some(item=>item.key==='timeline_purpose'&&item.scopes.includes('timeline:variable-beat:purpose')),'Variable report must expose unresolved Timeline tokens with exact beat/field scope.');
+assert(variableReport.unresolved.some(item=>item.key==='camera_rule'&&item.scopes.includes('timeline:variable-beat:camera')),'Variable report must inspect Timeline camera fields.');
+assert(variableReport.used.includes('product')&&variableReport.used.includes('endpoint_hold'),'Variable report must track variables used in Timeline as well as sections/ingredients.');
 assert(PROMPT_STUDIO_STARTER_INGREDIENTS.length>=6,'Production Tools must ship with substantive starter ingredients.');
+
+assert(detectPromptStudioTimelineCameraMoves('controlled locked camera').length===0,'Token-aware camera detection must not treat “controlled” as a roll move.');
+const detectedMoves=detectPromptStudioTimelineCameraMoves('orbit and zoom while tracking the product');
+assert(detectedMoves.length===3&&detectedMoves.includes('orbit')&&detectedMoves.includes('zoom')&&detectedMoves.includes('tracking'),'Camera detection must identify explicit orbit + zoom + tracking without substring noise.');
 
 let timelineProject=project;
 timelineProject=addTimelineBeat(timelineProject,{id:'b1',label:'Establish',shotType:'packshot',duration:2,purpose:'Read product identity',camera:'locked tripod',action:'Hold exact @ref01 geometry.',referenceTokens:['@ref01']});
@@ -77,7 +86,6 @@ assert(Math.abs(total-6)<=0.11,`Fit-to-duration must scale timeline to project d
 assert(ranges[0].start===0&&Math.abs(ranges[ranges.length-1].end-6)<=0.11,'Timeline ranges must be contiguous from 0 to project duration.');
 const timingText=compileTimelineToTiming(timelineProject);
 assert(/Beat 1/.test(timingText)&&/Refs: @ref01/.test(timingText),'Timeline compiler must emit numbered beats and reference jobs.');
-const preSyncTiming=timelineProject.sections.find(section=>section.id==='timing')?.content;
 const synced=syncTimelineToTimingSection(timelineProject);
 assert(synced.sections.find(section=>section.id==='timing')?.content===timingText,'Sync must make Timing equal the compiled structured timeline.');
 for(const section of synced.sections.filter(section=>section.id!=='timing'))assert(section.content===timelineProject.sections.find(value=>value.id===section.id)?.content,`Timeline sync must not modify non-Timing section ${section.id}.`);
@@ -89,10 +97,13 @@ let broken=updateTimelineBeat(synced,'b2',{camera:'orbit and zoom while tracking
 const brokenLint=lintPromptStudioTimeline(broken);
 assert(brokenLint.issues.some(item=>item.id==='beat-camera-overload'),'Timeline lint must catch compound per-beat camera moves.');
 assert(brokenLint.issues.some(item=>item.id==='beat-reference-unresolved'&&item.severity==='error'),'Timeline lint must catch unresolved beat references.');
+const invalidDuration=updateTimelineBeat(synced,'b1',{duration:'not-a-number'});
+const normalizedDuration=timelineWithTimeRanges(invalidDuration).find(item=>item.id==='b1')?.duration;
+assert(Number.isFinite(normalizedDuration)&&normalizedDuration===0.1,`Invalid duration input must normalize to safe 0.1s minimum, got ${normalizedDuration}.`);
 
 const schema=JSON.parse(await readFile('schemas/prompt-studio-production-tools.schema.json','utf8'));
 assert(schema.properties?.variables?.items?.properties?.key?.pattern==='^[a-z][a-z0-9_-]{0,63}$','Production Tools schema must lock variable key format.');
 assert(schema.properties?.timeline?.properties?.beats?.maxItems===30,'Production Tools schema must cap timeline beat count.');
 
 if(failures.length){console.error('Prompt Studio Production Tools contract failed:\n'+failures.map(item=>`- ${item}`).join('\n'));process.exit(1);}
-console.log(JSON.stringify({ok:true,variables:true,ingredientIsolation:true,unresolvedBlocking:true,starterIngredients:PROMPT_STUDIO_STARTER_INGREDIENTS.length,timelineBeats:ranges.length,timelineDuration:total,timingSync:true,timelineLint:true},null,2));
+console.log(JSON.stringify({ok:true,variables:true,timelineVariableScopes:true,ingredientIsolation:true,unresolvedBlocking:true,starterIngredients:PROMPT_STUDIO_STARTER_INGREDIENTS.length,cameraDetection:'token-aware',timelineBeats:ranges.length,timelineDuration:total,timingSync:true,timelineLint:true},null,2));
