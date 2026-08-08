@@ -9,5 +9,7 @@ outputs/
 *.mov
 *.webm
 *.porter.json
+*.job.json
+*.result.json
 .DS_Store
 coverage/

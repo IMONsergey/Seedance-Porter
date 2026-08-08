@@ -12,6 +12,8 @@
     "porter": "tsx src/cli.ts",
     "mcp": "tsx src/mcp/server.ts",
     "studio": "tsx src/server/http.ts",
+    "seedance:runner": "node scripts/seedance-modelark-runner.mjs",
+    "validate:seedance-runner": "node scripts/validate-seedance-modelark-runner.mjs",
     "validate:library": "node scripts/validate-library.mjs",
     "validate:render": "node scripts/validate-render-contract.mjs",
     "case:import": "node scripts/import-case-candidates.mjs --limit 750 --min 500 --output studio/case-candidates.json",
