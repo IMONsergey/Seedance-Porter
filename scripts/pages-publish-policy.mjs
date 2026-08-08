@@ -24,3 +24,13 @@ export function workflowUsesBulkStudioPublication(workflow) {
     && workflow.includes("-name '*.css'")
     && workflow.includes('-exec cp {} _site/');
 }
+
+export function workflowTriggersForPath(workflow, path) {
+  const value = String(path || '').replace(/^\.\//, '');
+  if (!value) return false;
+  if (workflow.includes(`- '${value}'`) || workflow.includes(`- "${value}"`)) return true;
+  if (value.startsWith('studio/') && workflow.includes("- 'studio/**'")) return true;
+  if (value.startsWith('scripts/') && workflow.includes("- 'scripts/**'")) return true;
+  if (value.startsWith('schemas/') && workflow.includes("- 'schemas/**'")) return true;
+  return false;
+}
