@@ -71,7 +71,7 @@ export async function runSeedanceBatch(plan,job,options={}){
     item=get(itemId);
     if(PROVIDER_TERMINAL.has(item.job?.status||item.status)){const result=applyJobStudioLinkToResult(buildGenerationResult(item.job,now()),item.job);update(itemId,{status:item.job.status,result,error:item.job.error||null,updatedAt:iso(now()),completedAt:item.job.completedAt||iso(now())});await persist();return;}
     try{
-      const completed=await waitForSeedanceGeneration(item.job,{requester,apiKey,pollMs,timeoutMs,...(sleep?{sleep}:{}),now,onPoll:async current=>{update(itemId,{status:current.status,job:current,updatedAt:iso(now())});await persist();}});
+      const completed=await waitForSeedanceGeneration(item.job,{requester,apiKey,pollMs,timeoutMs,...(sleep?{sleep}:{}),now,onPoll:async current=>{const terminal=PROVIDER_TERMINAL.has(current.status),result=terminal?applyJobStudioLinkToResult(buildGenerationResult(current,now()),current):null;update(itemId,{status:current.status,job:current,result,error:current.error||null,updatedAt:iso(now()),completedAt:terminal?current.completedAt||iso(now()):null});await persist();}});
       const result=applyJobStudioLinkToResult(completed.result,completed.job);update(itemId,{status:completed.job.status,job:completed.job,result,error:completed.job.error||null,updatedAt:iso(now()),completedAt:completed.job.completedAt||iso(now())});await persist();
     }catch(error){update(itemId,{status:'interrupted',error:safeError(error),updatedAt:iso(now()),completedAt:null});await persist();}
   }
