@@ -10,6 +10,8 @@ scheduleDecorate();
 
 function bindBridge(){
   document.addEventListener('click',event=>{
+    const command=event.target.closest('[data-open-prompt-studio-command]');
+    if(command){event.preventDefault();event.stopPropagation();window.porterPromptStudio?.open?.();return;}
     const button=event.target.closest('[data-open-prompt-studio-kind][data-open-prompt-studio-id]');
     if(!button)return;
     event.preventDefault();
@@ -29,6 +31,7 @@ function decorate(){
   decorateCurated();
   decorateOriginals();
   decorateResearch();
+  decorateCommandPalette();
   updateLabels();
 }
 
@@ -59,6 +62,17 @@ function decorateResearch(){
   });
 }
 
+function decorateCommandPalette(){
+  const hints=document.querySelector('#commandModeHints');
+  if(!hints||hints.querySelector('[data-open-prompt-studio-command]'))return;
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='command-mode-chip';
+  button.dataset.openPromptStudioCommand='true';
+  button.innerHTML='<kbd>✦</kbd><span>Studio</span>';
+  hints.appendChild(button);
+}
+
 function rebuildResearchTitleMap(){
   const map=new Map();
   for(const entry of promptStudioSourceCatalog().research){
@@ -81,6 +95,7 @@ function makeButton(kind,id){
 
 function updateLabels(){
   document.querySelectorAll('.open-prompt-studio-action').forEach(setButtonLabel);
+  document.querySelectorAll('[data-open-prompt-studio-command] span').forEach(span=>{const value=getLanguage()==='ru'?'Студио':'Studio';if(span.textContent!==value)span.textContent=value;});
 }
 function setButtonLabel(button){
   const value=label();
