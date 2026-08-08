@@ -3,30 +3,22 @@ name: Prompt Studio v4 Storyboard Variants Handoff CI
 on:
   pull_request:
     paths:
-      - 'studio/prompt-studio-storyboard.js'
-      - 'studio/prompt-studio-variants.js'
-      - 'studio/prompt-studio-generation-handoff.js'
-      - 'studio/prompt-studio-v4*.js'
-      - 'studio/prompt-studio-v4.css'
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
       - 'studio/sidebar.js'
-      - 'schemas/prompt-studio-v4.schema.json'
-      - 'schemas/prompt-studio-generation-handoff.schema.json'
-      - 'scripts/validate-prompt-studio-v4-*.mjs'
+      - 'schemas/prompt-studio*.json'
+      - 'scripts/validate-prompt-studio*.mjs'
       - 'scripts/validate-pages-contract.mjs'
       - '.github/workflows/pages.yml'
       - '.github/workflows/prompt-studio-v4-ci.yml'
   push:
     branches: [main]
     paths:
-      - 'studio/prompt-studio-storyboard.js'
-      - 'studio/prompt-studio-variants.js'
-      - 'studio/prompt-studio-generation-handoff.js'
-      - 'studio/prompt-studio-v4*.js'
-      - 'studio/prompt-studio-v4.css'
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
       - 'studio/sidebar.js'
-      - 'schemas/prompt-studio-v4.schema.json'
-      - 'schemas/prompt-studio-generation-handoff.schema.json'
-      - 'scripts/validate-prompt-studio-v4-*.mjs'
+      - 'schemas/prompt-studio*.json'
+      - 'scripts/validate-prompt-studio*.mjs'
       - 'scripts/validate-pages-contract.mjs'
       - '.github/workflows/pages.yml'
       - '.github/workflows/prompt-studio-v4-ci.yml'
