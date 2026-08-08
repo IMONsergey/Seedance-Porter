@@ -1,0 +1,31 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"Seedance Porter Generation Job",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["kind","schemaVersion","provider","adapter","taskId","status","providerStatus","terminal","endpoint","retrieveUrl","exportHash","exportSummary","createdAt","updatedAt","submittedAt","lastCheckedAt","completedAt","output","usage","error","providerMeta","policy"],
+  "properties":{
+    "kind":{"const":"seedance-porter-generation-job"},
+    "schemaVersion":{"const":1},
+    "provider":{"const":"byteplus-modelark"},
+    "adapter":{"const":"seedance-2.0"},
+    "taskId":{"type":"string","minLength":1},
+    "status":{"enum":["submitted","queued","running","succeeded","failed","cancelled","expired","unknown"]},
+    "providerStatus":{"type":["string","null"]},
+    "terminal":{"type":"boolean"},
+    "endpoint":{"const":"https://ark.ap-southeast.bytepluses.com/api/v3/contents/generations/tasks"},
+    "retrieveUrl":{"type":"string","format":"uri","pattern":"^https://ark\\.ap-southeast\\.bytepluses\\.com/api/v3/contents/generations/tasks/"},
+    "exportHash":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "exportSummary":{"type":"object","additionalProperties":false,"required":["model","resolution","ratio","duration","generateAudio","images","videos","audios"],"properties":{"model":{"type":"string"},"resolution":{"type":"string"},"ratio":{"type":"string"},"duration":{"type":["number","null"]},"generateAudio":{"type":"boolean"},"images":{"type":"integer","minimum":0},"videos":{"type":"integer","minimum":0},"audios":{"type":"integer","minimum":0}}},
+    "createdAt":{"type":"string","format":"date-time"},
+    "updatedAt":{"type":"string","format":"date-time"},
+    "submittedAt":{"type":"string","format":"date-time"},
+    "lastCheckedAt":{"type":["string","null"],"format":"date-time"},
+    "completedAt":{"type":["string","null"],"format":"date-time"},
+    "output":{"type":["object","null"],"additionalProperties":false,"properties":{"videoUrl":{"type":"string"},"lastFrameUrl":{"type":"string"}}},
+    "usage":{"type":["object","null"],"additionalProperties":false,"properties":{"completionTokens":{"type":["number","null"]},"totalTokens":{"type":["number","null"]}}},
+    "error":{"type":["object","null"],"additionalProperties":false,"properties":{"code":{"type":"string"},"message":{"type":"string","maxLength":1000}}},
+    "providerMeta":{"type":["object","null"]},
+    "policy":{"type":"object","additionalProperties":false,"required":["secretPersisted","apiKeySource","externalExecution"],"properties":{"secretPersisted":{"const":false},"apiKeySource":{"const":"environment"},"externalExecution":{"const":true}}}
+  }
+}
