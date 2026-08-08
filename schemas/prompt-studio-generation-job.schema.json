@@ -25,7 +25,12 @@
     "output":{"type":["object","null"],"additionalProperties":false,"properties":{"videoUrl":{"type":"string"},"lastFrameUrl":{"type":"string"}}},
     "usage":{"type":["object","null"],"additionalProperties":false,"properties":{"completionTokens":{"type":["number","null"]},"totalTokens":{"type":["number","null"]}}},
     "error":{"type":["object","null"],"additionalProperties":false,"properties":{"code":{"type":"string"},"message":{"type":"string","maxLength":1000}}},
-    "providerMeta":{"type":["object","null"]},
+    "providerMeta":{"type":["object","null"],"additionalProperties":false,"properties":{"model":{"type":"string"},"createdAt":{"type":["string","null"],"format":"date-time"},"updatedAt":{"type":["string","null"],"format":"date-time"},"resolution":{"type":"string"},"ratio":{"type":"string"},"duration":{"type":["number","null"]},"framesPerSecond":{"type":["number","null"]},"generateAudio":{"type":["boolean","null"]},"priority":{"type":["number","null"]},"executionExpiresAfter":{"type":["number","null"]}}},
     "policy":{"type":"object","additionalProperties":false,"required":["secretPersisted","apiKeySource","externalExecution"],"properties":{"secretPersisted":{"const":false},"apiKeySource":{"const":"environment"},"externalExecution":{"const":true}}}
-  }
+  },
+  "allOf":[
+    {"if":{"properties":{"status":{"enum":["succeeded","failed","cancelled","expired"]}},"required":["status"]},"then":{"properties":{"terminal":{"const":true},"completedAt":{"type":"string","format":"date-time"}}}},
+    {"if":{"properties":{"status":{"enum":["submitted","queued","running","unknown"]}},"required":["status"]},"then":{"properties":{"terminal":{"const":false},"completedAt":{"type":"null"}}}},
+    {"if":{"properties":{"status":{"const":"succeeded"}},"required":["status"]},"then":{"properties":{"output":{"type":"object","required":["videoUrl","lastFrameUrl"]}}}}
+  ]
 }
