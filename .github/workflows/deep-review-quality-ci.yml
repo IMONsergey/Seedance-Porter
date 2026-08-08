@@ -1,0 +1,42 @@
+name: deep-review-quality-ci
+
+on:
+  pull_request:
+    paths:
+      - 'studio/review-quality-engine.js'
+      - 'scripts/audit-deep-review-quality.mjs'
+      - 'scripts/validate-deep-review-quality.mjs'
+      - 'docs/DEEP-REVIEW-QUALITY-AUDITOR.md'
+      - '.github/workflows/deep-review-quality-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/review-quality-engine.js'
+      - 'scripts/audit-deep-review-quality.mjs'
+      - 'scripts/validate-deep-review-quality.mjs'
+      - '.github/workflows/deep-review-quality-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate adversarial Deep Review quality fixtures
+        run: node scripts/validate-deep-review-quality.mjs
+      - name: Validate protected exact-100 browser contract
+        run: npm run validate:render
+      - name: Syntax-check review quality modules
+        run: |
+          node --check studio/review-quality-engine.js
+          node --check scripts/audit-deep-review-quality.mjs
+          node --check scripts/validate-deep-review-quality.mjs
