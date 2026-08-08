@@ -20,7 +20,7 @@ export const PROMPT_STUDIO_BLUEPRINTS=Object.freeze([
     sections:{objective:'Create a short character performance with stable identity and one legible emotional/physical progression.',subject:'@ref01 controls character identity.',camera:'Choose one dominant camera behavior per beat.',action:'Describe observable body/face action and one state change per beat.',continuity:'Lock face identity, age, body proportions, hairstyle, wardrobe construction, handedness and spatial relationships.',constraints:'No identity swap, duplicate person, wardrobe mutation or invented accessories.'}
   },
   {
-    id:'blueprint-ui-motion',label:'UI / Interface Motion',labelRu:'UI / интерфейсная анимация',category:'UI',mode:'image-to-video',aspect:'16:9',duration:6,modelProfile:'ui-interface-motion',
+    id:'blueprint-ui-motion',label:'UI / Interface Motion',labelRu:'UI / интерфейсная анимация',category:'UI',mode:'image-to-video',aspect:'16:9',duration:6,modelProfile:'ui-motion',
     description:'Interface animation with layout hierarchy, state transitions and typography safety boundaries.',requiredReferenceRoles:['geometry','graphics'],
     customRules:['Preserve UI hierarchy and component geometry.','Exact microcopy and brand typography remain reference-driven or post-produced.'],
     variables:[{key:'interface',value:'',description:'Product/interface name'}],
@@ -46,7 +46,10 @@ export const PROMPT_STUDIO_BLUEPRINTS=Object.freeze([
   }
 ]);
 
-export function getPromptStudioBlueprint(id){return PROMPT_STUDIO_BLUEPRINTS.find(item=>item.id===id)||loadPromptStudioBlueprintLibrary().find(item=>item.id===id)||null;}
+export function getPromptStudioBlueprint(id){
+  const builtin=PROMPT_STUDIO_BLUEPRINTS.find(item=>item.id===id);if(builtin)return{...clone(builtin),builtin:true};
+  const custom=loadPromptStudioBlueprintLibrary().find(item=>item.id===id);return custom?{...clone(custom),builtin:false}:null;
+}
 export function listPromptStudioBlueprints(){return[...PROMPT_STUDIO_BLUEPRINTS.map(item=>({...clone(item),builtin:true})),...loadPromptStudioBlueprintLibrary().map(item=>({...item,builtin:false}))];}
 
 export function instantiatePromptStudioBlueprint(blueprintOrId,options={}){
