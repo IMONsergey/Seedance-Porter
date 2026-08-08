@@ -232,6 +232,11 @@ export function buildPromptStudioVariableReport(project) {
   };
   for(const section of project.sections||[])record(`section:${section.id}`,section.content||'');
   for(const ingredient of ingredients)record(`ingredient:${ingredient.id}`,ingredient.template);
+  for(const beat of project.timeline?.beats||[]){
+    for(const [field,text] of Object.entries({label:beat?.label,purpose:beat?.purpose,camera:beat?.camera,action:beat?.action,notes:beat?.notes})){
+      record(`timeline:${beat?.id||'beat'}:${field}`,text||'');
+    }
+  }
   return {
     variables,
     used:[...used].sort(),
