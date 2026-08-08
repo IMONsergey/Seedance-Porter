@@ -63,10 +63,12 @@ jobs:
         run: |
           node --check studio/prompt-studio-repair.js
           node --check studio/prompt-studio-blueprints.js
+          node --check studio/prompt-studio-generation-handoff.js
           node --check studio/prompt-studio-seedance-adapter.js
           node --check studio/prompt-studio-v5-workflow-guard.js
           node --check studio/prompt-studio-v5-ui.js
           node --check studio/prompt-studio-v5-bootstrap.js
+          node --check studio/sidebar.js
           node --check scripts/validate-prompt-studio-v5-engines.mjs
           node --check scripts/validate-prompt-studio-v5-workflow-guard.mjs
           node --check scripts/validate-prompt-studio-v5-production.mjs
