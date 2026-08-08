@@ -35,6 +35,8 @@ assert(bridge.includes('#digestGrid [data-digest-id]'),'Source bridge must decor
 assert(bridge.includes('#promptGrid [data-id]'),'Source bridge must decorate Porter Original cards by stable ID.');
 assert(bridge.includes('#corpusBody .corpus-card'),'Source bridge must support Research Corpus cards.');
 assert(bridge.includes('ambiguous:true'),'Research title bridge must refuse ambiguous title mapping instead of guessing candidate identity.');
+assert(bridge.includes('data-open-prompt-studio-command'),'Cmd-K palette must expose a direct Prompt Studio entry without mutating its internal result index.');
+assert(bridge.includes("button.textContent!==value"),'MutationObserver bridge label updates must be idempotent to avoid self-trigger loops.');
 assert(!bridge.includes('CASE_INTELLIGENCE.push')&&!bridge.includes('MULTI_SOURCE_CASES.push'),'Source bridge must never mutate curated arrays.');
 assert(!ui.includes('CASE_INTELLIGENCE.push')&&!ui.includes('MULTI_SOURCE_CASES.push'),'Prompt Studio UI must never mutate curated arrays.');
 assert(!ai.includes('applyPromptStudioPatch'),'AI controller must not own an apply path.');
@@ -44,4 +46,4 @@ assert(curated.length===100&&new Set(curated.map(item=>item.id)).size===100,`Pro
 assert(PROMPTS.length===192,`Prompt Studio production baseline must retain 192 Porter Originals; got ${PROMPTS.length}.`);
 
 if(failures.length){console.error('Prompt Studio production contract failed:\n'+failures.map(item=>`- ${item}`).join('\n'));process.exit(1);}
-console.log(JSON.stringify({ok:true,curatedCases:curated.length,porterOriginals:PROMPTS.length,productionAssets:assets.length,workspaceRoute:true,sourceBridge:true,aiAutoApply:false,curatedMutation:false},null,2));
+console.log(JSON.stringify({ok:true,curatedCases:curated.length,porterOriginals:PROMPTS.length,productionAssets:assets.length,workspaceRoute:true,sourceBridge:true,cmdKEntry:true,idempotentObserver:true,aiAutoApply:false,curatedMutation:false},null,2));
