@@ -1,10 +1,10 @@
 name: Prompt Studio v3 engine exact fix
 
 on:
-  push:
-    branches: [feat/prompt-studio-v3-timeline-ingredients]
+  pull_request:
     paths:
       - 'scripts/apply-prompt-studio-v3-engine-fix.mjs'
+      - '.github/workflows/prompt-studio-v3-engine-fix.yml'
   workflow_dispatch:
 
 permissions:
@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   migrate:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
