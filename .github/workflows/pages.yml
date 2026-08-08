@@ -25,6 +25,8 @@ on:
       - 'scripts/validate-promotion-workspace.mjs'
       - 'scripts/validate-coverage-planner.mjs'
       - 'scripts/validate-source-adapters.mjs'
+      - 'scripts/validate-operations-command-center.mjs'
+      - 'scripts/validate-operations-production.mjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -74,6 +76,12 @@ jobs:
       - name: Validate source adapter registry, risk policy and health engine
         run: node scripts/validate-source-adapters.mjs
 
+      - name: Validate Operations Command Center
+        run: node scripts/validate-operations-command-center.mjs
+
+      - name: Validate Operations production wiring
+        run: node scripts/validate-operations-production.mjs
+
       - name: Build Research Corpus + strategic operations snapshots for Pages
         continue-on-error: true
         run: npm run case:refresh
@@ -93,12 +101,16 @@ jobs:
           cp studio/promotion.css _site/promotion.css
           cp studio/coverage-planner.css _site/coverage-planner.css
           cp studio/source-health.css _site/source-health.css
+          cp studio/operations.css _site/operations.css
           cp studio/experience.css _site/experience.css
           cp studio/multi-source.css _site/multi-source.css
           cp studio/coverage-audit.css _site/coverage-audit.css
           cp studio/library.js _site/library.js
           cp studio/sidebar.js _site/sidebar.js
           cp studio/workspace-router.js _site/workspace-router.js
+          cp studio/operations-bootstrap.js _site/operations-bootstrap.js
+          cp studio/operations-engine.js _site/operations-engine.js
+          cp studio/operations-ui.js _site/operations-ui.js
           cp studio/case-ui.js _site/case-ui.js
           cp studio/case-corpus-ui.js _site/case-corpus-ui.js
           cp studio/deep-review-bootstrap.js _site/deep-review-bootstrap.js
