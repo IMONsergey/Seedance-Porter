@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFile, writeFile } from 'node:fs/promises';
 
+// Triggered after the workflow definition exists; this file is removed after migration verification.
 const path='studio/prompt-studio-production-tools.js';
 let source=await readFile(path,'utf8');
 
