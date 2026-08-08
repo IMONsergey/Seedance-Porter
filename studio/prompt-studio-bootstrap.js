@@ -1,4 +1,8 @@
-for (const [href, marker] of [['./prompt-studio.css','promptStudioStyles'],['./prompt-studio-bridge.css','promptStudioBridgeStyles']]) {
+for (const [href, marker] of [
+  ['./prompt-studio.css','promptStudioStyles'],
+  ['./prompt-studio-bridge.css','promptStudioBridgeStyles'],
+  ['./prompt-studio-preview.css','promptStudioPreviewStyles']
+]) {
   if (!document.querySelector(`link[data-${marker.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`)}]`)) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -8,5 +12,7 @@ for (const [href, marker] of [['./prompt-studio.css','promptStudioStyles'],['./p
   }
 }
 
+await import('./prompt-studio-asset-lifecycle.js');
 await import('./prompt-studio-ui.js');
 await import('./prompt-studio-source-bridge.js');
+await import('./prompt-studio-reference-preview.js');
