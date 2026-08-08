@@ -4,19 +4,26 @@ on:
   pull_request:
     paths:
       - 'studio/evidence-package-engine.js'
+      - 'studio/review-quality-engine.js'
       - 'studio/promotion-handoff-engine.js'
       - 'scripts/build-final-evidence-package.mjs'
+      - 'scripts/audit-deep-review-quality.mjs'
       - 'scripts/build-promotion-handoff.mjs'
       - 'scripts/validate-final-evidence-package.mjs'
+      - 'scripts/validate-deep-review-quality.mjs'
       - 'scripts/validate-promotion-handoff.mjs'
       - 'docs/PROMOTION-EVIDENCE-HANDOFF.md'
+      - 'docs/PROMOTION-QUALITY-GATE.md'
       - '.github/workflows/promotion-handoff-ci.yml'
   push:
     branches: [main]
     paths:
       - 'studio/evidence-package-engine.js'
+      - 'studio/review-quality-engine.js'
       - 'studio/promotion-handoff-engine.js'
+      - 'scripts/audit-deep-review-quality.mjs'
       - 'scripts/build-promotion-handoff.mjs'
+      - 'scripts/validate-deep-review-quality.mjs'
       - 'scripts/validate-promotion-handoff.mjs'
       - '.github/workflows/promotion-handoff-ci.yml'
   workflow_dispatch:
@@ -37,12 +44,17 @@ jobs:
       - run: npm test
       - name: Validate parent Final Evidence Package
         run: node scripts/validate-final-evidence-package.mjs
-      - name: Validate Final Evidence to Promotion handoff
+      - name: Validate adversarial Deep Review quality gate
+        run: node scripts/validate-deep-review-quality.mjs
+      - name: Validate quality-gated Final Evidence to Promotion handoff
         run: node scripts/validate-promotion-handoff.mjs
       - name: Validate protected exact-100 browser contract
         run: npm run validate:render
       - name: Syntax-check Promotion handoff modules
         run: |
+          node --check studio/review-quality-engine.js
           node --check studio/promotion-handoff-engine.js
+          node --check scripts/audit-deep-review-quality.mjs
           node --check scripts/build-promotion-handoff.mjs
+          node --check scripts/validate-deep-review-quality.mjs
           node --check scripts/validate-promotion-handoff.mjs
