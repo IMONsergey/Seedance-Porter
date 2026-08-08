@@ -1,0 +1,48 @@
+name: promotion-handoff-ci
+
+on:
+  pull_request:
+    paths:
+      - 'studio/evidence-package-engine.js'
+      - 'studio/promotion-handoff-engine.js'
+      - 'scripts/build-final-evidence-package.mjs'
+      - 'scripts/build-promotion-handoff.mjs'
+      - 'scripts/validate-final-evidence-package.mjs'
+      - 'scripts/validate-promotion-handoff.mjs'
+      - 'docs/PROMOTION-EVIDENCE-HANDOFF.md'
+      - '.github/workflows/promotion-handoff-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/evidence-package-engine.js'
+      - 'studio/promotion-handoff-engine.js'
+      - 'scripts/build-promotion-handoff.mjs'
+      - 'scripts/validate-promotion-handoff.mjs'
+      - '.github/workflows/promotion-handoff-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  handoff:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate parent Final Evidence Package
+        run: node scripts/validate-final-evidence-package.mjs
+      - name: Validate Final Evidence to Promotion handoff
+        run: node scripts/validate-promotion-handoff.mjs
+      - name: Validate protected exact-100 browser contract
+        run: npm run validate:render
+      - name: Syntax-check Promotion handoff modules
+        run: |
+          node --check studio/promotion-handoff-engine.js
+          node --check scripts/build-promotion-handoff.mjs
+          node --check scripts/validate-promotion-handoff.mjs
