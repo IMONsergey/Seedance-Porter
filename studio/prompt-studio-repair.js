@@ -20,12 +20,12 @@ export function repairStrategy(issue){
     'prompt:too-many-camera-moves':{kind:'patch',preset:'camera-cleanup',allowedSections:['camera'],label:'Reduce competing camera moves'},
     'prompt:continuity-lock-needed':{kind:'patch',preset:'continuity',allowedSections:['continuity'],label:'Strengthen continuity locks'},
     'prompt:constraints-thin':{kind:'patch',preset:'constraints',allowedSections:['constraints'],label:'Add failure boundaries'},
-    'prompt:exact-graphics-without-reference':{kind:'patch',preset:'constraints',allowedSections:['constraints'],label:'Protect exact graphics workflow'},
+    'prompt:exact-graphics-without-reference':{kind:'manual',label:'Attach a graphics reference or move exact graphics to post-production'},
     'prompt:prompt-long':{kind:'patch',preset:'shorten',allowedSections:[],label:'Shorten prompt'},
     'prompt:generic-language':{kind:'patch',preset:'tighten',allowedSections:[],label:'Replace generic language'},
-    'prompt:legacy-reference-token':{kind:'patch',preset:'reference-locks',allowedSections:['continuity','constraints'],label:'Clarify reference jobs'},
+    'prompt:legacy-reference-token':{kind:'manual',label:'Map the legacy media token to an explicit @refNN reference'},
     'prompt:weak-reference-role':{kind:'manual',label:'Assign a precise reference job'},
-    'prompt:reference-not-locked':{kind:'patch',preset:'reference-locks',allowedSections:['continuity','constraints'],label:'Strengthen reference locks'},
+    'prompt:reference-not-locked':{kind:'reference-lock',label:'Lock the referenced identity/geometry source'},
     'prompt:missing-objective':{kind:'ai-or-manual',allowedSections:['objective'],label:'Define observable objective'},
     'prompt:missing-action':{kind:'ai-or-manual',allowedSections:['action','timing'],label:'Define visible action'},
     'timeline:timeline-duration-mismatch':{kind:'timeline-fit',label:'Fit Timeline to project duration'},
@@ -45,6 +45,13 @@ export function buildPromptStudioRepairProposal(project,repair,options={}){
   if(strategy.kind==='patch'){
     const patch=buildDeterministicStudioPatch(project,strategy.preset);const scoped=scopePatch(issue,strategy,patch);const validation=validatePromptStudioPatch(project,scoped);
     return{kind:'patch',issue,strategy,ok:validation.ok,patch:validation.patch,errors:validation.errors||[],backend:'rules-engine',summary:validation.patch?.summary||strategy.label};
+  }
+  if(strategy.kind==='reference-lock'){
+    const token=String(issue.message||'').match(/@ref\d{2,}/i)?.[0]?.toLowerCase()||'';
+    if(!token)return{kind:'manual',issue,strategy:{kind:'manual',label:'Choose the reference to lock'},ok:false,summary:'Reference lock needs an explicit token.',reason:'No @refNN token could be resolved from this lint issue.'};
+    const next=JSON.parse(JSON.stringify(project));const ref=(next.references||[]).find(item=>String(item.token||'').toLowerCase()===token);
+    if(!ref)return{kind:'manual',issue,strategy:{kind:'manual',label:'Choose the reference to lock'},ok:false,summary:'Reference lock needs an explicit reference.',reason:`${token} does not resolve to an attached reference.`};
+    ref.locked=true;return{kind:'project-update',issue,strategy,ok:true,project:next,changed:[`reference:${token}:locked`],summary:strategy.label};
   }
   if(strategy.kind==='timeline-fit'){
     const next=fitTimelineToProjectDuration(project);return{kind:'project-update',issue,strategy,ok:true,project:next,changed:['timeline'],summary:strategy.label};
