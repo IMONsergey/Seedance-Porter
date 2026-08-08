@@ -34,11 +34,27 @@ assert(loaded.some(item=>item.id==='library-custom'&&item.template==='Keep geome
 const countAfterInsert=loaded.length;
 upsertPromptStudioLibraryIngredient({id:'library-custom',label:'Custom lock v2',type:'continuity',defaultSection:'continuity',template:'Keep geometry fixed and lighting coherent.',tags:['custom','v2']});
 loaded=loadPromptStudioIngredientLibrary();
-assert(loaded.length===countAfterInsert,'Upsert with the same ID must update rather than duplicate a shared Ingredient.');
+assert(loaded.length===countAfterInsert,'Upsert with the same ID and no source identity must update rather than duplicate.');
 assert(loaded.find(item=>item.id==='library-custom')?.label==='Custom lock v2','Shared Ingredient update must replace the matching ID.');
 
 deletePromptStudioLibraryIngredient('library-custom');
 assert(!loadPromptStudioIngredientLibrary().some(item=>item.id==='library-custom'),'Delete must remove exactly the requested shared Ingredient.');
+
+const sourceA={id:'library-same-label',label:'Same label',type:'continuity',defaultSection:'continuity',template:'Rule A',tags:['a'],createdAt:'2026-08-08T05:00:00.000Z'};
+const sourceB={id:'library-same-label',label:'Same label',type:'continuity',defaultSection:'continuity',template:'Rule B',tags:['b'],createdAt:'2026-08-08T05:01:00.000Z'};
+upsertPromptStudioLibraryIngredient(sourceA);
+upsertPromptStudioLibraryIngredient(sourceB);
+loaded=loadPromptStudioIngredientLibrary();
+let sameLabel=loaded.filter(item=>item.label==='Same label');
+assert(sameLabel.length===2,'Different source Ingredients with the same shared ID/label must coexist instead of silently overwriting.');
+assert(new Set(sameLabel.map(item=>item.id)).size===2,'Collision-safe shared Ingredients must receive distinct library IDs.');
+assert(sameLabel.some(item=>item.createdAt===sourceA.createdAt)&&sameLabel.some(item=>item.createdAt===sourceB.createdAt),'Collision-safe copies must preserve source identity timestamps.');
+const beforeSourceBResave=loaded.length;
+upsertPromptStudioLibraryIngredient({...sourceB,template:'Rule B updated'});
+loaded=loadPromptStudioIngredientLibrary();
+sameLabel=loaded.filter(item=>item.label==='Same label');
+assert(loaded.length===beforeSourceBResave,'Re-saving the same source Ingredient must update its prior shared copy, not create another collision copy.');
+assert(sameLabel.find(item=>item.createdAt===sourceB.createdAt)?.template==='Rule B updated','Source-aware re-save must update the correct collision-safe shared Ingredient.');
 
 const many=Array.from({length:325},(_,index)=>({id:`library-${index}`,label:`Ingredient ${index}`,type:'other',defaultSection:'constraints',template:`Rule ${index}`,tags:[]}));
 const capped=savePromptStudioIngredientLibrary(many);
@@ -53,4 +69,4 @@ assert(reset.length>=6&&reset.length<300,'Reset must restore starter recipes rat
 assert(ensurePromptStudioIngredientStarters().length===reset.length,'Starter ensure must be idempotent when the library is already populated.');
 
 if(failures.length){console.error('Prompt Studio Shared Ingredient Library contract failed:\n'+failures.map(item=>`- ${item}`).join('\n'));process.exit(1);}
-console.log(JSON.stringify({ok:true,starterRecipes:reset.length,upsert:true,delete:true,limit:300,stats:true,localOnly:true},null,2));
+console.log(JSON.stringify({ok:true,starterRecipes:reset.length,upsert:true,collisionSafe:true,sourceAwareResave:true,delete:true,limit:300,stats:true,localOnly:true},null,2));
