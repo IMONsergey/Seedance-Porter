@@ -1,4 +1,4 @@
-# ADR-018 — Retake Draft changes one named production lever and never auto-rewrites the prompt
+# ADR-018 — Retake is one evidence-driven lever, not an automatic rewrite
 
 Status: Accepted  
 Date: 2026-08-08  
@@ -6,65 +6,67 @@ Scope: Prompt Studio v9 Generation Console
 
 ## Context
 
-A weak generation often triggers an uncontrolled rewrite: camera, lighting, action, prompt wording and references all change together. The next output may improve, but the team no longer knows which intervention caused the improvement.
+Uncontrolled retakes change camera, light, action, references and wording together. The next result may improve, but causal learning becomes impossible.
 
-V9 is intended to create production learning, so retakes must preserve causal clarity and must start from observed review evidence rather than a vague desire to “try again”.
+A Retake also needs to preserve **why** it was proposed. If the source Evaluation changes later, future Production Memory must not silently reinterpret the historical hypothesis.
 
 ## Decision
 
-A V9 Retake Draft can only start from a **succeeded visual generation with a saved Evaluation**.
+A V9 Retake Draft may start only from:
 
-It stores exactly one named production lever:
+- a succeeded visual generation;
+- with a saved Evaluation;
+- at least one rated dimension;
+- at least one evidence-covered dimension.
 
-- objective
-- subject
-- environment
-- composition
-- camera
-- action
-- timing
-- lighting
-- materials
-- style
-- continuity
-- constraints
-- avoid
-- references
-- provider settings
-- other
+The Retake stores:
 
-The draft must also store:
+- source task ID;
+- source export SHA;
+- **source Evaluation snapshot**;
+- one canonical named production lever;
+- non-empty change instruction;
+- non-empty expected improvement;
+- at least one retained lock;
+- timestamps;
+- `status: draft`.
 
-- source task ID and export hash;
-- explicit change instruction;
-- **non-empty expected improvement** — what should become measurably/visibly better;
-- **at least one retained lock** — successful facts that must not drift;
-- timestamps.
+Source Evaluation snapshot contains:
 
-Saving a Retake Draft does **not**:
+- task ID;
+- Evaluation ID;
+- Evaluation updatedAt;
+- score/verdict;
+- rated/evidence counts;
+- decision-ready state.
 
-- mutate Prompt Studio sections;
-- change references;
-- create a Variant automatically;
-- call local AI automatically;
+If the current Evaluation is edited later, the Retake hypothesis remains historically unchanged and Decision Audit emits `retake-evidence-drift` warning.
+
+A missing, malformed or task-mismatched source snapshot is a hard integrity error.
+
+Saving Retake does **not**:
+
+- mutate prompt sections;
+- mutate references;
+- create a Variant;
+- call AI;
 - submit provider generation.
-
-A later explicit mutation may apply a Retake Draft only through its own guarded/revisioned path.
 
 ## Consequences
 
 Positive:
-- A/B diagnosis remains interpretable;
-- every retake is linked to observed Evaluation evidence;
-- expected improvement makes the next review falsifiable rather than subjective;
-- successful locks are preserved explicitly;
-- future Production Memory can learn from controlled changes;
-- retake intent is reviewable before prompt mutation or paid execution.
+
+- one-variable diagnosis remains interpretable;
+- hypothesis is tied to observed evidence;
+- expected improvement makes the next result falsifiable;
+- retained locks make successful properties explicit;
+- V10 can compare hypothesis → later result without rewriting historical review evidence.
 
 Tradeoffs:
-- a Retake Draft requires more explicit thought before it can be saved;
-- multi-lever creative rewrites require multiple explicit steps or a separately named broader experiment.
+
+- Retake requires a minimum real review before save;
+- later source-review changes surface audit warnings rather than silently updating the hypothesis.
 
 ## Invariant
 
-**Retake Draft = one evidence-driven lever + expected improvement + retained locks. It records the proposed controlled change; it is not the change itself.**
+**Retake = one named lever + source evidence snapshot + expected improvement + retained locks. It records a controlled hypothesis; it does not execute the change.**
