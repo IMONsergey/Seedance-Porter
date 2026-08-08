@@ -1,0 +1,21 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"Seedance Porter Generation Handoff",
+  "type":"object",
+  "required":["schemaVersion","kind","createdAt","project","compiledPrompt","references","timeline","storyboard","quality","policy","target","integrity"],
+  "properties":{
+    "schemaVersion":{"const":1},
+    "kind":{"const":"seedance-porter-generation-handoff"},
+    "createdAt":{"type":"string","format":"date-time"},
+    "project":{"type":"object","required":["id","title","mode","aspect","duration","modelProfile"]},
+    "source":{"type":["object","null"]},
+    "compiledPrompt":{"type":"string","minLength":1},
+    "references":{"type":"array","items":{"type":"object","required":["token","name","mediaType","role","locked","availability","uri","localAssetKey","nonPortable"],"properties":{"token":{"type":"string","pattern":"^@ref[0-9]{2,}$"},"availability":{"enum":["url","local-browser","missing"]},"nonPortable":{"type":"boolean"}}}},
+    "timeline":{"type":"object"},
+    "storyboard":{"type":"object"},
+    "quality":{"type":"object","required":["prompt","blockers","warnings","status"],"properties":{"blockers":{"type":"array","items":{"type":"string"}},"warnings":{"type":"array","items":{"type":"string"}},"status":{"enum":["ready","needs-review","blocked"]}}},
+    "policy":{"type":"object","required":["autoGenerate","autoUpload","autoPublish","autoGitHubWrite","clientSecrets","requiresExplicitExternalExecution"],"properties":{"autoGenerate":{"const":false},"autoUpload":{"const":false},"autoPublish":{"const":false},"autoGitHubWrite":{"const":false},"clientSecrets":{"const":false},"requiresExplicitExternalExecution":{"const":true}}},
+    "target":{"type":"string"},
+    "integrity":{"type":"object","required":["algorithm","canonicalization","contentHash"],"properties":{"algorithm":{"const":"sha-256"},"canonicalization":{"const":"stable-json-v1"},"contentHash":{"type":"string","pattern":"^[a-f0-9]{64}$"}}}
+  }
+}
