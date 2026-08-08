@@ -44,7 +44,7 @@ on:
 
 permissions:
   contents: read
-  pages: write
+n  pages: write
   id-token: write
 
 concurrency:
@@ -120,6 +120,7 @@ jobs:
           cp studio/rotation.css _site/rotation.css
           cp studio/prompt-studio.css _site/prompt-studio.css
           cp studio/prompt-studio-bridge.css _site/prompt-studio-bridge.css
+          cp studio/prompt-studio-preview.css _site/prompt-studio-preview.css
           cp studio/experience.css _site/experience.css
           cp studio/multi-source.css _site/multi-source.css
           cp studio/coverage-audit.css _site/coverage-audit.css
@@ -133,9 +134,11 @@ jobs:
           cp studio/prompt-studio-engine.js _site/prompt-studio-engine.js
           cp studio/prompt-studio-store.js _site/prompt-studio-store.js
           cp studio/prompt-studio-assets.js _site/prompt-studio-assets.js
+          cp studio/prompt-studio-asset-lifecycle.js _site/prompt-studio-asset-lifecycle.js
           cp studio/prompt-studio-ai.js _site/prompt-studio-ai.js
           cp studio/prompt-studio-source-catalog.js _site/prompt-studio-source-catalog.js
           cp studio/prompt-studio-source-bridge.js _site/prompt-studio-source-bridge.js
+          cp studio/prompt-studio-reference-preview.js _site/prompt-studio-reference-preview.js
           cp studio/prompt-studio-ui.js _site/prompt-studio-ui.js
           cp studio/command-palette-bootstrap.js _site/command-palette-bootstrap.js
           cp studio/command-palette-engine.js _site/command-palette-engine.js
