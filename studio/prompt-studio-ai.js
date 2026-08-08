@@ -57,34 +57,48 @@ export function createPromptStudioAIController(options = {}) {
     async stageEdit(project, request = {}) {
       if (destroyed) throw new Error('Prompt Studio AI controller has been destroyed.');
       const preset = String(request.preset || '');
-      const rawInstruction = String(request.instruction || presetInstruction(preset) || '').trim();
-      const deterministicPreset = preset || classifyPresetFromInstruction(rawInstruction);
+      const presetText = presetInstruction(preset);
+      const customInstruction = String(request.instruction || '').trim();
+      const deterministicPreset = preset || classifyPresetFromInstruction(customInstruction);
       const caps = await getPromptStudioAICapabilities();
 
-      if (!rawInstruction && deterministicPreset) {
-        return stageRulesPatch(project, deterministicPreset, 'No custom instruction was provided.');
+      if (!presetText && !customInstruction) {
+        return {
+          ok:false,
+          backend:'none',
+          error:'Choose an edit preset or write a custom instruction.',
+          patch:null,
+          warnings:[]
+        };
       }
 
       if (!caps.builtInAI.supported || caps.builtInAI.availability === 'unavailable') {
-        if (deterministicPreset) return stageRulesPatch(project, deterministicPreset, 'Built-in language model is unavailable; used the local deterministic rules engine.');
+        if (deterministicPreset) {
+          const extra = customInstruction
+            ? ' Built-in AI is unavailable, so the exact custom instruction could not be interpreted; the matching deterministic production preset was used instead.'
+            : '';
+          return stageRulesPatch(project, deterministicPreset, `Built-in language model is unavailable; used the local deterministic rules engine.${extra}`);
+        }
         return {
           ok:false,
           backend:'rules-only',
-          error:'Built-in AI is unavailable in this browser. Use a preset or enable a supported on-device language model.',
+          error:'Built-in AI is unavailable in this browser. Use a supported preset or enable a supported on-device language model.',
           patch:null,
           warnings:['No cloud API key is used or required by Prompt Studio.']
         };
       }
 
-      let instruction = rawInstruction;
-      const containsCyrillic = /[А-Яа-яЁё]/.test(instruction);
+      let normalizedCustom = customInstruction;
+      const containsCyrillic = /[А-Яа-яЁё]/.test(customInstruction);
       if (containsCyrillic) {
         try {
           translator ||= await ensureTranslator(onProgress);
-          instruction = await translator.translate(instruction);
+          normalizedCustom = await translator.translate(customInstruction);
           onProgress({ phase:'translation-complete', detail:'RU → EN' });
         } catch (error) {
-          if (deterministicPreset) return stageRulesPatch(project, deterministicPreset, `Local RU→EN translation is unavailable; used deterministic rules instead. ${error?.message || error}`);
+          if (deterministicPreset) {
+            return stageRulesPatch(project, deterministicPreset, `Local RU→EN translation is unavailable; used deterministic rules instead. The exact custom wording was not interpreted. ${error?.message || error}`);
+          }
           return {
             ok:false,
             backend:'built-in-ai',
@@ -95,9 +109,14 @@ export function createPromptStudioAIController(options = {}) {
         }
       }
 
+      const instruction = [
+        presetText,
+        normalizedCustom ? `Additional user instruction: ${normalizedCustom}` : ''
+      ].filter(Boolean).join('\n');
+
       try {
         session ||= await ensureLanguageModel(onProgress);
-        const payload = buildAIRequest(project, instruction, request);
+        const payload = buildAIRequest(project, instruction, { ...request, preset, customInstruction:normalizedCustom });
         onProgress({ phase:'thinking', detail:'Generating structured edit patch' });
         const raw = await session.prompt(JSON.stringify(payload), {
           responseConstraint:buildPromptStudioPatchSchema()
@@ -109,7 +128,8 @@ export function createPromptStudioAIController(options = {}) {
         return {
           ok:true,
           backend:'built-in-ai',
-          translatedInstruction:containsCyrillic ? instruction : null,
+          translatedInstruction:containsCyrillic ? normalizedCustom : null,
+          effectiveInstruction:instruction,
           patch:validation.patch,
           warnings:validation.patch.warnings || [],
           usage:sessionUsage(session)
@@ -143,6 +163,7 @@ export function buildAIRequest(project, instruction, request = {}) {
     task:'Edit a Seedance Porter Prompt Studio project by returning changed sections only.',
     instruction:String(instruction || '').trim(),
     preset:String(request.preset || ''),
+    customInstruction:String(request.customInstruction || '').trim(),
     project:{
       id:project.id,
       title:project.title,
