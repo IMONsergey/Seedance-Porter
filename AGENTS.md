@@ -2,6 +2,17 @@
 
 This repository exists for one purpose: get reliably better production output from the newest practical Seedance model without confusing model marketing, provider capabilities and creative direction.
 
+## Canonical project memory
+
+GitHub is the source of truth. Before substantial work, read:
+
+- `docs/PROJECT-CONTEXT.md` — current product/architecture context;
+- `docs/ROADMAP.md` — ordered delivery plan and active phase;
+- `docs/ARCHITECTURE-DECISIONS.md` — durable decisions and rationale;
+- `docs/PROJECT-STATE.json` — machine-readable current state.
+
+A feature that changes architecture, current phase, provider behavior, safety boundaries or roadmap status is not complete until the relevant project-memory files are updated in the same PR whenever practical. Do not rely on chat history as the only record of a decision.
+
 ## Non-negotiable rules
 
 1. **Official ByteDance guidance is the baseline.** Every project must be compiled and validated against `docs/BYTEDANCE-OFFICIAL-GUIDE.md` / `BOS-2026-07-17` before any paid generation. Keep official rules separately identifiable from Porter empirical best practices.
@@ -20,23 +31,30 @@ This repository exists for one purpose: get reliably better production output fr
 14. **Retakes change one variable.** Preserve successful locks and reference set. Preserve a seed only on routes that explicitly advertise seed control; the verified direct BytePlus Seedance 2.0 route does not.
 15. **Text/logo intent must be explicit.** Default output policy forbids generated text, invented logos and watermarks. Strict logo use requires `generatedLogo: reference-only` plus a dedicated `role: logo` reference. Generated text can be allowed deliberately, but must be reviewed for exactness.
 16. **Never commit provider keys, uploaded private media URLs or client-sensitive manifests.**
+17. **Paid execution ambiguity fails closed.** Never auto-retry a provider POST when a network failure leaves it unknown whether the paid task was created. Resume automatically only when a provider task ID is already known.
+18. **Browser Studio never owns provider credentials.** Provider submission belongs to external execution surfaces; browser authoring/export/result-import remain credential-free.
+19. **Protected library invariants stay enabled.** Substantial changes must keep exact-100 curated and exact-192 Porter Originals release contracts unless an explicit editorial migration changes those invariants.
 
 ## Agent workflow
 
 For a new idea:
 
-1. Convert it into a Porter project spec.
-2. Decide the minimum viable mode: T2V, I2V, R2V or first/last-frame.
-3. Define the core subject and bind every reference asset to one function; add stable anchors and BytePlus `faceSource` where required.
-4. Supply scene/environment, lighting/color tone, visual style, image quality and constraints.
-5. Build complex sequences as ordered `Shot 1`, `Shot 2`, etc.; give each shot one camera movement type and physical action description.
-6. Use a Director's Read only when narrative/performance benefits from it; do not invent drama for packshots or utility motion.
-7. Compile and inspect `officialCompliance` + Porter advisories.
-8. Fix all official-compliance errors before generation.
-9. Generate only after the compliance hard gate passes.
-10. Score the take on all production dimensions.
-11. Accept, or retake by changing exactly the weakest production lever.
-12. Keep `.porter.json` sidecars next to accepted outputs; they record the applied official standard.
+1. Read the canonical project-memory files and confirm the actual current `main`/active phase from GitHub before editing.
+2. Convert the idea into a Porter project spec or one coherent product slice.
+3. Decide the minimum viable mode: T2V, I2V, R2V or first/last-frame.
+4. Define the core subject and bind every reference asset to one function; add stable anchors and BytePlus `faceSource` where required.
+5. Supply scene/environment, lighting/color tone, visual style, image quality and constraints.
+6. Build complex sequences as ordered `Shot 1`, `Shot 2`, etc.; give each shot one camera movement type and physical action description.
+7. Use a Director's Read only when narrative/performance benefits from it; do not invent drama for packshots or utility motion.
+8. Compile and inspect `officialCompliance` + Porter advisories.
+9. Fix all official-compliance errors before generation.
+10. Generate only after the compliance hard gate passes.
+11. Score the take on all production dimensions.
+12. Accept, or retake by changing exactly the weakest production lever.
+13. Keep `.porter.json` sidecars next to accepted outputs; they record the applied official standard.
+14. Add behavioral/production contracts for new architecture or execution boundaries.
+15. Update project context/roadmap/state/ADRs before feature merge when the feature changes them.
+16. Audit the final PR diff for temporary scaffolding and verify the branch is based on the actual current `main`.
 
 ## Model upgrade workflow
 

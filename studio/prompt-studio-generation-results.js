@@ -54,7 +54,10 @@ export function savePromptStudioGenerationArtifact(project,artifactInput,options
   const validation=artifactInput?.sourceArtifactKind?{ok:true,artifact:sanitizeStoredRecord(artifactInput)}:validatePromptStudioGenerationArtifact(artifactInput);
   if(!validation.ok)throw new Error(`Generation artifact is not safe to save: ${validation.errors.join(', ')}`);
   const record=artifactInput?.sourceArtifactKind?sanitizeStoredRecord(artifactInput):artifactToRecord(validation.artifact,options.now||Date.now());
-  const existing=normalizeRecords(project?.[PROMPT_STUDIO_GENERATION_RECORDS_KEY]||[]).filter(item=>item.taskId!==record.taskId);
+  const records=normalizeRecords(project?.[PROMPT_STUDIO_GENERATION_RECORDS_KEY]||[]),previous=records.find(item=>item.taskId===record.taskId)||null;
+  if(previous&&String(previous.exportHash)!==String(record.exportHash))throw new Error(`Generation task ${record.taskId} conflicts with an existing export hash.`);
+  if(previous&&recordRank(previous)>=recordRank(record))return clone(project);
+  const existing=records.filter(item=>item.taskId!==record.taskId);
   const next=clone(project);next[PROMPT_STUDIO_GENERATION_RECORDS_KEY]=[record,...existing].slice(0,MAX_PROMPT_STUDIO_GENERATION_RECORDS);return next;
 }
 

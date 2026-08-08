@@ -1,0 +1,21 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"Seedance Porter Generation Batch Plan",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["kind","schemaVersion","createdAt","project","ready","errors","warnings","items","execution","policy","integrity"],
+  "properties":{
+    "kind":{"const":"seedance-porter-generation-batch-plan"},
+    "schemaVersion":{"const":1},
+    "createdAt":{"type":"string","format":"date-time"},
+    "project":{"type":"object","additionalProperties":false,"required":["id","updatedAt","title"],"properties":{"id":{"type":"string","minLength":1},"updatedAt":{"type":"string"},"title":{"type":"string"}}},
+    "ready":{"type":"boolean"},
+    "errors":{"type":"array","items":{"type":"string"}},
+    "warnings":{"type":"array","items":{"type":"string"}},
+    "items":{"type":"array","minItems":1,"maxItems":20,"items":{"$ref":"#/$defs/item"}},
+    "execution":{"type":"object","additionalProperties":false,"required":["provider","adapter","recommendedLocalConcurrency","maxLocalConcurrency"],"properties":{"provider":{"const":"byteplus-modelark"},"adapter":{"const":"seedance-2.0"},"recommendedLocalConcurrency":{"type":"integer","minimum":1,"maximum":8},"maxLocalConcurrency":{"const":8}}},
+    "policy":{"type":"object","additionalProperties":false,"required":["autoSubmit","browserNetwork","clientSecrets","requiresExternalExecution","automaticRetry","ambiguousSubmissionRetry"],"properties":{"autoSubmit":{"const":false},"browserNetwork":{"const":false},"clientSecrets":{"const":false},"requiresExternalExecution":{"const":true},"automaticRetry":{"const":false},"ambiguousSubmissionRetry":{"const":false}}},
+    "integrity":{"type":"object","additionalProperties":false,"required":["algorithm","canonicalization","contentHash"],"properties":{"algorithm":{"const":"sha-256"},"canonicalization":{"const":"stable-json-v1"},"contentHash":{"type":"string","pattern":"^[a-f0-9]{64}$"}}}
+  },
+  "$defs":{"item":{"type":"object","additionalProperties":false,"required":["itemId","variant","ready","errors","warnings","exportHash","providerExport"],"properties":{"itemId":{"type":"string","minLength":1},"variant":{"type":"object","additionalProperties":false,"required":["id","label","status","isBase","variantHash"],"properties":{"id":{"type":"string","minLength":1},"label":{"type":"string"},"status":{"type":"string"},"isBase":{"type":"boolean"},"variantHash":{"type":"string","pattern":"^[a-f0-9]{64}$"}}},"ready":{"type":"boolean"},"errors":{"type":"array","items":{"type":"string"}},"warnings":{"type":"array","items":{"type":"string"}},"exportHash":{"type":"string","pattern":"^[a-f0-9]{64}$"},"providerExport":{"type":["object","null"]}}}}
+}

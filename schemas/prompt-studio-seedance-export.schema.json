@@ -9,6 +9,7 @@
     "provider":{"const":"byteplus-modelark"},
     "adapter":{"const":"seedance-2.0"},
     "verifiedAgainst":{"type":"object"},
+    "studioLink":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/studioLink"}]},
     "endpoint":{"type":"string","format":"uri"},
     "retrieveEndpoint":{"type":"string"},
     "ready":{"type":"boolean"},
@@ -19,6 +20,7 @@
     "referenceTokenMap":{"type":"object"},
     "policy":{"type":"object","required":["autoSubmit","apiKeyEmbedded","networkRequest","requiresExternalExecution"],"properties":{"autoSubmit":{"const":false},"apiKeyEmbedded":{"const":false},"networkRequest":{"const":false},"requiresExternalExecution":{"const":true}}}
   },
+  "$defs":{"studioLink":{"type":"object","additionalProperties":false,"required":["projectId","projectUpdatedAt","handoffHash"],"properties":{"projectId":{"type":"string","minLength":1},"projectUpdatedAt":{"type":"string","format":"date-time"},"handoffHash":{"type":"string","pattern":"^[a-f0-9]{64}$"}}}},
   "allOf":[
     {"if":{"properties":{"ready":{"const":true}},"required":["ready"]},"then":{"properties":{"payload":{"type":"object"}}}},
     {"if":{"properties":{"ready":{"const":false}},"required":["ready"]},"then":{"properties":{"payload":{"type":"null"}}}}

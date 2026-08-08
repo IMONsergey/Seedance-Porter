@@ -12,6 +12,7 @@ import {
   validatePromptStudioGenerationArtifact
 } from '../studio/prompt-studio-generation-results.js';
 import { buildGenerationResult, retrieveSeedanceGeneration, submitSeedanceGeneration } from './seedance-modelark-runner-engine.mjs';
+import { applyExportStudioLinkToJob, applyJobStudioLinkToResult } from './seedance-modelark-runner-lineage.mjs';
 
 const failures=[];const assert=(condition,message)=>{if(!condition)failures.push(message);};
 const API_KEY='v7-test-key-never-persist';
@@ -23,12 +24,13 @@ assert(exportBundle.ready,'Baseline v7 Seedance export must be ready.');
 assert(exportBundle.studioLink?.projectId===project.id&&exportBundle.studioLink?.projectUpdatedAt===project.updatedAt,'Provider export must carry exact Studio project state.');
 assert(exportBundle.studioLink?.handoffHash===handoff.integrity.contentHash,'Provider export Studio link must carry verified Handoff hash.');
 
-const job=await submitSeedanceGeneration(exportBundle,{apiKey:API_KEY,now:Date.parse('2026-08-08T12:00:01Z'),requester:async()=>jsonResponse({id:'cgt-v7-001'})});
-assert(job.studioLink?.projectId===project.id&&job.studioLink?.handoffHash===handoff.integrity.contentHash,'Runner job must preserve safe Studio lineage.');
+const submitted=await submitSeedanceGeneration(exportBundle,{apiKey:API_KEY,now:Date.parse('2026-08-08T12:00:01Z'),requester:async()=>jsonResponse({id:'cgt-v7-001'})});
+const job=applyExportStudioLinkToJob(submitted,exportBundle);
+assert(job.studioLink?.projectId===project.id&&job.studioLink?.handoffHash===handoff.integrity.contentHash,'External Runner manifest boundary must preserve safe Studio lineage.');
 assert(!JSON.stringify(job).includes(API_KEY),'Runner job with Studio lineage must remain credential-free.');
 const succeeded=await retrieveSeedanceGeneration(job,{apiKey:API_KEY,now:Date.parse('2026-08-08T12:00:30Z'),requester:async()=>jsonResponse({id:'cgt-v7-001',status:'succeeded',content:{video_url:'https://cdn.example.com/v7.mp4',last_frame_url:'https://cdn.example.com/v7-last.png'},model:'dreamina-seedance-2-0-260128',resolution:'1080p',ratio:'16:9',duration:6,generate_audio:true})});
-const result=buildGenerationResult(succeeded,Date.parse('2026-08-08T12:00:31Z'));
-assert(result.studioLink?.projectUpdatedAt===project.updatedAt,'Terminal result must preserve original Studio project version.');
+const result=applyJobStudioLinkToResult(buildGenerationResult(succeeded,Date.parse('2026-08-08T12:00:31Z')),succeeded);
+assert(result.studioLink?.projectUpdatedAt===project.updatedAt,'Terminal external Runner result must preserve original Studio project version.');
 
 const validation=validatePromptStudioGenerationArtifact(result);
 assert(validation.ok&&validation.kind==='result','V7 importer must accept a valid terminal Runner result.');
@@ -71,6 +73,6 @@ assert(!validatePromptStudioGenerationArtifact(unsafePolicy).ok,'Browser importe
 const badOutput={...result,output:{videoUrl:'http://insecure.example/video.mp4',lastFrameUrl:''}};
 assert(!validatePromptStudioGenerationArtifact(badOutput).ok,'Browser importer must require HTTPS succeeded output.');
 
-if(failures.length){console.error('Prompt Studio v7 Generation Results contract failed:\n'+failures.map(item=>`- ${item}`).join('\n'));process.exit(1);}console.log(JSON.stringify({ok:true,lineage:['exact-project','same-project-drift','different-project','unlinked'],runnerRoundTrip:true,credentialImportBlocked:true,historyMonotonic:true,hashConflictBlocked:true,videoContinuation:true,lastFrameContinuation:true,extensionPersistence:true,networkDuringImport:false},null,2));
+if(failures.length){console.error('Prompt Studio v7 Generation Results contract failed:\n'+failures.map(item=>`- ${item}`).join('\n'));process.exit(1);}console.log(JSON.stringify({ok:true,lineage:['exact-project','same-project-drift','different-project','unlinked'],runnerManifestBoundary:true,credentialImportBlocked:true,historyMonotonic:true,hashConflictBlocked:true,videoContinuation:true,lastFrameContinuation:true,extensionPersistence:true,networkDuringImport:false},null,2));
 
 function jsonResponse(value,status=200){return new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json'}});}

@@ -17,6 +17,7 @@
     "retrieveUrl":{"type":"string","format":"uri","pattern":"^https://ark\\.ap-southeast\\.bytepluses\\.com/api/v3/contents/generations/tasks/"},
     "exportHash":{"type":"string","pattern":"^[a-f0-9]{64}$"},
     "exportSummary":{"type":"object","additionalProperties":false,"required":["model","resolution","ratio","duration","generateAudio","images","videos","audios"],"properties":{"model":{"type":"string"},"resolution":{"type":"string"},"ratio":{"type":"string"},"duration":{"type":["number","null"]},"generateAudio":{"type":"boolean"},"images":{"type":"integer","minimum":0},"videos":{"type":"integer","minimum":0},"audios":{"type":"integer","minimum":0}}},
+    "studioLink":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/studioLink"}]},
     "createdAt":{"type":"string","format":"date-time"},
     "updatedAt":{"type":"string","format":"date-time"},
     "submittedAt":{"type":"string","format":"date-time"},
@@ -28,6 +29,7 @@
     "providerMeta":{"type":["object","null"],"additionalProperties":false,"properties":{"model":{"type":"string"},"createdAt":{"type":["string","null"],"format":"date-time"},"updatedAt":{"type":["string","null"],"format":"date-time"},"resolution":{"type":"string"},"ratio":{"type":"string"},"duration":{"type":["number","null"]},"framesPerSecond":{"type":["number","null"]},"generateAudio":{"type":["boolean","null"]},"priority":{"type":["number","null"]},"executionExpiresAfter":{"type":["number","null"]}}},
     "policy":{"type":"object","additionalProperties":false,"required":["secretPersisted","apiKeySource","externalExecution"],"properties":{"secretPersisted":{"const":false},"apiKeySource":{"const":"environment"},"externalExecution":{"const":true}}}
   },
+  "$defs":{"studioLink":{"type":"object","additionalProperties":false,"required":["projectId","projectUpdatedAt","handoffHash"],"properties":{"projectId":{"type":"string","minLength":1},"projectUpdatedAt":{"type":"string","format":"date-time"},"handoffHash":{"type":"string","pattern":"^[a-f0-9]{64}$"}}}},
   "allOf":[
     {"if":{"properties":{"status":{"enum":["succeeded","failed","cancelled","expired"]}},"required":["status"]},"then":{"properties":{"terminal":{"const":true},"completedAt":{"type":"string","format":"date-time"}}}},
     {"if":{"properties":{"status":{"enum":["submitted","queued","running","unknown"]}},"required":["status"]},"then":{"properties":{"terminal":{"const":false},"completedAt":{"type":"null"}}}},
