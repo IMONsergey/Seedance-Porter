@@ -11,5 +11,8 @@ outputs/
 *.porter.json
 *.job.json
 *.result.json
+*.batch-plan.json
+*.batch-job.json
+*.batch-result.json
 .DS_Store
 coverage/
