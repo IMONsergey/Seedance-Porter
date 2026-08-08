@@ -8,6 +8,7 @@ on:
       - 'schemas/case-review.schema.json'
       - 'schemas/review-media-evidence.schema.json'
       - 'schemas/curation-draft.schema.json'
+      - 'schemas/workspace-bundle.schema.json'
       - 'scripts/import-case-candidates.mjs'
       - 'scripts/augment-case-candidates.mjs'
       - 'scripts/expand-case-candidates.mjs'
@@ -29,6 +30,8 @@ on:
       - 'scripts/validate-operations-production.mjs'
       - 'scripts/validate-command-palette.mjs'
       - 'scripts/validate-command-palette-production.mjs'
+      - 'scripts/validate-workspace-bundles.mjs'
+      - 'scripts/validate-workspace-bundles-production.mjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -76,6 +79,10 @@ jobs:
         run: node scripts/validate-command-palette.mjs
       - name: Validate Command Palette production wiring
         run: node scripts/validate-command-palette-production.mjs
+      - name: Validate Workspace Evidence Bundles
+        run: node scripts/validate-workspace-bundles.mjs
+      - name: Validate Workspace Bundle production wiring
+        run: node scripts/validate-workspace-bundles-production.mjs
       - name: Build Research Corpus + strategic operations snapshots for Pages
         continue-on-error: true
         run: npm run case:refresh
@@ -96,6 +103,7 @@ jobs:
           cp studio/source-health.css _site/source-health.css
           cp studio/operations.css _site/operations.css
           cp studio/command-palette.css _site/command-palette.css
+          cp studio/workspace-bundle.css _site/workspace-bundle.css
           cp studio/experience.css _site/experience.css
           cp studio/multi-source.css _site/multi-source.css
           cp studio/coverage-audit.css _site/coverage-audit.css
@@ -108,6 +116,9 @@ jobs:
           cp studio/command-palette-bootstrap.js _site/command-palette-bootstrap.js
           cp studio/command-palette-engine.js _site/command-palette-engine.js
           cp studio/command-palette-ui.js _site/command-palette-ui.js
+          cp studio/workspace-bundle-bootstrap.js _site/workspace-bundle-bootstrap.js
+          cp studio/workspace-bundle-engine.js _site/workspace-bundle-engine.js
+          cp studio/workspace-bundle-ui.js _site/workspace-bundle-ui.js
           cp studio/case-ui.js _site/case-ui.js
           cp studio/case-corpus-ui.js _site/case-corpus-ui.js
           cp studio/deep-review-bootstrap.js _site/deep-review-bootstrap.js
