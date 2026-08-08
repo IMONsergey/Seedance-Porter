@@ -25,6 +25,7 @@ const assets=[
 ];
 for(const asset of assets)assert(workflowPublishesStudioAsset(pages,asset),`Pages must publish ${asset}.`);
 assert(workflowRunsValidator(pages,'validate-prompt-studio.mjs'),'Pages must run Prompt Studio engine/safety contract.');
+assert(workflowRunsValidator(pages,'validate-prompt-studio-ai.mjs'),'Pages must run Prompt Studio local AI contract.');
 assert(workflowRunsValidator(pages,'validate-prompt-studio-production.mjs'),'Pages must run Prompt Studio production contract.');
 assert(sidebar.includes("import './prompt-studio-bootstrap.js';"),'Application shell must mount Prompt Studio.');
 assert(sidebar.indexOf("import './operations-bootstrap.js';")<sidebar.indexOf("import './prompt-studio-bootstrap.js';"),'Prompt Studio should mount after Operations.');
@@ -49,10 +50,11 @@ assert(preview.includes("document.createElement('video')")&&preview.includes("do
 assert(!bridge.includes('CASE_INTELLIGENCE.push')&&!bridge.includes('MULTI_SOURCE_CASES.push'),'Source bridge must never mutate curated arrays.');
 assert(!ui.includes('CASE_INTELLIGENCE.push')&&!ui.includes('MULTI_SOURCE_CASES.push'),'Prompt Studio UI must never mutate curated arrays.');
 assert(!ai.includes('applyPromptStudioPatch'),'AI controller must not own an apply path.');
+assert(ai.includes('Additional user instruction:'),'AI controller must combine preset and user clarification rather than silently overriding one.');
 
 const curated=[...CASE_INTELLIGENCE,...MULTI_SOURCE_CASES];
 assert(curated.length===100&&new Set(curated.map(item=>item.id)).size===100,`Prompt Studio production baseline must remain exactly 100 curated cases; got ${curated.length}.`);
 assert(PROMPTS.length===192,`Prompt Studio production baseline must retain 192 Porter Originals; got ${PROMPTS.length}.`);
 
 if(failures.length){console.error('Prompt Studio production contract failed:\n'+failures.map(item=>`- ${item}`).join('\n'));process.exit(1);}
-console.log(JSON.stringify({ok:true,curatedCases:curated.length,porterOriginals:PROMPTS.length,productionAssets:assets.length,publicationPolicy:'shared',workspaceRoute:true,sourceBridge:true,referencePreviews:true,assetCleanup:true,cmdKEntry:true,idempotentObserver:true,aiAutoApply:false,curatedMutation:false},null,2));
+console.log(JSON.stringify({ok:true,curatedCases:curated.length,porterOriginals:PROMPTS.length,productionAssets:assets.length,publicationPolicy:'shared',workspaceRoute:true,sourceBridge:true,referencePreviews:true,assetCleanup:true,cmdKEntry:true,idempotentObserver:true,presetAndCustomMerged:true,aiAutoApply:false,curatedMutation:false},null,2));
