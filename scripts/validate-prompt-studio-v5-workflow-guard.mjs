@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+import { JSDOM } from 'jsdom';
+
+const dom=new JSDOM(`<!doctype html><html><body>
+<section id="promptStudioView">
+  <button id="newProject" data-studio-action="new">New</button>
+  <button id="forkSource" data-studio-source-id="s1">Fork</button>
+  <button id="restoreRevision" data-restore-revision="r1">Restore</button>
+  <select id="studioProjectSelect"><option value="p1">P1</option><option value="p2">P2</option></select>
+</section>
+<section id="studioV4Dock"><header><button id="storyTab" data-studio-v4-action="tab" data-studio-v4-tab="storyboard">Storyboard</button><button id="storyBuild" data-studio-v4-action="story-build">Build</button><b data-v4-dirty="true">staged</b></header><input id="storyField" data-story-field="composition"></section>
+<section id="studioV5Dock" data-repair-staged="false"><header><button id="repairStage" data-studio-v5-action="repair-stage">Repair</button><button id="repairApply" data-studio-v5-action="repair-apply">Apply repair</button><button id="blueprintsTab" data-studio-v5-action="tab" data-studio-v5-tab="blueprints">Blueprints</button><button id="seedanceTab" data-studio-v5-action="tab" data-studio-v5-tab="seedance">Seedance</button><button id="blueprintFull" data-studio-v5-action="blueprint-full">Apply Blueprint</button><button id="seedanceBuild" data-studio-v5-action="seedance-build">Build Seedance</button></header><footer class="studio-v5-footer"><span></span></footer></section>
+</body></html>`,{url:'https://example.test/'});
+globalThis.window=dom.window;globalThis.document=dom.window.document;globalThis.MutationObserver=dom.window.MutationObserver;globalThis.Event=dom.window.Event;globalThis.CustomEvent=dom.window.CustomEvent;
+const failures=[];const assert=(condition,message)=>{if(!condition)failures.push(message);};let v5Calls=0,coreCalls=0,v4Calls=0,openEventCalls=0,openSourceCalls=0;
+document.addEventListener('click',event=>{if(event.target.closest('[data-studio-v5-action]'))v5Calls++;if(event.target.closest('[data-studio-action],[data-studio-source-id],[data-restore-revision]'))coreCalls++;if(event.target.closest('[data-studio-v4-action]'))v4Calls++;});window.addEventListener('porter-open-prompt-studio',()=>{openEventCalls++;});window.porterPromptStudio={getProject:()=>({id:'p1'}),openSource:()=>{openSourceCalls++;return'opened';}};
+await import(`../studio/prompt-studio-v5-workflow-guard.js?contract=${Date.now()}`);
+const click=id=>document.getElementById(id).dispatchEvent(new dom.window.MouseEvent('click',{bubbles:true,cancelable:true}));
+
+click('repairStage');click('repairApply');click('blueprintFull');click('seedanceBuild');click('blueprintsTab');click('seedanceTab');assert(v5Calls===0,'Dirty Storyboard must block Repair stage/apply, Blueprint mutation and Seedance navigation/export at capture phase.');
+document.querySelector('[data-v4-dirty]').dataset.v4Dirty='false';await new Promise(resolve=>queueMicrotask(resolve));click('repairStage');assert(v5Calls===1,'Repair stage must resume after Storyboard is clean.');
+
+document.getElementById('studioV5Dock').dataset.repairStaged='true';await new Promise(resolve=>queueMicrotask(resolve));v5Calls=0;click('blueprintsTab');click('seedanceTab');click('blueprintFull');click('seedanceBuild');assert(v5Calls===0,'Staged Repair must block Blueprints and Seedance actions/navigation.');click('newProject');click('forkSource');click('restoreRevision');assert(coreCalls===0,'Staged Repair must block core project lifecycle actions.');const select=document.getElementById('studioProjectSelect');select.value='p2';select.dispatchEvent(new dom.window.Event('change',{bubbles:true,cancelable:true}));assert(select.value==='p1','Staged Repair must restore canonical project selection.');window.dispatchEvent(new dom.window.CustomEvent('porter-open-prompt-studio',{cancelable:true}));assert(openEventCalls===0,'Staged Repair must capture-block external open event.');const dirtyOpen=window.porterPromptStudio.openSource({id:'x'});assert(dirtyOpen===null&&openSourceCalls===0,'Staged Repair must guard direct public openSource.');click('storyTab');click('storyBuild');assert(v4Calls===0,'Staged Repair must block Storyboard start/build.');assert(document.getElementById('storyField').disabled===true,'Staged Repair must disable Storyboard fields.');
+
+document.getElementById('studioV5Dock').dataset.repairStaged='false';await new Promise(resolve=>queueMicrotask(resolve));assert(document.getElementById('storyField').disabled===false,'Storyboard fields must re-enable after Repair is cleared.');click('blueprintsTab');assert(v5Calls===1,'Blueprint navigation must resume after Repair is clean.');click('newProject');assert(coreCalls===1,'Core project lifecycle must resume after Repair is clean.');window.dispatchEvent(new dom.window.CustomEvent('porter-open-prompt-studio',{cancelable:true}));assert(openEventCalls===1,'External open event must resume after Repair is clean.');const cleanOpen=window.porterPromptStudio.openSource({id:'x'});assert(cleanOpen==='opened'&&openSourceCalls===1,'Direct public openSource must resume after Repair is clean.');click('storyTab');assert(v4Calls===1,'Storyboard navigation must resume after Repair is clean.');
+
+if(failures.length){console.error('Prompt Studio v5 workflow guard contract failed:\n'+failures.map(item=>`- ${item}`).join('\n'));process.exit(1);}console.log(JSON.stringify({ok:true,storyboardBlocksV5:true,repairBlocksLifecycle:true,repairBlocksStoryboard:true,publicOpenSourceGuard:true,resumesWhenClean:true},null,2));
