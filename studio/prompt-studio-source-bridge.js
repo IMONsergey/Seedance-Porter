@@ -11,7 +11,7 @@ scheduleDecorate();
 function bindBridge(){
   document.addEventListener('click',event=>{
     const command=event.target.closest('[data-open-prompt-studio-command]');
-    if(command){event.preventDefault();event.stopPropagation();window.porterPromptStudio?.open?.();return;}
+    if(command){event.preventDefault();event.stopPropagation();document.querySelector('[data-command-close]')?.click();window.porterPromptStudio?.open?.();return;}
     const button=event.target.closest('[data-open-prompt-studio-kind][data-open-prompt-studio-id]');
     if(!button)return;
     event.preventDefault();
