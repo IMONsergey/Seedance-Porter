@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-08T17:57:00+03:00",
+  "repository": "IMONsergey/Seedance-Porter",
+  "sourceOfTruth": "github",
+  "main": {
+    "commit": "d16d73841516d453def385a441365bf74dedc2c0",
+    "releaseState": "prompt-studio-v7"
+  },
+  "active": {
+    "phase": "prompt-studio-v8-variant-batch-generation",
+    "branch": "feat/prompt-studio-v8-batch-generation",
+    "status": "in-development",
+    "objective": "Connect Prompt Studio v4 Variants to safe integrity-bound external batch execution and return validated per-item results into v7 generation history."
+  },
+  "protectedInvariants": {
+    "curatedCases": 100,
+    "curatedCasesMustBeUnique": true,
+    "porterOriginals": 192,
+    "automaticCuratedMutation": false,
+    "browserProviderSubmission": false,
+    "clientProviderCredentials": false,
+    "automaticGeneratedOutputAttachment": false,
+    "extensionSafeProjectPersistence": true
+  },
+  "implemented": [
+    "research-corpus-and-source-universe",
+    "deep-review-and-evidence-pipeline",
+    "promotion-quality-gates",
+    "curated-rotation-guard",
+    "operations-command-center",
+    "prompt-studio-v1-structured-editor",
+    "prompt-studio-v2-rule-packs-public-api",
+    "prompt-studio-v3-variables-ingredients-timeline",
+    "prompt-studio-v4-storyboard-variants-handoff",
+    "prompt-studio-v5-repair-blueprints-seedance-export",
+    "prompt-studio-v6-audio-references",
+    "secure-modelark-single-task-runner",
+    "prompt-studio-v7-generation-results-continuation"
+  ],
+  "v8ExitCriteria": [
+    "selected variants deterministically build independent provider exports",
+    "batch plan is SHA-256 integrity-bound",
+    "browser performs zero provider execution requests",
+    "external runner uses environment-only ARK_API_KEY",
+    "local concurrency is bounded but not represented as official provider quota",
+    "ambiguous POST submission becomes submission-uncertain and is not auto-retried",
+    "known task IDs resume without another POST",
+    "batch job persists after state transitions",
+    "terminal batch result validates every item",
+    "successful item results can be explicitly saved into v7 generation history",
+    "exact-100 curated and 192 Originals remain unchanged",
+    "Node 20/22/24 and Pages production contracts pass",
+    "project context and roadmap are updated before merge"
+  ],
+  "next": [
+    {
+      "phase": "v9-generation-console-evaluation-loop",
+      "priority": 1
+    },
+    {
+      "phase": "v10-production-memory-learning",
+      "priority": 2
+    },
+    {
+      "phase": "v11-multi-provider-execution-abstraction",
+      "priority": 3
+    },
+    {
+      "phase": "research-corpus-500-1000",
+      "priority": 4,
+      "parallel": true
+    }
+  ],
+  "projectMemory": {
+    "humanContext": "docs/PROJECT-CONTEXT.md",
+    "roadmap": "docs/ROADMAP.md",
+    "architectureDecisions": "docs/ARCHITECTURE-DECISIONS.md",
+    "agentContract": "AGENTS.md"
+  }
+}
