@@ -8,3 +8,4 @@ if (!existing) {
 }
 
 await import('./prompt-studio-ui.js');
+await import('./prompt-studio-source-bridge.js');
