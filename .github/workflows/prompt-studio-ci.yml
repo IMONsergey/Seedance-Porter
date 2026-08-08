@@ -1,0 +1,58 @@
+name: Prompt Studio CI
+
+on:
+  pull_request:
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'studio/workspace-router.js'
+      - 'scripts/validate-prompt-studio.mjs'
+      - 'scripts/validate-prompt-studio-production.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'studio/workspace-router.js'
+      - 'scripts/validate-prompt-studio.mjs'
+      - 'scripts/validate-prompt-studio-production.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  studio:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate Prompt Studio engine, imports, lint and patch safety
+        run: node scripts/validate-prompt-studio.mjs
+      - name: Validate Prompt Studio production wiring and source bridge
+        run: node scripts/validate-prompt-studio-production.mjs
+      - name: Validate protected exact-100 browser contract
+        run: npm run validate:render
+      - name: Syntax-check Prompt Studio modules
+        run: |
+          node --check studio/prompt-studio-engine.js
+          node --check studio/prompt-studio-store.js
+          node --check studio/prompt-studio-assets.js
+          node --check studio/prompt-studio-ai.js
+          node --check studio/prompt-studio-source-catalog.js
+          node --check studio/prompt-studio-source-bridge.js
+          node --check studio/prompt-studio-ui.js
+          node --check studio/prompt-studio-bootstrap.js
+          node --check scripts/validate-prompt-studio.mjs
+          node --check scripts/validate-prompt-studio-production.mjs
