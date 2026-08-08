@@ -19,6 +19,7 @@ on:
       - 'scripts/verify-final-evidence-package.mjs'
       - 'scripts/validate-final-evidence-package.mjs'
       - '.github/workflows/final-evidence-ci.yml'
+  workflow_dispatch:
 
 jobs:
   evidence:
