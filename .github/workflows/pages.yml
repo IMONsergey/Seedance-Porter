@@ -115,6 +115,15 @@ jobs:
       - name: Validate Prompt Studio v4 production wiring
         run: node scripts/validate-prompt-studio-v4-production.mjs
 
+      - name: Validate Prompt Studio v5 Repair Blueprints and Seedance engines
+        run: node scripts/validate-prompt-studio-v5-engines.mjs
+
+      - name: Validate Prompt Studio v5 workflow guard behavior
+        run: node scripts/validate-prompt-studio-v5-workflow-guard.mjs
+
+      - name: Validate Prompt Studio v5 production wiring
+        run: node scripts/validate-prompt-studio-v5-production.mjs
+
       - name: Validate protected exact-100 browser render
         run: npm run validate:render
 
@@ -163,6 +172,8 @@ jobs:
           test -f _site/prompt-studio-production-tools-bootstrap.js
           test -f _site/prompt-studio-v4-bootstrap.js
           test -f _site/prompt-studio-v4.css
+          test -f _site/prompt-studio-v5-bootstrap.js
+          test -f _site/prompt-studio-v5.css
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
