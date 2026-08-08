@@ -1,0 +1,93 @@
+import {
+  GENERATION_EVALUATION_DIMENSIONS,
+  attachGenerationWinnerOutput,
+  buildPromptStudioGenerationComparisonView,
+  createPromptStudioGenerationComparison,
+  createPromptStudioGenerationRetake,
+  listPromptStudioGenerationComparisons,
+  listPromptStudioGenerationRetakes,
+  promptStudioGenerationEvaluationForTask,
+  savePromptStudioGenerationEvaluation,
+  setPromptStudioGenerationWinner
+} from './prompt-studio-generation-evaluation.js';
+import { listPromptStudioGenerationRecords } from './prompt-studio-generation-results.js';
+import { promptStudioBatchLinkForTask } from './prompt-studio-generation-batch.js';
+import { assertPromptStudioV9MutationAllowed } from './prompt-studio-v9-workflow-guard.js';
+
+const state={activeTaskId:'',compare:new Set(),activeComparisonId:'',evaluationDraft:null,retakeDraft:null,message:'',kind:'',queued:false};
+bind();scheduleMount();
+
+function bind(){
+  document.addEventListener('click',event=>{
+    const button=event.target.closest('[data-v9-action]');if(!button)return;
+    try{
+      const action=button.dataset.v9Action;
+      if(action==='evaluate'){openEvaluation(button.dataset.taskId);return;}
+      if(action==='discard-draft'){clearDraft();setMessage('Draft discarded.','');render();return;}
+      if(action==='save-evaluation'){assertPromptStudioV9MutationAllowed();saveEvaluation();return;}
+      if(action==='create-comparison'){assertPromptStudioV9MutationAllowed();createComparison();return;}
+      if(action==='open-comparison'){state.activeComparisonId=button.dataset.comparisonId||'';render();return;}
+      if(action==='mark-winner'){assertPromptStudioV9MutationAllowed();markWinner(button.dataset.taskId);return;}
+      if(action==='attach-winner-video'){assertPromptStudioV9MutationAllowed();attachWinner('video');return;}
+      if(action==='attach-winner-last'){assertPromptStudioV9MutationAllowed();attachWinner('last-frame');return;}
+      if(action==='retake'){openRetake(button.dataset.taskId);return;}
+      if(action==='save-retake'){assertPromptStudioV9MutationAllowed();saveRetake();return;}
+      if(action==='clear-compare'){state.compare.clear();render();return;}
+    }catch(error){setMessage(String(error?.message||error),'error');render();}
+  });
+  document.addEventListener('change',event=>{
+    const compare=event.target.closest('[data-v9-compare]');if(compare){if(compare.checked)state.compare.add(compare.value);else state.compare.delete(compare.value);render();return;}
+    if(event.target.matches('[data-v9-score]')){ensureEvaluationDraft();const id=event.target.dataset.v9Score;state.evaluationDraft.scores[id].score=event.target.value?Number(event.target.value):null;markDirty();return;}
+    if(event.target.matches('[data-v9-dimension-note]')){ensureEvaluationDraft();state.evaluationDraft.scores[event.target.dataset.v9DimensionNote].note=event.target.value;markDirty();return;}
+    if(event.target.matches('[data-v9-dimension-evidence]')){ensureEvaluationDraft();state.evaluationDraft.scores[event.target.dataset.v9DimensionEvidence].evidence=event.target.value;markDirty();return;}
+    if(event.target.matches('[data-v9-eval-field]')){ensureEvaluationDraft();state.evaluationDraft[event.target.dataset.v9EvalField]=event.target.value;markDirty();return;}
+    if(event.target.matches('[data-v9-retake-field]')){if(!state.retakeDraft)return;state.retakeDraft[event.target.dataset.v9RetakeField]=event.target.value;markDirty();}
+  });
+  window.addEventListener('porter-prompt-studio-project-replaced',handleProjectChange);
+  window.addEventListener('porter-prompt-studio-change',()=>{if(!draftDirty())render();});
+  window.addEventListener('porter-workspace-change',event=>{if(event.detail?.viewId==='promptStudioView')scheduleMount();});
+  new MutationObserver(scheduleMount).observe(document.body,{childList:true,subtree:true});
+}
+
+function scheduleMount(){if(state.queued)return;state.queued=true;queueMicrotask(()=>{state.queued=false;mount();});}
+function mount(){const editor=document.querySelector('#promptStudioView .studio-editor');if(!editor||document.querySelector('#studioV9ConsoleDock'))return;const root=document.createElement('section');root.id='studioV9ConsoleDock';root.className='studio-v9-console';const anchor=document.querySelector('#studioV8BatchDock')||document.querySelector('#studioV7ResultsDock')||editor.querySelector('.studio-project-toolbar');anchor?.insertAdjacentElement('afterend',root);render();}
+
+function openEvaluation(taskId){const record=recordFor(taskId);const existing=promptStudioGenerationEvaluationForTask(project(),taskId);state.activeTaskId=record.taskId;state.retakeDraft=null;state.evaluationDraft={taskId:record.taskId,exportHash:record.exportHash,scores:Object.fromEntries(GENERATION_EVALUATION_DIMENSIONS.map(def=>[def.id,{score:existing?.scores?.[def.id]?.score??null,note:existing?.scores?.[def.id]?.note||'',evidence:existing?.scores?.[def.id]?.evidence||''}])),verdict:existing?.verdict||'candidate',strengths:(existing?.strengths||[]).join('\n'),weaknesses:(existing?.weaknesses||[]).join('\n'),artifactFlags:(existing?.artifactFlags||[]).join('\n'),notes:existing?.notes||''};markDirty();render();}
+function ensureEvaluationDraft(){if(!state.evaluationDraft)throw new Error('Open a generation evaluation first.');}
+function saveEvaluation(){ensureEvaluationDraft();const next=savePromptStudioGenerationEvaluation(project(),state.evaluationDraft);state.evaluationDraft=null;state.activeTaskId='';replaceProject(next,'save generation evaluation');setMessage('Evaluation saved.','ok');}
+function createComparison(){if(state.compare.size<2)throw new Error('Select at least two generation results to compare.');const label=document.querySelector('#studioV9ComparisonLabel')?.value||'';const created=createPromptStudioGenerationComparison(project(),[...state.compare],{label});state.compare.clear();state.activeComparisonId=created.comparison.id;replaceProject(created.project,'create generation comparison');setMessage('Comparison saved.','ok');}
+function markWinner(taskId){const comparison=currentComparison();if(!comparison)throw new Error('Open a saved comparison first.');const reason=document.querySelector('#studioV9WinnerReason')?.value||'';const next=setPromptStudioGenerationWinner(project(),comparison.id,taskId,{reason});replaceProject(next,'select generation winner');setMessage(`Winner selected: ${shortTask(taskId)}.`,'ok');}
+function attachWinner(kind){const comparison=currentComparison();if(!comparison)throw new Error('Open a saved comparison first.');const result=attachGenerationWinnerOutput(project(),comparison.id,kind);replaceProject(result.project,kind==='video'?'attach winning generated video':'attach winning generated last frame');setMessage(`${kind==='video'?'Winning video':'Winning last frame'} added as ${result.reference.token}.`,'ok');}
+function openRetake(taskId){const record=recordFor(taskId);state.activeTaskId='';state.evaluationDraft=null;state.retakeDraft={sourceTaskId:record.taskId,lever:'other',changeInstruction:'',expectedImprovement:'',retainedLocks:''};markDirty();render();}
+function saveRetake(){if(!state.retakeDraft)throw new Error('Open a Retake Draft first.');const created=createPromptStudioGenerationRetake(project(),state.retakeDraft);state.retakeDraft=null;replaceProject(created.project,'save generation retake draft');setMessage('Retake Draft saved without changing the prompt.','ok');}
+function clearDraft(){state.evaluationDraft=null;state.retakeDraft=null;state.activeTaskId='';markDirty();}
+
+function handleProjectChange(){if(draftDirty()){state.evaluationDraft=null;state.retakeDraft=null;state.activeTaskId='';setMessage('Unsaved V9 draft was invalidated because the project changed.','warn');}const comparisons=listPromptStudioGenerationComparisons(project());if(state.activeComparisonId&&!comparisons.some(item=>item.id===state.activeComparisonId))state.activeComparisonId='';render();}
+function replaceProject(next,reason){state.evaluationDraft=null;state.retakeDraft=null;const saved=window.porterPromptStudio?.replaceProject?.(next,{reason,snapshot:true,preserveIdentity:true});if(!saved)throw new Error('Prompt Studio public mutation API is unavailable.');return saved;}
+function markDirty(){const root=document.querySelector('#studioV9ConsoleDock');if(root)root.dataset.v9Dirty=draftDirty()?'true':'false';}
+function draftDirty(){return Boolean(state.evaluationDraft||state.retakeDraft);}
+function project(){return window.porterPromptStudio?.getProject?.()||null;}
+function records(){return listPromptStudioGenerationRecords(project());}
+function recordFor(taskId){const record=records().find(item=>item.taskId===String(taskId||''));if(!record)throw new Error(`Generation task not found: ${taskId}`);return record;}
+function currentComparison(){const comparisons=listPromptStudioGenerationComparisons(project());return comparisons.find(item=>item.id===state.activeComparisonId)||comparisons[0]||null;}
+
+function render(){const root=document.querySelector('#studioV9ConsoleDock'),p=project();if(!root||!p)return;root.dataset.v9Dirty=draftDirty()?'true':'false';const generationRecords=records(),evaluated=generationRecords.filter(record=>promptStudioGenerationEvaluationForTask(p,record.taskId)).length,comparisons=listPromptStudioGenerationComparisons(p),retakes=listPromptStudioGenerationRetakes(p);if(!state.activeComparisonId&&comparisons[0])state.activeComparisonId=comparisons[0].id;root.innerHTML=`
+<header class="v9-head"><div><span>PROMPT STUDIO V9</span><h3>Generation Console</h3><p>Compare what changed, score what actually happened, choose a winner and make the next iteration explicit.</p></div><div class="v9-stats"><b>${generationRecords.length}</b><small>results</small><b>${evaluated}</b><small>evaluated</small><b>${comparisons.length}</b><small>comparisons</small><b>${retakes.length}</b><small>retakes</small></div></header>
+${state.message?`<div class="v9-message is-${esc(state.kind||'info')}">${esc(state.message)}</div>`:''}
+<div class="v9-grid"><section class="v9-results"><div class="v9-title"><strong>Generation history</strong><span>${state.compare.size} selected</span></div>${generationRecords.length?generationRecords.map(resultRow).join(''):`<div class="v9-empty">No Generation Results yet. Import single or batch results in V7/V8 first.</div>`}<div class="v9-compare-bar"><input id="studioV9ComparisonLabel" placeholder="Comparison label"><button data-v9-action="create-comparison" ${state.compare.size<2?'disabled':''}>Compare selected</button><button data-v9-action="clear-compare">Clear</button></div></section><section class="v9-workspace">${state.evaluationDraft?evaluationEditor():state.retakeDraft?retakeEditor():comparisonWorkspace()}</section></div>
+<footer class="v9-foot"><span>EVIDENCE-BASED REVIEW</span><span>HUMAN WINNER</span><span>ONE-LEVER RETAKE</span><span>EXPLICIT CONTINUATION</span><span>NO PROVIDER KEY</span></footer>`;}
+
+function resultRow(record){const p=project(),evaluation=promptStudioGenerationEvaluationForTask(p,record.taskId),batch=promptStudioBatchLinkForTask(p,record.taskId),selected=state.compare.has(record.taskId),links=[record.output?.videoUrl?`<a href="${attr(record.output.videoUrl)}" target="_blank" rel="noopener noreferrer">video ↗</a>`:'',record.output?.lastFrameUrl?`<a href="${attr(record.output.lastFrameUrl)}" target="_blank" rel="noopener noreferrer">last frame ↗</a>`:''].filter(Boolean).join(' · ');return`<article class="v9-result-row"><label><input type="checkbox" data-v9-compare value="${attr(record.taskId)}" ${selected?'checked':''}></label><div><strong>${esc(batch?.variantLabel||shortTask(record.taskId))}</strong><span>${esc(record.status)} · ${esc(shortTask(record.taskId))}${batch?.variantId?` · ${esc(batch.variantId)}`:''}</span><small>${links||'no output link'} · export ${esc(String(record.exportHash||'').slice(0,10))}…</small></div><div class="v9-result-side"><b>${evaluation?.overallScore??'—'}</b><span>/5</span><button data-v9-action="evaluate" data-task-id="${attr(record.taskId)}">${evaluation?'Review':'Evaluate'}</button></div></article>`;}
+
+function evaluationEditor(){const draft=state.evaluationDraft,record=recordFor(draft.taskId),batch=promptStudioBatchLinkForTask(project(),draft.taskId);return`<div class="v9-title"><div><strong>Evaluate ${esc(batch?.variantLabel||shortTask(record.taskId))}</strong><span>${esc(record.status)} · ${esc(shortTask(record.taskId))}</span></div><button data-v9-action="discard-draft">Discard</button></div><div class="v9-eval-grid">${GENERATION_EVALUATION_DIMENSIONS.map(def=>dimensionEditor(def,draft.scores[def.id])).join('')}</div><div class="v9-eval-summary"><label>Verdict<select data-v9-eval-field="verdict">${['candidate','retake','reject'].map(value=>`<option value="${value}" ${draft.verdict===value?'selected':''}>${value}</option>`).join('')}</select></label><label>Strengths<textarea data-v9-eval-field="strengths">${esc(draft.strengths)}</textarea></label><label>Weaknesses<textarea data-v9-eval-field="weaknesses">${esc(draft.weaknesses)}</textarea></label><label>Artifact flags<textarea data-v9-eval-field="artifactFlags">${esc(draft.artifactFlags)}</textarea></label><label class="wide">Reviewer notes<textarea data-v9-eval-field="notes">${esc(draft.notes)}</textarea></label></div><button class="primary v9-save" data-v9-action="save-evaluation">Save Evaluation</button>`;}
+function dimensionEditor(def,value){return`<article class="v9-dimension"><div><strong>${esc(def.label)}</strong><span>${esc(def.labelRu)}</span></div><select data-v9-score="${attr(def.id)}"><option value="">—</option>${[1,2,3,4,5].map(score=>`<option value="${score}" ${value?.score===score?'selected':''}>${score}</option>`).join('')}</select><textarea data-v9-dimension-note="${attr(def.id)}" placeholder="What worked / failed?">${esc(value?.note||'')}</textarea><input data-v9-dimension-evidence="${attr(def.id)}" value="${attr(value?.evidence||'')}" placeholder="Evidence: frame / moment / observation"></article>`;}
+
+function comparisonWorkspace(){const comparisons=listPromptStudioGenerationComparisons(project()),comparison=currentComparison();if(!comparison)return`<div class="v9-empty"><strong>Create a comparison</strong><span>Select 2–8 results on the left. Comparison preserves task → variant → export lineage; winner selection is always explicit.</span></div>`;const view=buildPromptStudioGenerationComparisonView(project(),comparison),winner=view.winner;return`<div class="v9-title"><div><strong>${esc(comparison.label)}</strong><span>${comparison.taskIds.length} candidates</span></div><div class="v9-comparison-tabs">${comparisons.slice(0,8).map(item=>`<button data-v9-action="open-comparison" data-comparison-id="${attr(item.id)}" class="${item.id===comparison.id?'active':''}">${esc(item.label)}</button>`).join('')}</div></div><label class="v9-winner-reason">Winner rationale<input id="studioV9WinnerReason" value="${attr(winner?.reason||'')}" placeholder="Why this result wins"></label><div class="v9-comparison">${view.rows.map(row=>comparisonRow(row,winner)).join('')}</div>${winner?`<div class="v9-winner-actions"><strong>Winner: ${esc(winner.taskId)}</strong><button data-v9-action="attach-winner-video">Use winner video as @ref</button><button data-v9-action="attach-winner-last">Use winner last frame as @ref</button><button data-v9-action="retake" data-task-id="${attr(winner.taskId)}">Create Retake Draft</button></div>`:''}`;}
+function comparisonRow(row,winner){const changed=row.variant?.changedControls?.length?row.variant.changedControls.join(', '):row.batch?.variantId?'variant delta':'single generation',isWinner=winner?.taskId===row.taskId;return`<article class="v9-compare-row ${isWinner?'is-winner':''}"><div><strong>${esc(row.variant?.label||row.batch?.variantLabel||shortTask(row.taskId))}</strong><span>${esc(shortTask(row.taskId))}</span><small>changed: ${esc(changed)}</small></div><div><b>${row.overallScore??'—'}</b><span>/5</span></div><div><button data-v9-action="evaluate" data-task-id="${attr(row.taskId)}">Evaluate</button><button data-v9-action="mark-winner" data-task-id="${attr(row.taskId)}" ${isWinner?'disabled':''}>${isWinner?'Winner':'Choose winner'}</button></div></article>`;}
+
+function retakeEditor(){const draft=state.retakeDraft,evaluation=promptStudioGenerationEvaluationForTask(project(),draft.sourceTaskId);return`<div class="v9-title"><div><strong>Retake Draft</strong><span>source ${esc(shortTask(draft.sourceTaskId))}${evaluation?.overallScore?` · ${evaluation.overallScore}/5`:''}</span></div><button data-v9-action="discard-draft">Discard</button></div><div class="v9-retake"><label>One production lever<select data-v9-retake-field="lever">${['objective','subject','environment','composition','camera','action','timing','lighting','materials','style','continuity','constraints','avoid','references','provider-settings','other'].map(value=>`<option value="${value}" ${draft.lever===value?'selected':''}>${value}</option>`).join('')}</select></label><label>Change instruction<textarea data-v9-retake-field="changeInstruction" placeholder="Change only this lever…">${esc(draft.changeInstruction)}</textarea></label><label>Expected improvement<textarea data-v9-retake-field="expectedImprovement" placeholder="What should improve and how will we judge it?">${esc(draft.expectedImprovement)}</textarea></label><label>Retained locks<textarea data-v9-retake-field="retainedLocks" placeholder="Identity, framing, material, references… one per line">${esc(draft.retainedLocks)}</textarea></label></div><div class="v9-retake-rule">Retake Draft records intent only. It does not rewrite the prompt, submit generation or create a Variant automatically.</div><button class="primary v9-save" data-v9-action="save-retake">Save Retake Draft</button>`;}
+
+function setMessage(text,kind=''){state.message=String(text||'');state.kind=kind;}
+function shortTask(value){const text=String(value||'');return text.length<=20?text:`${text.slice(0,10)}…${text.slice(-6)}`;}
+function esc(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function attr(value){return esc(value);}
