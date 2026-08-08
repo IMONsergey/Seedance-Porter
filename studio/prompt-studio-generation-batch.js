@@ -46,6 +46,8 @@ export async function validatePromptStudioBatchPlan(plan){
   if(!plan||plan.kind!==PROMPT_STUDIO_BATCH_PLAN_KIND)errors.push('invalid-kind');
   if(plan?.schemaVersion!==1)errors.push('invalid-schema-version');
   if(containsCredentialLikeField(plan))errors.push('credential-like-field-present');
+  if(!String(plan?.project?.id||'').trim())errors.push('project-id-missing');
+  if(!String(plan?.project?.updatedAt||'').trim())errors.push('project-version-missing');
   if(!Array.isArray(plan?.items)||plan.items.length<1||plan.items.length>MAX_PROMPT_STUDIO_BATCH_ITEMS)errors.push('invalid-item-count');
   const policy=plan?.policy||{};if(policy.autoSubmit!==false||policy.browserNetwork!==false||policy.clientSecrets!==false||policy.requiresExternalExecution!==true||policy.automaticRetry!==false||policy.ambiguousSubmissionRetry!==false)errors.push('unsafe-policy');
   const seen=new Set();
@@ -56,7 +58,10 @@ export async function validatePromptStudioBatchPlan(plan){
     if(!/^[a-f0-9]{64}$/i.test(String(item?.exportHash||'')))errors.push(`export-hash-invalid:${item?.itemId||'unknown'}`);
     if(item?.ready!==true)errors.push(`item-not-ready:${item?.itemId||'unknown'}`);
     if(!providerExportLooksExecutable(item?.providerExport))errors.push(`provider-export-unsafe:${item?.itemId||'unknown'}`);
-    if(item?.providerExport){const actual=await sha256Hex(stable(item.providerExport));if(actual!==String(item.exportHash||''))errors.push(`provider-export-hash-mismatch:${item.itemId}`);}
+    if(item?.providerExport){
+      const actual=await sha256Hex(stable(item.providerExport));if(actual!==String(item.exportHash||''))errors.push(`provider-export-hash-mismatch:${item.itemId}`);
+      const link=item.providerExport.studioLink;if(!link)errors.push(`provider-studio-link-missing:${item.itemId}`);else{if(String(link.projectId)!==String(plan?.project?.id||''))errors.push(`provider-project-mismatch:${item.itemId}`);if(String(link.projectUpdatedAt)!==String(plan?.project?.updatedAt||''))errors.push(`provider-project-version-mismatch:${item.itemId}`);if(!/^[a-f0-9]{64}$/i.test(String(link.handoffHash||'')))errors.push(`provider-handoff-hash-invalid:${item.itemId}`);}
+    }
   }
   if(plan?.ready!==true)errors.push('plan-not-ready');
   const core=clone(plan);delete core.integrity;const expected=await sha256Hex(stable(core));
@@ -70,12 +75,15 @@ export function validatePromptStudioBatchResult(value){
   if(value?.schemaVersion!==1)errors.push('invalid-schema-version');
   if(containsCredentialLikeField(value))errors.push('credential-like-field-present');
   if(!/^[a-f0-9]{64}$/i.test(String(value?.planHash||'')))errors.push('plan-hash-invalid');
+  if(!String(value?.project?.id||'').trim())errors.push('project-id-missing');
+  if(!String(value?.project?.updatedAt||'').trim())errors.push('project-version-missing');
   if(!Array.isArray(value?.items)||value.items.length<1||value.items.length>MAX_PROMPT_STUDIO_BATCH_ITEMS)errors.push('invalid-item-count');
   if(value?.policy?.secretPersisted!==false||value?.policy?.externalExecution!==true||value?.policy?.automaticRetry!==false)errors.push('unsafe-policy');
   const seen=new Set();
   for(const item of value?.items||[]){
     const status=String(item?.status||'');if(!item?.itemId||seen.has(item.itemId))errors.push('duplicate-or-missing-item-id');seen.add(item?.itemId);
     if(!item?.variant?.id)errors.push(`variant-id-missing:${item?.itemId||'unknown'}`);
+    if(!/^[a-f0-9]{64}$/i.test(String(item?.variant?.variantHash||'')))errors.push(`variant-hash-invalid:${item?.itemId||'unknown'}`);
     if(!/^[a-f0-9]{64}$/i.test(String(item?.exportHash||'')))errors.push(`export-hash-invalid:${item?.itemId||'unknown'}`);
     if(!TERMINAL_ITEM_STATUSES.has(status)&&!REVIEW_STOP_STATUSES.has(status))errors.push(`invalid-result-status:${item?.itemId||'unknown'}`);
     if(TERMINAL_ITEM_STATUSES.has(status)){
@@ -85,14 +93,17 @@ export function validatePromptStudioBatchResult(value){
         if(String(item.result?.taskId||'')!==String(item.taskId||''))errors.push(`task-result-mismatch:${item.itemId}`);
         if(String(item.result?.status||'')!==status)errors.push(`status-result-mismatch:${item.itemId}`);
         if(String(item.result?.exportHash||'').toLowerCase()!==String(item.exportHash||'').toLowerCase())errors.push(`export-result-mismatch:${item.itemId}`);
+        const link=item.result?.studioLink;if(!link)errors.push(`result-studio-link-missing:${item.itemId}`);else{if(String(link.projectId)!==String(value?.project?.id||''))errors.push(`result-project-mismatch:${item.itemId}`);if(String(link.projectUpdatedAt)!==String(value?.project?.updatedAt||''))errors.push(`result-project-version-mismatch:${item.itemId}`);}
       }
     }else if(item?.result)errors.push(`review-stop-must-not-have-result:${item.itemId}`);
   }
+  const items=Array.isArray(value?.items)?value.items:[],expectedStatus=items.length&&items.every(item=>item.status==='succeeded')?'succeeded':'completed-with-errors';if(String(value?.status||'')!==expectedStatus)errors.push('batch-status-item-mismatch');
   return{ok:errors.length===0,errors:[...new Set(errors)]};
 }
 
 export function savePromptStudioBatchResult(project,batchResult,options={}){
   const validation=validatePromptStudioBatchResult(batchResult);if(!validation.ok)throw new Error(`Batch result is not safe to save: ${validation.errors.join(', ')}`);
+  if(String(batchResult?.project?.id||'')!==String(project?.id||''))throw new Error(`Batch result belongs to a different Prompt Studio project (${batchResult?.project?.id||'unknown'}).`);
   let next=clone(project);const links=normalizeBatchLinks(next[PROMPT_STUDIO_BATCH_LINKS_KEY]);
   for(const item of batchResult.items){
     if(!item.result)continue;
