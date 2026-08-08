@@ -100,6 +100,9 @@ jobs:
       - name: Validate Prompt Studio v3 Shared Ingredient Library
         run: node scripts/validate-prompt-studio-ingredient-library.mjs
 
+      - name: Validate Prompt Studio v3 extension persistence
+        run: node scripts/validate-prompt-studio-v3-persistence.mjs
+
       - name: Validate Prompt Studio v3 production wiring
         run: node scripts/validate-prompt-studio-v3-production.mjs
 
