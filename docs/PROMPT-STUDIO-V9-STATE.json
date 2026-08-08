@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-08T21:00:00+03:00",
+  "phase": "prompt-studio-v9-generation-console-evaluation-loop",
+  "branch": "feat/prompt-studio-v9-generation-console",
+  "pullRequest": 48,
+  "status": "implementation",
+  "goal": "Turn returned single/batch generations into an evidence-based human review, comparison, winner, retake and continuation system.",
+  "extensions": {
+    "evaluations": "generationEvaluations",
+    "comparisons": "generationComparisons",
+    "winners": "generationWinners",
+    "retakes": "generationRetakes"
+  },
+  "evaluationDimensions": [
+    "task-adherence",
+    "identity-consistency",
+    "composition",
+    "camera",
+    "motion-action",
+    "timing-readability",
+    "continuity",
+    "material-physics",
+    "lighting-color",
+    "graphics-text-logo",
+    "audio-fit",
+    "artifact-severity",
+    "production-readiness"
+  ],
+  "decisions": [
+    "numeric evaluation does not automatically select a winner",
+    "winner selection requires an explicit human action and rationale",
+    "retake draft changes one named production lever and preserves explicit locks",
+    "retake save does not rewrite prompt sections or submit generation",
+    "generated remote media is not automatically embedded or downloaded in the browser",
+    "winner continuation reuses the explicit V7 generated-output reference path",
+    "V9 project mutations use revisioned public Prompt Studio API only",
+    "foreign V4/V5/V7/V8 staged work blocks V9 decisions",
+    "dirty V9 draft blocks project-changing actions until save/discard"
+  ],
+  "exitCriteria": [
+    "13-dimension evaluation engine and closed schema",
+    "unified Generation Console over V7/V8 history",
+    "variant-aware comparison against V4 lineage/deltas",
+    "explicit human winner selection with rationale",
+    "winner video/last-frame continuation actions",
+    "one-lever Retake Draft without hidden prompt mutation",
+    "cross-layer staged-work guard",
+    "zero browser provider execution and zero automatic media embedding",
+    "Node 20/22/24 engine/UI/production contracts",
+    "Pages browser module graph includes V9",
+    "exact 100 curated runtime cases",
+    "exact 192 Porter Originals",
+    "GitHub project memory updated before merge"
+  ],
+  "next": [
+    "prompt-studio-v10-production-memory-learning",
+    "prompt-studio-v11-multi-provider-execution-abstraction",
+    "research-corpus-500-1000-parallel"
+  ]
+}
