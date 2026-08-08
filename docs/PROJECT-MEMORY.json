@@ -1,18 +1,21 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-08T18:45:00+03:00",
+  "updatedAt": "2026-08-08T20:48:00+03:00",
   "repository": "IMONsergey/Seedance-Porter",
   "sourceOfTruth": "github",
   "freshnessRule": "This file supersedes older phase markers in PROJECT-CONTEXT.md, ROADMAP.md and PROJECT-STATE.json when this updatedAt is newer.",
   "completedRelease": {
     "phase": "prompt-studio-v8-variant-batch-generation",
     "pullRequest": 46,
+    "mergeCommit": "103b40eb24f0ae9b6543e77c3b31b62a2cdebfd0",
     "status": "merged-to-main"
   },
   "active": {
     "phase": "prompt-studio-v9-generation-console-evaluation-loop",
-    "status": "now",
-    "objective": "Turn single and batch generation results into an evidence-based comparison, scoring, winner-selection, continuation and retake workflow without moving provider credentials into the browser."
+    "branch": "feat/prompt-studio-v9-generation-console",
+    "pullRequest": 48,
+    "status": "release-candidate",
+    "objective": "Turn returned single/batch generations into explicit footage review, comparison-wide evidence gating, auditable human winner, explicit continuation and evidence-versioned one-lever retake hypotheses."
   },
   "protectedInvariants": {
     "curatedCases": 100,
@@ -22,8 +25,9 @@
     "browserProviderSubmission": false,
     "clientProviderCredentials": false,
     "automaticGeneratedOutputAttachment": false,
+    "automaticWinnerFromEvaluationScore": false,
+    "automaticRetakePromptMutation": false,
     "ambiguousPaidSubmissionAutoRetry": false,
-    "corruptResumableManifestMeansMissing": false,
     "extensionSafeProjectPersistence": true
   },
   "completedCapabilities": [
@@ -42,28 +46,20 @@
     "prompt-studio-v7-generation-results-continuation",
     "prompt-studio-v8-variant-batch-generation"
   ],
-  "v8DurableGuarantees": [
-    "browser builds batch plans but never submits paid provider tasks",
-    "batch plan max 20 items",
-    "local runner concurrency 1-8 is not represented as provider quota",
-    "submission-uncertain is never automatically retried",
-    "known task IDs resume without another POST",
-    "every emitted batch snapshot is protocol-valid and resumable",
-    "corrupt existing batch job fails closed",
-    "explicit batch create refuses overwrite",
-    "batch job/result writes use atomic temp-file-to-rename persistence",
-    "project variant export and task lineage is cross-checked",
-    "batch results return explicitly into v7 generation history",
-    "generated output attachment remains explicit"
-  ],
   "v9": {
     "coreSurfaces": [
       "generation-console",
+      "explicit-preload-none-video-preview",
       "variant-result-comparison",
       "structured-production-evaluation",
-      "winner-selection",
-      "retake-delta",
-      "explicit-continuation-actions"
+      "per-result-decision-readiness",
+      "comparison-wide-decision-readiness",
+      "human-winner-selection",
+      "winner-candidate-evaluation-snapshots",
+      "explicit-continuation-actions",
+      "one-lever-retake-draft",
+      "retake-source-evaluation-snapshot",
+      "decision-integrity-audit"
     ],
     "evaluationDimensions": [
       "task-adherence",
@@ -71,7 +67,7 @@
       "composition",
       "camera",
       "motion-action",
-      "timing-shot-readability",
+      "timing-readability",
       "continuity",
       "material-physics",
       "lighting-color",
@@ -80,41 +76,87 @@
       "artifact-severity",
       "production-readiness"
     ],
+    "decisionReadiness": {
+      "minimumRatedDimensionsPerCandidate": 5,
+      "minimumEvidenceDimensionsPerCandidate": 3,
+      "productionReadinessMustBeRated": true,
+      "everyComparisonCandidateMustBeReady": true,
+      "winnerRequiresHumanRationale": true,
+      "winnerSnapshotsEveryCandidateEvaluationVersion": true,
+      "scoreCanSelectWinnerAutomatically": false
+    },
+    "explicitPreview": {
+      "initialRemoteVideoDom": false,
+      "userActionRequired": true,
+      "preload": "none",
+      "autoplay": false,
+      "controls": true,
+      "playsInline": true
+    },
+    "retakeContract": {
+      "sourceMustBeSucceededVisualGeneration": true,
+      "sourceMustHaveSavedEvaluation": true,
+      "minimumRatedDimensions": 1,
+      "minimumEvidenceDimensions": 1,
+      "sourceEvaluationVersionIsSnapshotted": true,
+      "exactlyOneNamedLever": true,
+      "changeInstructionRequired": true,
+      "expectedImprovementRequired": true,
+      "retainedLocksRequired": true,
+      "automaticPromptRewrite": false,
+      "automaticVariantCreation": false,
+      "automaticGeneration": false
+    },
+    "historicalEvidence": {
+      "winnerEvaluationChangesAfterSelection": "warning:winner-evidence-drift",
+      "retakeSourceEvaluationChangesAfterDraft": "warning:retake-evidence-drift",
+      "historicalDecisionRecordsAreNotSilentlyRewritten": true
+    },
+    "workflowSafety": {
+      "foreignV4V5V7V8DraftsBlockStartingOrSavingV9Decisions": true,
+      "dirtyV9DraftBlocksLifecycleSourceRestoreAndConflictingStaging": true,
+      "dirtyV9DraftBlocksDirectOpenSource": true,
+      "externalProjectMutationInvalidatesDraft": true
+    },
+    "releaseArchitecture": {
+      "singleV9CiWorkflow": true,
+      "nodeMatrix": [20,22,24],
+      "realPagesDeployRunsV9Contracts": true,
+      "centralPagesModuleGraphIncludesV9": true,
+      "duplicateV9WorkflowsRemoved": true,
+      "canonicalUiContract": "scripts/validate-prompt-studio-v9-console-ui.mjs"
+    },
     "exitCriteria": [
-      "unified single and batch generation console",
-      "project-variant-handoff-export-task lineage visible per result",
-      "comparison against frozen variant base and deltas",
-      "structured reviewer scoring with notes/evidence",
-      "explicit winner selection",
-      "explicit continuation/reference/retake actions",
-      "no browser provider credential",
-      "no automatic output or prompt mutation",
-      "backward-compatible v7/v8 history",
-      "Node 20/22/24 browser and Pages contracts",
+      "single and batch generation history unified in Console",
+      "explicit in-console preview without autoplay or automatic preload",
+      "project-variant-export-task lineage visible per result",
+      "13-dimension human Evaluation",
+      "every candidate review coverage visible and decision-gated",
+      "whole Comparison required to be ready before Winner",
+      "human Winner rationale required",
+      "Winner snapshots every candidate Evaluation version",
+      "explicit Winner continuation actions",
+      "one-lever Retake with expected improvement and retained locks",
+      "Retake snapshots source Evaluation version",
+      "Decision Audit detects raw corruption and later evidence drift",
+      "no browser provider credential or paid submission",
+      "real Pages/Node contracts",
       "exact-100 and 192 invariants preserved",
-      "project memory updated before merge"
+      "project memory current before merge"
     ]
   },
   "next": [
-    {
-      "phase": "prompt-studio-v10-production-memory-learning",
-      "priority": 1
-    },
-    {
-      "phase": "prompt-studio-v11-multi-provider-execution-abstraction",
-      "priority": 2
-    },
-    {
-      "phase": "research-corpus-500-1000",
-      "priority": 3,
-      "parallel": true
-    }
+    {"phase":"prompt-studio-v10-production-memory-learning","priority":1},
+    {"phase":"prompt-studio-v11-multi-provider-execution-abstraction","priority":2},
+    {"phase":"research-corpus-500-1000","priority":3,"parallel":true}
   ],
   "canonicalCurrentMemory": {
     "human": "docs/PROJECT-MEMORY.md",
     "machine": "docs/PROJECT-MEMORY.json",
-    "architectureDecisions": "docs/ARCHITECTURE-DECISIONS.md",
-    "v8OperationalContract": "docs/PROMPT-STUDIO-V8-BATCH-GENERATION.md",
-    "v8HardeningLog": "docs/PROMPT-STUDIO-V8-RELEASE-HARDENING.md"
+    "v9State": "docs/PROMPT-STUDIO-V9-STATE.json",
+    "v9ProductContract": "docs/PROMPT-STUDIO-V9-GENERATION-CONSOLE.md",
+    "v9DecisionReadiness": "docs/V9-DECISION-READINESS.md",
+    "architectureDecisions": ["docs/ADR-017-V9-HUMAN-WINNER.md","docs/ADR-018-V9-ONE-LEVER-RETAKE.md"],
+    "v9ReleaseAudit": "docs/V9-RELEASE-AUDIT.md"
   }
 }

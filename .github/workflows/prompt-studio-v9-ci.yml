@@ -1,0 +1,99 @@
+name: Prompt Studio v9 Generation Console CI
+
+on:
+  pull_request:
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'schemas/prompt-studio-generation*.json'
+      - 'scripts/validate-prompt-studio-v7-*.mjs'
+      - 'scripts/validate-prompt-studio-v8-*.mjs'
+      - 'scripts/validate-prompt-studio-v9-*.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - 'docs/PROJECT-MEMORY*'
+      - 'docs/PROMPT-STUDIO-V9-*.md'
+      - 'docs/PROMPT-STUDIO-V9-STATE.json'
+      - 'docs/V9-*.md'
+      - 'docs/ADR-017-*.md'
+      - 'docs/ADR-018-*.md'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v9-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'schemas/prompt-studio-generation*.json'
+      - 'scripts/validate-prompt-studio-v7-*.mjs'
+      - 'scripts/validate-prompt-studio-v8-*.mjs'
+      - 'scripts/validate-prompt-studio-v9-*.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - 'docs/PROJECT-MEMORY*'
+      - 'docs/PROMPT-STUDIO-V9-*.md'
+      - 'docs/PROMPT-STUDIO-V9-STATE.json'
+      - 'docs/V9-*.md'
+      - 'docs/ADR-017-*.md'
+      - 'docs/ADR-018-*.md'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v9-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  v9:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20,22,24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate V4 Variant/Handoff baseline
+        run: node scripts/validate-prompt-studio-v4-engines.mjs
+      - name: Validate V7 Generation Results baseline
+        run: node scripts/validate-prompt-studio-v7-generation-results.mjs
+      - name: Validate V7 staged UI baseline
+        run: node scripts/validate-prompt-studio-v7-ui.mjs
+      - name: Validate V7 production baseline
+        run: node scripts/validate-prompt-studio-v7-production.mjs
+      - name: Validate V8 Variant Batch baseline
+        run: node scripts/validate-prompt-studio-v8-batch.mjs
+      - name: Validate V8 return-path UI baseline
+        run: node scripts/validate-prompt-studio-v8-ui.mjs
+      - name: Validate V8 production baseline
+        run: node scripts/validate-prompt-studio-v8-production.mjs
+      - name: Validate V9 evaluation/readiness/winner/retake engine
+        run: node scripts/validate-prompt-studio-v9-evaluation.mjs
+      - name: Validate V9 decision integrity audit
+        run: node scripts/validate-prompt-studio-v9-decision-audit.mjs
+      - name: Validate V9 Generation Console UI and workflow guards
+        run: node scripts/validate-prompt-studio-v9-console-ui.mjs
+      - name: Validate V9 production and project-memory wiring
+        run: node scripts/validate-prompt-studio-v9-production.mjs
+      - name: Validate generalized Pages browser module graph
+        run: node scripts/validate-pages-contract.mjs
+      - name: Validate protected exact-100 renderer
+        run: npm run validate:render
+      - name: Parse V9 schema/state/memory JSON
+        run: |
+          node -e "for (const p of ['schemas/prompt-studio-generation-evaluation.schema.json','docs/PROJECT-MEMORY.json','docs/PROMPT-STUDIO-V9-STATE.json']) JSON.parse(require('fs').readFileSync(p,'utf8')); console.log('json-ok')"
+      - name: Syntax-check V9 runtime and contracts
+        run: |
+          node --check studio/prompt-studio-generation-evaluation.js
+          node --check studio/prompt-studio-generation-evaluation-audit.js
+          node --check studio/prompt-studio-v9-workflow-guard.js
+          node --check studio/prompt-studio-v9-console-ui.js
+          node --check studio/prompt-studio-v9-bootstrap.js
+          node --check studio/sidebar.js
+          node --check scripts/validate-prompt-studio-v9-evaluation.mjs
+          node --check scripts/validate-prompt-studio-v9-decision-audit.mjs
+          node --check scripts/validate-prompt-studio-v9-console-ui.mjs
+          node --check scripts/validate-prompt-studio-v9-production.mjs
+          node --check scripts/validate-pages-contract.mjs

@@ -28,162 +28,113 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Install dependencies
         run: npm install
-
       - name: Validate Pages production artifact contract
         run: node scripts/validate-pages-contract.mjs
-
       - name: Validate Deep Review Workspace contract
         run: node scripts/validate-deep-review-workspace.mjs
-
       - name: Validate Review Player evidence boundary
         run: node scripts/validate-review-player.mjs
-
       - name: Validate Promotion Workspace contract
         run: node scripts/validate-promotion-workspace.mjs
-
       - name: Validate strategic Coverage Planner contract
         run: node scripts/validate-coverage-planner.mjs
-
       - name: Validate source adapter registry, risk policy and health engine
         run: node scripts/validate-source-adapters.mjs
-
       - name: Validate Operations Command Center
         run: node scripts/validate-operations-command-center.mjs
-
       - name: Validate Operations production wiring
         run: node scripts/validate-operations-production.mjs
-
       - name: Validate global Command Palette
         run: node scripts/validate-command-palette.mjs
-
       - name: Validate Command Palette production wiring
         run: node scripts/validate-command-palette-production.mjs
-
       - name: Validate Workspace Evidence Bundles
         run: node scripts/validate-workspace-bundles.mjs
-
       - name: Validate Workspace Bundle production wiring
         run: node scripts/validate-workspace-bundles-production.mjs
-
       - name: Validate Curated Rotation Planner
         run: node scripts/validate-rotation-planner.mjs
-
       - name: Validate Curated Rotation production wiring
         run: node scripts/validate-rotation-production.mjs
-
       - name: Validate Prompt Studio engine and safety contract
         run: node scripts/validate-prompt-studio.mjs
-
       - name: Validate Prompt Studio local AI contract
         run: node scripts/validate-prompt-studio-ai.mjs
-
       - name: Validate Prompt Studio production wiring
         run: node scripts/validate-prompt-studio-production.mjs
-
       - name: Validate Prompt Studio v2 Rule Packs
         run: node scripts/validate-prompt-studio-v2-rule-packs.mjs
-
       - name: Validate Prompt Studio v2 production wiring
         run: node scripts/validate-prompt-studio-v2-production.mjs
-
       - name: Validate Prompt Studio v3 Variables Ingredients and Timeline
         run: node scripts/validate-prompt-studio-production-tools.mjs
-
       - name: Validate Prompt Studio v3 Shared Ingredient Library
         run: node scripts/validate-prompt-studio-ingredient-library.mjs
-
       - name: Validate Prompt Studio v3 extension persistence
         run: node scripts/validate-prompt-studio-v3-persistence.mjs
-
       - name: Validate Prompt Studio v3 production wiring
         run: node scripts/validate-prompt-studio-v3-production.mjs
-
       - name: Validate Prompt Studio v4 Storyboard Variants and Handoff engines
         run: node scripts/validate-prompt-studio-v4-engines.mjs
-
       - name: Validate Prompt Studio v4 workflow guard behavior
         run: node scripts/validate-prompt-studio-v4-workflow-guard.mjs
-
       - name: Validate Prompt Studio v4 production wiring
         run: node scripts/validate-prompt-studio-v4-production.mjs
-
       - name: Validate Prompt Studio v5 Repair Blueprints and Seedance engines
         run: node scripts/validate-prompt-studio-v5-engines.mjs
-
       - name: Validate Prompt Studio v5 workflow guard behavior
         run: node scripts/validate-prompt-studio-v5-workflow-guard.mjs
-
       - name: Validate Prompt Studio v5 production wiring
         run: node scripts/validate-prompt-studio-v5-production.mjs
-
       - name: Validate Prompt Studio v6 audio reference engine
         run: node scripts/validate-prompt-studio-v6-audio.mjs
-
       - name: Validate Prompt Studio v6 audio reference UI
         run: node scripts/validate-prompt-studio-v6-audio-ui.mjs
-
       - name: Validate Prompt Studio v6 production wiring
         run: node scripts/validate-prompt-studio-v6-production.mjs
-
       - name: Validate Prompt Studio v7 Generation Results engine
         run: node scripts/validate-prompt-studio-v7-generation-results.mjs
-
       - name: Validate Prompt Studio v7 staged UI
         run: node scripts/validate-prompt-studio-v7-ui.mjs
-
       - name: Validate Prompt Studio v7 production wiring
         run: node scripts/validate-prompt-studio-v7-production.mjs
-
       - name: Validate Prompt Studio v8 variant batch plan
         run: node scripts/validate-prompt-studio-v8-batch.mjs
-
       - name: Validate Prompt Studio v8 batch UI
         run: node scripts/validate-prompt-studio-v8-ui.mjs
-
       - name: Validate Prompt Studio v8 production wiring
         run: node scripts/validate-prompt-studio-v8-production.mjs
-
+      - name: Validate Prompt Studio v9 evaluation and decision readiness
+        run: node scripts/validate-prompt-studio-v9-evaluation.mjs
+      - name: Validate Prompt Studio v9 decision integrity audit
+        run: node scripts/validate-prompt-studio-v9-decision-audit.mjs
+      - name: Validate Prompt Studio v9 Generation Console and guards
+        run: node scripts/validate-prompt-studio-v9-console-ui.mjs
+      - name: Validate Prompt Studio v9 production wiring
+        run: node scripts/validate-prompt-studio-v9-production.mjs
       - name: Validate protected exact-100 browser render
         run: npm run validate:render
-
       - name: Build Research Corpus + strategic operations snapshots for Pages
         continue-on-error: true
         run: npm run case:refresh
-
       - name: Prepare static Pages site
         shell: bash
         run: |
           set -euo pipefail
           rm -rf _site
           mkdir -p _site
-
           cp studio/library.html _site/index.html
-
-          # Every browser module and stylesheet in Studio is published automatically.
-          # `validate-pages-contract.mjs` verifies the import graph and critical assets
-          # before this step, so new workspaces cannot silently 404 in production.
           find studio -maxdepth 1 -type f \( -name '*.js' -o -name '*.css' \) -exec cp {} _site/ \;
-
-          # Research/operations snapshots are best-effort. The curated app stays live
-          # if an upstream source is temporarily unavailable.
           for snapshot in case-candidates.json case-review-queue.json coverage-plan.json source-health.json; do
-            if [[ -f "studio/$snapshot" ]]; then
-              cp "studio/$snapshot" "_site/$snapshot"
-            fi
+            if [[ -f "studio/$snapshot" ]]; then cp "studio/$snapshot" "_site/$snapshot"; fi
           done
-
           touch _site/.nojekyll
-
-          # Project Pages is hosted under /Seedance-Porter/, so local root-relative
-          # entry assets become relative in the published index.
           sed -i 's|href="/library.css"|href="./library.css"|g' _site/index.html
           sed -i 's|href="/digest.css"|href="./digest.css"|g' _site/index.html
           sed -i 's|href="/case-intelligence.css"|href="./case-intelligence.css"|g' _site/index.html
@@ -191,26 +142,19 @@ jobs:
           sed -i 's|src="/library.js"|src="./library.js"|g' _site/index.html
           sed -i 's|src="/sidebar.js"|src="./sidebar.js"|g' _site/index.html
           sed -i 's|src="/case-ui.js"|src="./case-ui.js"|g' _site/index.html
-
-          test -f _site/sidebar.js
-          test -f _site/prompt-studio-ui.js
-          test -f _site/prompt-studio.css
-          test -f _site/prompt-studio-rule-packs-bootstrap.js
-          test -f _site/prompt-studio-production-tools-bootstrap.js
-          test -f _site/prompt-studio-v4-bootstrap.js
-          test -f _site/prompt-studio-v4.css
-          test -f _site/prompt-studio-v5-bootstrap.js
-          test -f _site/prompt-studio-v5.css
-          test -f _site/prompt-studio-v6-bootstrap.js
-          test -f _site/prompt-studio-v6.css
-          test -f _site/prompt-studio-v7-bootstrap.js
-          test -f _site/prompt-studio-v7.css
-          test -f _site/prompt-studio-v8-bootstrap.js
-          test -f _site/prompt-studio-v8.css
-
+          for asset in \
+            sidebar.js prompt-studio-ui.js prompt-studio.css \
+            prompt-studio-rule-packs-bootstrap.js prompt-studio-production-tools-bootstrap.js \
+            prompt-studio-v4-bootstrap.js prompt-studio-v4.css \
+            prompt-studio-v5-bootstrap.js prompt-studio-v5.css \
+            prompt-studio-v6-bootstrap.js prompt-studio-v6.css \
+            prompt-studio-v7-bootstrap.js prompt-studio-v7-workflow-guard.js prompt-studio-v7-results-ui.js prompt-studio-v7.css \
+            prompt-studio-v8-bootstrap.js prompt-studio-v8-batch-ui.js prompt-studio-generation-batch.js prompt-studio-v8.css \
+            prompt-studio-v9-bootstrap.js prompt-studio-v9-workflow-guard.js prompt-studio-v9-console-ui.js prompt-studio-generation-evaluation.js prompt-studio-generation-evaluation-audit.js prompt-studio-v9.css; do
+            test -f "_site/$asset"
+          done
       - name: Configure Pages
         uses: actions/configure-pages@v6
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:

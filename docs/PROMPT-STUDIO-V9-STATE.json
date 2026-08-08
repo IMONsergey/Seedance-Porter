@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-08T20:50:00+03:00",
+  "phase": "prompt-studio-v9-generation-console-evaluation-loop",
+  "branch": "feat/prompt-studio-v9-generation-console",
+  "pullRequest": 48,
+  "status": "release-candidate",
+  "goal": "Turn returned generations into explicit footage review, comparison-wide evidence gating, human winner decisions and evidence-versioned retake hypotheses.",
+  "extensions": {
+    "evaluations": "generationEvaluations",
+    "comparisons": "generationComparisons",
+    "winners": "generationWinners",
+    "retakes": "generationRetakes"
+  },
+  "bounds": {
+    "evaluations": 200,
+    "comparisons": 100,
+    "winners": 100,
+    "retakes": 100,
+    "comparisonCandidatesMin": 2,
+    "comparisonCandidatesMax": 8
+  },
+  "decisionReadiness": {
+    "minimumRatedDimensionsPerCandidate": 5,
+    "minimumEvidenceDimensionsPerCandidate": 3,
+    "productionReadinessMustBeRated": true,
+    "everyComparisonCandidateMustBeReady": true,
+    "automaticWinnerFromScore": false,
+    "winnerRequiresHumanRationale": true,
+    "winnerSnapshotsAllCandidateEvaluationVersions": true
+  },
+  "preview": {
+    "initialVideoDom": false,
+    "explicitUserActionRequired": true,
+    "preload": "none",
+    "autoplay": false
+  },
+  "retakeContract": {
+    "oneNamedLever": true,
+    "requiresSavedEvaluation": true,
+    "minimumRatedDimensions": 1,
+    "minimumEvidenceDimensions": 1,
+    "sourceEvaluationVersionSnapshot": true,
+    "requiresChangeInstruction": true,
+    "requiresExpectedImprovement": true,
+    "requiresRetainedLocks": true,
+    "automaticPromptMutation": false,
+    "automaticVariantCreation": false,
+    "automaticGeneration": false
+  },
+  "decisionAudit": {
+    "rawStateIntegrity": true,
+    "winnerEvidenceSetIntegrity": true,
+    "winnerEvidenceSnapshotIntegrity": true,
+    "retakeSourceSnapshotIntegrity": true,
+    "postWinnerEvaluationDrift": "warning",
+    "postRetakeEvaluationDrift": "warning"
+  },
+  "workflowSafety": [
+    "foreign V4 Storyboard staged work blocks starting/saving V9 decisions",
+    "foreign V5 Repair staged work blocks starting/saving V9 decisions",
+    "foreign V7 Generation Result staged work blocks starting/saving V9 decisions",
+    "foreign V8 Batch Result staged work blocks starting/saving V9 decisions",
+    "dirty V9 draft blocks lifecycle/source/restore/conflicting staging",
+    "dirty V9 draft blocks direct public porterPromptStudio.openSource",
+    "uninterceptable external project replacement invalidates V9 draft visibly"
+  ],
+  "releaseGates": [
+    "V9 evaluation/comparison-wide readiness/winner snapshot engine contract",
+    "adversarial raw + historical decision integrity audit",
+    "canonical JSDOM Generation Console preview/guard contract",
+    "production/project-memory contract",
+    "single Node 20/22/24 V9 CI workflow",
+    "real GitHub Pages deploy workflow runs V9 contracts",
+    "central Pages module graph includes V9 runtime",
+    "exact 100 curated runtime cases",
+    "exact 192 Porter Originals"
+  ],
+  "cleanup": [
+    "duplicate V9 Pages-preflight workflow removed",
+    "duplicate V9 release workflow removed",
+    "superseded early V9 UI/Console tests removed",
+    "one canonical V9 Console UI contract retained"
+  ],
+  "next": [
+    "prompt-studio-v10-production-memory-learning",
+    "prompt-studio-v11-multi-provider-execution-abstraction",
+    "research-corpus-500-1000-parallel"
+  ]
+}
