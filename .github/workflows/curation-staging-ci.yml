@@ -1,0 +1,48 @@
+name: curation-staging-ci
+
+on:
+  pull_request:
+    paths:
+      - 'studio/curation-staging-engine.js'
+      - 'scripts/build-curation-staging-pack.mjs'
+      - 'scripts/validate-curation-staging-pack.mjs'
+      - 'docs/CURATION-STAGING-PACK.md'
+      - '.github/workflows/curation-staging-ci.yml'
+      - 'studio/digest-data.js'
+      - 'studio/multi-source-cases*.js'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/curation-staging-engine.js'
+      - 'scripts/build-curation-staging-pack.mjs'
+      - 'scripts/validate-curation-staging-pack.mjs'
+      - '.github/workflows/curation-staging-ci.yml'
+      - 'studio/digest-data.js'
+      - 'studio/multi-source-cases*.js'
+  workflow_dispatch:
+
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate Curation Staging Pack and exact repo locations
+        run: node scripts/validate-curation-staging-pack.mjs
+      - name: Validate Curated Rotation parent contract
+        run: node scripts/validate-rotation-planner.mjs
+      - name: Validate protected exact-100 browser contract
+        run: npm run validate:render
+      - name: Syntax-check staging modules
+        run: |
+          node --check studio/curation-staging-engine.js
+          node --check scripts/build-curation-staging-pack.mjs
+          node --check scripts/validate-curation-staging-pack.mjs
