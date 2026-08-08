@@ -47,6 +47,8 @@ jobs:
         run: node scripts/validate-prompt-studio-v3-persistence.mjs
       - name: Validate Prompt Studio v4 engines
         run: node scripts/validate-prompt-studio-v4-engines.mjs
+      - name: Validate Prompt Studio v4 workflow guard behavior
+        run: node scripts/validate-prompt-studio-v4-workflow-guard.mjs
       - name: Validate Prompt Studio v4 production wiring
         run: node scripts/validate-prompt-studio-v4-production.mjs
       - name: Validate generalized Pages/module graph
@@ -62,4 +64,5 @@ jobs:
           node --check studio/prompt-studio-v4-ui.js
           node --check studio/prompt-studio-v4-bootstrap.js
           node --check scripts/validate-prompt-studio-v4-engines.mjs
+          node --check scripts/validate-prompt-studio-v4-workflow-guard.mjs
           node --check scripts/validate-prompt-studio-v4-production.mjs

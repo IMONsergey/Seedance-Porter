@@ -109,6 +109,9 @@ jobs:
       - name: Validate Prompt Studio v4 Storyboard Variants and Handoff engines
         run: node scripts/validate-prompt-studio-v4-engines.mjs
 
+      - name: Validate Prompt Studio v4 workflow guard behavior
+        run: node scripts/validate-prompt-studio-v4-workflow-guard.mjs
+
       - name: Validate Prompt Studio v4 production wiring
         run: node scripts/validate-prompt-studio-v4-production.mjs
 
