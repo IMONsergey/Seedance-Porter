@@ -1,0 +1,71 @@
+name: Prompt Studio v6 Audio References CI
+
+on:
+  pull_request:
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'schemas/prompt-studio*.json'
+      - 'scripts/validate-prompt-studio*.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v6-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'schemas/prompt-studio*.json'
+      - 'scripts/validate-prompt-studio*.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v6-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  v6:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20,22,24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate Prompt Studio v4 engines baseline
+        run: node scripts/validate-prompt-studio-v4-engines.mjs
+      - name: Validate Prompt Studio v5 engines baseline
+        run: node scripts/validate-prompt-studio-v5-engines.mjs
+      - name: Validate Prompt Studio v5 workflow guard baseline
+        run: node scripts/validate-prompt-studio-v5-workflow-guard.mjs
+      - name: Validate Prompt Studio v5 production baseline
+        run: node scripts/validate-prompt-studio-v5-production.mjs
+      - name: Validate Prompt Studio v6 audio engine
+        run: node scripts/validate-prompt-studio-v6-audio.mjs
+      - name: Validate Prompt Studio v6 audio UI
+        run: node scripts/validate-prompt-studio-v6-audio-ui.mjs
+      - name: Validate Prompt Studio v6 production wiring
+        run: node scripts/validate-prompt-studio-v6-production.mjs
+      - name: Validate generalized Pages/module graph
+        run: node scripts/validate-pages-contract.mjs
+      - name: Validate protected exact-100 renderer
+        run: npm run validate:render
+      - name: Syntax-check v6 runtime and contracts
+        run: |
+          node --check studio/prompt-studio-reference-media.js
+          node --check studio/prompt-studio-reference-preview.js
+          node --check studio/prompt-studio-generation-handoff.js
+          node --check studio/prompt-studio-seedance-adapter.js
+          node --check studio/prompt-studio-v6-audio-ui.js
+          node --check studio/prompt-studio-v6-bootstrap.js
+          node --check studio/sidebar.js
+          node --check scripts/validate-prompt-studio-v6-audio.mjs
+          node --check scripts/validate-prompt-studio-v6-audio-ui.mjs
+          node --check scripts/validate-prompt-studio-v6-production.mjs
