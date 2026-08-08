@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Seedance Porter Prompt Studio Project",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "id", "title", "createdAt", "updatedAt", "mode", "aspect", "duration", "language", "modelProfile", "sections", "references", "customRules", "tags", "compiledPrompt", "quality"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "seedance-porter-prompt-studio-project" },
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "mode": { "enum": ["text-to-video", "image-to-video", "first-last-frame", "multi-reference"] },
+    "aspect": { "type": "string", "minLength": 3 },
+    "duration": { "type": "number", "minimum": 1, "maximum": 30 },
+    "language": { "type": "string", "minLength": 2 },
+    "modelProfile": { "type": "string", "minLength": 1 },
+    "source": { "type": ["object", "null"] },
+    "sections": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "order", "enabled", "content"],
+        "properties": {
+          "id": { "enum": ["objective", "subject", "environment", "composition", "camera", "action", "timing", "lighting", "materials", "style", "continuity", "constraints", "avoid"] },
+          "label": { "type": "string" },
+          "order": { "type": "integer", "minimum": 0 },
+          "enabled": { "type": "boolean" },
+          "content": { "type": "string" }
+        }
+      }
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "token", "name", "mediaType", "role", "locked", "uri", "localAssetKey", "notes", "enabled"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "token": { "type": "string", "pattern": "^@ref[0-9]{2,}$" },
+          "name": { "type": "string" },
+          "mediaType": { "enum": ["image", "video", "unknown"] },
+          "role": { "enum": ["identity", "geometry", "style", "material", "motion", "camera", "first-frame", "last-frame", "graphics", "pattern", "environment", "other"] },
+          "locked": { "type": "boolean" },
+          "uri": { "type": "string" },
+          "localAssetKey": { "type": "string" },
+          "notes": { "type": "string" },
+          "enabled": { "type": "boolean" }
+        }
+      }
+    },
+    "customRules": { "type": "array", "items": { "type": "string" } },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "string" },
+    "compiledPrompt": { "type": "string" },
+    "quality": {
+      "type": "object",
+      "required": ["score", "grade", "errors", "warnings", "infos"],
+      "properties": {
+        "score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "grade": { "enum": ["A", "B", "C", "D", "F"] },
+        "errors": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 },
+        "infos": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "lastPatch": { "type": ["object", "null"] }
+  }
+}
