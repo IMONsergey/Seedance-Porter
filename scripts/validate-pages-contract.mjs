@@ -111,6 +111,7 @@ const validators = [
   'validate-prompt-studio-v2-production.mjs',
   'validate-prompt-studio-production-tools.mjs',
   'validate-prompt-studio-ingredient-library.mjs',
+  'validate-prompt-studio-v3-persistence.mjs',
   'validate-prompt-studio-v3-production.mjs'
 ];
 for (const validator of validators) {
@@ -136,6 +137,6 @@ console.log(JSON.stringify({
   researchSnapshotBuild:'best-effort',
   machineReadableSnapshots:['case-candidates.json','case-review-queue.json','coverage-plan.json','source-health.json'],
   exact100Render:'predeploy-required',
-  promptStudio:'v1+v2+v3 production-critical',
+  promptStudio:'v1+v2+v3 production-critical + extension-persistence-safe',
   curatedSiteFailureMode:'deploy remains available if external research generation fails'
 },null,2));
