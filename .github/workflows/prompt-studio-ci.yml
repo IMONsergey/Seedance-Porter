@@ -11,6 +11,7 @@ on:
       - 'scripts/pages-publish-policy.mjs'
       - 'scripts/validate-pages-contract.mjs'
       - 'scripts/validate-prompt-studio.mjs'
+      - 'scripts/validate-prompt-studio-ai.mjs'
       - 'scripts/validate-prompt-studio-production.mjs'
       - 'docs/PROMPT-STUDIO.md'
       - '.github/workflows/pages.yml'
@@ -26,6 +27,7 @@ on:
       - 'scripts/pages-publish-policy.mjs'
       - 'scripts/validate-pages-contract.mjs'
       - 'scripts/validate-prompt-studio.mjs'
+      - 'scripts/validate-prompt-studio-ai.mjs'
       - 'scripts/validate-prompt-studio-production.mjs'
       - '.github/workflows/pages.yml'
       - '.github/workflows/prompt-studio-ci.yml'
@@ -49,6 +51,8 @@ jobs:
         run: node scripts/validate-pages-contract.mjs
       - name: Validate Prompt Studio engine, imports, lint and patch safety
         run: node scripts/validate-prompt-studio.mjs
+      - name: Validate Prompt Studio local AI contract
+        run: node scripts/validate-prompt-studio-ai.mjs
       - name: Validate Prompt Studio production wiring and source bridge
         run: node scripts/validate-prompt-studio-production.mjs
       - name: Validate protected exact-100 browser contract
@@ -68,4 +72,5 @@ jobs:
           node --check scripts/pages-publish-policy.mjs
           node --check scripts/validate-pages-contract.mjs
           node --check scripts/validate-prompt-studio.mjs
+          node --check scripts/validate-prompt-studio-ai.mjs
           node --check scripts/validate-prompt-studio-production.mjs
