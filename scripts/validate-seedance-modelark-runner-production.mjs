@@ -4,8 +4,8 @@ import { CASE_INTELLIGENCE } from '../studio/case-intelligence-runtime.js';
 import { MULTI_SOURCE_CASES } from '../studio/multi-source-index.js';
 import { PROMPTS } from '../studio/library-data.js';
 
-const [engine,cli,jobSchema,resultSchema,packageJson,ci,sidebar,pages]=await Promise.all([
-  readFile('scripts/seedance-modelark-runner-engine.mjs','utf8'),readFile('scripts/seedance-modelark-runner.mjs','utf8'),readFile('schemas/prompt-studio-generation-job.schema.json','utf8'),readFile('schemas/prompt-studio-generation-result.schema.json','utf8'),readFile('package.json','utf8'),readFile('.github/workflows/seedance-modelark-runner-ci.yml','utf8'),readFile('studio/sidebar.js','utf8'),readFile('.github/workflows/pages.yml','utf8')
+const [engine,cli,jobSchema,resultSchema,packageJson,ci,sidebar,pages,gitignore]=await Promise.all([
+  readFile('scripts/seedance-modelark-runner-engine.mjs','utf8'),readFile('scripts/seedance-modelark-runner.mjs','utf8'),readFile('schemas/prompt-studio-generation-job.schema.json','utf8'),readFile('schemas/prompt-studio-generation-result.schema.json','utf8'),readFile('package.json','utf8'),readFile('.github/workflows/seedance-modelark-runner-ci.yml','utf8'),readFile('studio/sidebar.js','utf8'),readFile('.github/workflows/pages.yml','utf8'),readFile('.gitignore','utf8')
 ]);
 const failures=[];const assert=(condition,message)=>{if(!condition)failures.push(message);};
 const pkg=JSON.parse(packageJson),job=JSON.parse(jobSchema),result=JSON.parse(resultSchema);
@@ -13,8 +13,10 @@ assert(engine.includes("MODELARK_TASKS_ENDPOINT='https://ark.ap-southeast.bytepl
 assert(engine.includes("TERMINAL_TASK_STATUSES=Object.freeze(['succeeded','failed','cancelled','expired'])"),'Runner must model current terminal task statuses.');
 assert(engine.includes("apiKey=process.env.ARK_API_KEY")&&engine.includes("Authorization:`Bearer ${apiKey}`"),'Runner key must come from ARK_API_KEY environment and be used only for outbound auth.');
 assert(engine.includes("assertSecretValueAbsent(exportBundle,key,'export')")&&engine.includes('redactSecretStrings')&&engine.includes('[REDACTED]'),'Runner must reject key-bearing exports and redact echoed secret values.');
+assert(engine.includes('requestSafely')&&engine.includes("throw new SeedanceRunnerError('network-error'")&&engine.includes('redactText'),'Authenticated transport errors must be wrapped and secret-redacted.');
 assert(engine.includes("if(current.status==='running')throw")&&engine.includes("terminal-record-delete-refused")&&engine.includes("if(current.status!=='queued')throw"),'Cancel must be queued-only and refuse destructive terminal deletion.');
-assert(engine.includes("resolveRequester(requester)(url,{method:'GET'})")&&!engine.includes("resolveRequester(requester)(url,{method:'GET',headers:authHeaders"),'Generated media download must not forward provider authorization to output CDN.');
+assert(engine.includes('requestDownload(resolveRequester(requester),url)')&&engine.includes("return await request(url,{method:'GET'})")&&!engine.includes('requestDownload(request,url,apiKey'),'Generated media download must use an isolated unauthenticated transport boundary.');
+assert(engine.includes("if(status==='succeeded'&&!output.videoUrl)throw new SeedanceRunnerError('provider-output-missing'")&&engine.includes('succeeded-video-output-missing'),'Provider/manifest success must require a valid HTTPS video output.');
 assert(engine.includes('hashStableJson(exportBundle)')&&engine.includes('exportSummary:summarizeExport(exportBundle)'),'Job manifest must persist hash/summary instead of raw provider payload.');
 assert(cli.includes('There is intentionally no --api-key flag.')&&!cli.includes('options.api-key')&&!cli.includes('options.apiKey'),'CLI must not accept API keys as command-line arguments.');
 for(const command of ['submit','status','wait','cancel','download','run'])assert(cli.includes(`command==='${command}'`),`CLI must expose ${command} command.`);
@@ -34,5 +36,6 @@ assert(ci.includes('node: [20,22,24]')&&ci.includes('npm run validate:seedance-r
 assert(ci.includes('prompt-studio-seedance-adapter.js')&&ci.includes('prompt-studio-seedance-export.schema.json'),'Runner CI must rerun when upstream provider export protocol changes.');
 assert(!sidebar.includes('seedance-modelark-runner'),'Browser sidebar must never import server-side runner.');
 assert(!pages.includes('seedance-modelark-runner.mjs'),'GitHub Pages workflow must not execute or publish external provider runner.');
+assert(gitignore.includes('*.job.json')&&gitignore.includes('*.result.json'),'Operational job/result manifests must be ignored by Git by default.');
 const curated=[...CASE_INTELLIGENCE,...MULTI_SOURCE_CASES];assert(curated.length===100&&new Set(curated.map(item=>item.id)).size===100,`Runner work must preserve exact 100 curated cases; got ${curated.length}.`);assert(PROMPTS.length===192,`Runner work must preserve 192 Porter Originals; got ${PROMPTS.length}.`);
-if(failures.length){console.error('Seedance ModelArk runner production contract failed:\n'+failures.map(item=>`- ${item}`).join('\n'));process.exit(1);}console.log(JSON.stringify({ok:true,externalOnly:true,environmentKeyOnly:true,secretPersistence:false,queuedOnlyCancel:true,terminalDeleteRefused:true,resumablePolling:true,downloadAuthorization:false,jobSchemaClosed:true,resultSchemaClosed:true,lifecycleSchemaStrict:true,nodeMatrix:[20,22,24],curatedCases:curated.length,porterOriginals:PROMPTS.length},null,2));
+if(failures.length){console.error('Seedance ModelArk runner production contract failed:\n'+failures.map(item=>`- ${item}`).join('\n'));process.exit(1);}console.log(JSON.stringify({ok:true,externalOnly:true,environmentKeyOnly:true,secretPersistence:false,transportSecretRedaction:true,queuedOnlyCancel:true,terminalDeleteRefused:true,resumablePolling:true,downloadAuthorization:false,providerOutputRequired:true,jobSchemaClosed:true,resultSchemaClosed:true,lifecycleSchemaStrict:true,operationalArtifactsIgnored:true,nodeMatrix:[20,22,24],curatedCases:curated.length,porterOriginals:PROMPTS.length},null,2));
