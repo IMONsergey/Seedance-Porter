@@ -16,7 +16,7 @@ function bindBridge(){
     event.stopPropagation();
     window.porterPromptStudio?.openSource?.({kind:button.dataset.openPromptStudioKind,id:button.dataset.openPromptStudioId});
   },true);
-  window.addEventListener('porter-language-change',()=>requestAnimationFrame(()=>{updateLabels();decorate();}));
+  window.addEventListener('porter-language-change',()=>requestAnimationFrame(decorate));
   new MutationObserver(scheduleDecorate).observe(document.body,{childList:true,subtree:true});
 }
 
@@ -75,12 +75,16 @@ function makeButton(kind,id){
   button.className='open-prompt-studio-action';
   button.dataset.openPromptStudioKind=kind;
   button.dataset.openPromptStudioId=id;
-  button.textContent=label();
-  button.setAttribute('aria-label',label());
+  setButtonLabel(button);
   return button;
 }
 
 function updateLabels(){
-  document.querySelectorAll('.open-prompt-studio-action').forEach(button=>{button.textContent=label();button.setAttribute('aria-label',label());});
+  document.querySelectorAll('.open-prompt-studio-action').forEach(setButtonLabel);
+}
+function setButtonLabel(button){
+  const value=label();
+  if(button.textContent!==value)button.textContent=value;
+  if(button.getAttribute('aria-label')!==value)button.setAttribute('aria-label',value);
 }
 function label(){return getLanguage()==='ru'?'В Prompt Studio':'Open in Studio';}
