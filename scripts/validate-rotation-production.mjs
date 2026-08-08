@@ -2,6 +2,7 @@
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
+import { workflowPublishesStudioAsset, workflowRunsValidator, workflowTriggersForPath } from './pages-publish-policy.mjs';
 
 const failures=[];
 const assert=(condition,message)=>{if(!condition)failures.push(message);};
@@ -17,11 +18,12 @@ const [pages,sidebar,ui,engine,bootstrap,runtime,multi]=await Promise.all([
 ]);
 
 for(const asset of ['rotation.css','rotation-bootstrap.js','rotation-engine.js','rotation-ui.js']){
-  assert(pages.includes(`cp studio/${asset} _site/${asset}`),`Pages must publish ${asset}.`);
+  assert(workflowPublishesStudioAsset(pages,asset),`Pages must publish ${asset}.`);
 }
-assert(pages.includes('node scripts/validate-rotation-planner.mjs'),'Pages must run the Rotation Planner contract before deploy.');
-assert(pages.includes("'scripts/validate-rotation-planner.mjs'"),'Pages workflow path triggers must include Rotation validator changes.');
-assert(pages.includes("'scripts/build-rotation-plan.mjs'"),'Pages workflow path triggers must include Rotation CLI changes.');
+assert(workflowRunsValidator(pages,'validate-rotation-planner.mjs'),'Pages must run the Rotation Planner contract before deploy.');
+assert(workflowRunsValidator(pages,'validate-rotation-production.mjs'),'Pages must run the Rotation production contract before deploy.');
+assert(workflowTriggersForPath(pages,'scripts/validate-rotation-planner.mjs'),'Pages workflow path triggers must include Rotation validator changes.');
+assert(workflowTriggersForPath(pages,'scripts/build-rotation-plan.mjs'),'Pages workflow path triggers must include Rotation CLI changes.');
 assert(sidebar.includes("import './rotation-bootstrap.js';"),'Application shell must mount Rotation Planner.');
 assert(sidebar.indexOf("import './rotation-bootstrap.js';")>sidebar.indexOf("import './promotion-bootstrap.js';"),'Rotation Planner must mount after Promotion workspace.');
 assert(bootstrap.includes("link.href = './rotation.css'"),'Rotation bootstrap must load CSS.');
@@ -37,4 +39,4 @@ const curated=new Set([...runtime.CASE_INTELLIGENCE.map(item=>item.id),...multi.
 assert(curated.size===100,`Production Rotation Planner must compare against current exact-100 curated runtime; got ${curated.size}.`);
 
 if(failures.length){console.error('Rotation production contract failed:\n'+failures.map(item=>`- ${item}`).join('\n'));process.exit(1);}
-console.log(JSON.stringify({ok:true,curatedCases:curated.size,pagesAssets:4,pagesPredeployValidation:true,autoSwap:false,autoPublish:false},null,2));
+console.log(JSON.stringify({ok:true,curatedCases:curated.size,pagesAssets:4,publicationPolicy:'shared',pagesPredeployValidation:true,autoSwap:false,autoPublish:false},null,2));

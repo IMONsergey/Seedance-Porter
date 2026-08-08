@@ -6,6 +6,7 @@ const CORE_VIEW_IDS = {
 
 const CUSTOM_VIEW_IDS = {
   operations: 'operationsView',
+  'prompt-studio': 'promptStudioView',
   corpus: 'corpusView',
   'deep-review': 'deepReviewView',
   promotion: 'promotionView'
