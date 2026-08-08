@@ -48,8 +48,10 @@ export async function runSeedanceBatch(plan,job,options={}){
   const apiKey=requireApiKey(options.apiKey??process.env.ARK_API_KEY),requester=options.requester??globalThis.fetch,pollMs=options.pollMs??10000,timeoutMs=options.timeoutMs??60*60*1000,sleep=options.sleep,now=options.now??(()=>Date.now()),onState=options.onState??null;
   const planValidation=await validatePromptStudioBatchPlan(plan);if(!planValidation.ok)throw new SeedanceBatchError('invalid-batch-plan',`Batch plan is not executable: ${planValidation.errors.join(', ')}`);
   const jobValidation=validateSeedanceBatchJob(job,plan);if(!jobValidation.ok)throw new SeedanceBatchError('invalid-batch-job',`Batch job is invalid: ${jobValidation.errors.join(', ')}`);
-  let state=sanitizeBatchJob({...clone(job),localConcurrency:normalizeConcurrency(options.concurrency??job.localConcurrency),status:'running',updatedAt:iso(now())});await emit(onState,state);
-  const planMap=new Map(plan.items.map(item=>[item.itemId,item]));const actionable=state.items.filter(item=>!PROVIDER_TERMINAL.has(item.status)&&!REVIEW_STOP.has(item.status)).map(item=>item.itemId);let cursor=0;
+  const base=clone(job),localConcurrency=normalizeConcurrency(options.concurrency??job.localConcurrency),actionable=base.items.filter(item=>!PROVIDER_TERMINAL.has(item.status)&&!REVIEW_STOP.has(item.status)).map(item=>item.itemId);
+  if(!actionable.length){const settled=sanitizeBatchJob({...base,localConcurrency,status:aggregateBatchStatus(base.items),updatedAt:iso(now()),completedAt:isBatchComplete(base.items)?(base.completedAt||iso(now())):null});await emit(onState,settled);return settled;}
+  let state=sanitizeBatchJob({...base,localConcurrency,status:'running',updatedAt:iso(now()),completedAt:null});await emit(onState,state);
+  const planMap=new Map(plan.items.map(item=>[item.itemId,item]));let cursor=0;
   const worker=async()=>{while(true){const index=cursor++;if(index>=actionable.length)return;await processItem(actionable[index]);}};
   const persist=async()=>{state=sanitizeBatchJob({...state,status:aggregateBatchStatus(state.items),updatedAt:iso(now()),completedAt:isBatchComplete(state.items)?iso(now()):null});await emit(onState,state);};
   const update=(itemId,patch)=>{state={...state,items:state.items.map(item=>item.itemId===itemId?{...item,...clone(patch)}:item)};};
