@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-08T17:57:00+03:00",
+  "updatedAt": "2026-08-08T18:06:00+03:00",
   "repository": "IMONsergey/Seedance-Porter",
   "sourceOfTruth": "github",
   "main": {
@@ -10,7 +10,8 @@
   "active": {
     "phase": "prompt-studio-v8-variant-batch-generation",
     "branch": "feat/prompt-studio-v8-batch-generation",
-    "status": "in-development",
+    "pullRequest": 46,
+    "status": "draft-release-audit",
     "objective": "Connect Prompt Studio v4 Variants to safe integrity-bound external batch execution and return validated per-item results into v7 generation history."
   },
   "protectedInvariants": {
@@ -38,20 +39,28 @@
     "secure-modelark-single-task-runner",
     "prompt-studio-v7-generation-results-continuation"
   ],
+  "reconciledDuringV8": [
+    "mount prompt-studio-v7-bootstrap in production sidebar before v8 and command palette",
+    "preserve safe studioLink through public single-task Runner CLI job/result manifests",
+    "make v7 generation history monotonic and same-task export-hash conflict safe",
+    "add optional closed studioLink to single job/result schemas",
+    "restore v7 browser contracts to GitHub Pages release gate"
+  ],
   "v8ExitCriteria": [
     "selected variants deterministically build independent provider exports",
-    "batch plan is SHA-256 integrity-bound",
+    "batch plan is SHA-256 integrity-bound and semantic project lineage is cross-checked",
     "browser performs zero provider execution requests",
     "external runner uses environment-only ARK_API_KEY",
     "local concurrency is bounded but not represented as official provider quota",
     "ambiguous POST submission becomes submission-uncertain and is not auto-retried",
     "known task IDs resume without another POST",
-    "batch job persists after state transitions",
-    "terminal batch result validates every item",
-    "successful item results can be explicitly saved into v7 generation history",
+    "every persisted batch job snapshot remains protocol-valid and resumable",
+    "terminal batch result validates every item and canonical project lineage",
+    "successful item results can be explicitly saved into v7 generation history with generationBatchLinks",
     "exact-100 curated and 192 Originals remain unchanged",
     "Node 20/22/24 and Pages production contracts pass",
-    "project context and roadmap are updated before merge"
+    "project context and roadmap are updated before merge",
+    "final PR contains no temporary migration or compatibility scaffolding"
   ],
   "next": [
     {
