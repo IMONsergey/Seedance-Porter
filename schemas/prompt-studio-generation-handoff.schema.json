@@ -7,7 +7,7 @@
     "schemaVersion":{"const":1},
     "kind":{"const":"seedance-porter-generation-handoff"},
     "createdAt":{"type":"string","format":"date-time"},
-    "project":{"type":"object","required":["id","title","mode","aspect","duration","modelProfile"]},
+    "project":{"type":"object","required":["id","updatedAt","title","mode","aspect","duration","modelProfile"],"properties":{"id":{"type":"string","minLength":1},"updatedAt":{"type":"string","format":"date-time"},"title":{"type":"string"},"mode":{"type":"string"},"aspect":{"type":"string"},"duration":{"type":"number"},"modelProfile":{"type":"string"}}},
     "source":{"type":["object","null"]},
     "compiledPrompt":{"type":"string","minLength":1},
     "references":{"type":"array","items":{"type":"object","required":["token","name","mediaType","role","locked","availability","uri","localAssetKey","nonPortable"],"properties":{"token":{"type":"string","pattern":"^@ref[0-9]{2,}$"},"availability":{"enum":["url","local-browser","missing"]},"nonPortable":{"type":"boolean"}}}},
