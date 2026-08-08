@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Seedance Porter Prompt Studio Production Tools Extensions",
+  "type": "object",
+  "properties": {
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "key", "value", "description", "updatedAt"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "key": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$" },
+          "value": { "type": "string" },
+          "description": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        }
+      }
+    },
+    "ingredients": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "type", "defaultSection", "template", "tags", "createdAt", "updatedAt"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "type": { "enum": ["subject", "environment", "composition", "camera", "action", "lighting", "material", "style", "continuity", "constraint", "avoid", "other"] },
+          "defaultSection": { "type": "string", "minLength": 1 },
+          "template": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        }
+      }
+    },
+    "timeline": {
+      "type": "object",
+      "required": ["schemaVersion", "beats", "updatedAt", "lastSyncedAt", "lastSyncedHash"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "beats": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "type": "object",
+            "required": ["id", "index", "label", "shotType", "duration", "purpose", "camera", "action", "referenceTokens", "notes", "enabled"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "index": { "type": "integer", "minimum": 0 },
+              "label": { "type": "string" },
+              "shotType": { "enum": ["establishing", "wide", "medium", "close-up", "macro", "overhead", "pov", "tracking", "packshot", "interface", "transition", "custom"] },
+              "duration": { "type": "number", "exclusiveMinimum": 0, "maximum": 30 },
+              "purpose": { "type": "string" },
+              "camera": { "type": "string" },
+              "action": { "type": "string" },
+              "referenceTokens": { "type": "array", "items": { "type": "string", "pattern": "^@ref[0-9]{2,}$" } },
+              "notes": { "type": "string" },
+              "enabled": { "type": "boolean" }
+            }
+          }
+        },
+        "updatedAt": { "type": "string" },
+        "lastSyncedAt": { "type": "string" },
+        "lastSyncedHash": { "type": "string" }
+      }
+    }
+  }
+}
