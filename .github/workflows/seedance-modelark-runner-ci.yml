@@ -1,0 +1,60 @@
+name: Seedance ModelArk Runner CI
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/seedance-modelark-runner*.mjs'
+      - 'scripts/validate-seedance-modelark-runner*.mjs'
+      - 'schemas/prompt-studio-generation-job.schema.json'
+      - 'schemas/prompt-studio-generation-result.schema.json'
+      - 'schemas/prompt-studio-seedance-export.schema.json'
+      - 'studio/prompt-studio-seedance-adapter.js'
+      - 'package.json'
+      - 'docs/SEEDANCE-MODELARK-RUNNER.md'
+      - '.github/workflows/seedance-modelark-runner-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/seedance-modelark-runner*.mjs'
+      - 'scripts/validate-seedance-modelark-runner*.mjs'
+      - 'schemas/prompt-studio-generation-job.schema.json'
+      - 'schemas/prompt-studio-generation-result.schema.json'
+      - 'schemas/prompt-studio-seedance-export.schema.json'
+      - 'studio/prompt-studio-seedance-adapter.js'
+      - 'package.json'
+      - 'docs/SEEDANCE-MODELARK-RUNNER.md'
+      - '.github/workflows/seedance-modelark-runner-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  runner:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20,22,24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate Prompt Studio v6 provider baseline
+        run: node scripts/validate-prompt-studio-v6-audio.mjs
+      - name: Validate external runner behavior
+        run: npm run validate:seedance-runner
+      - name: Validate external runner production boundary
+        run: node scripts/validate-seedance-modelark-runner-production.mjs
+      - name: Validate protected exact-100 renderer
+        run: npm run validate:render
+      - name: Parse runner schemas
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('schemas/prompt-studio-generation-job.schema.json','utf8')); JSON.parse(require('fs').readFileSync('schemas/prompt-studio-generation-result.schema.json','utf8'));"
+      - name: Syntax-check runner surface
+        run: |
+          node --check scripts/seedance-modelark-runner-engine.mjs
+          node --check scripts/seedance-modelark-runner.mjs
+          node --check scripts/validate-seedance-modelark-runner.mjs
+          node --check scripts/validate-seedance-modelark-runner-production.mjs
