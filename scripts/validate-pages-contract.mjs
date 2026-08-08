@@ -14,15 +14,12 @@ const html = await readFile('studio/library.html', 'utf8');
 const failures = [];
 const fail = message => failures.push(message);
 
-if (!workflowUsesBulkStudioPublication(workflow)) {
-  fail('Pages workflow must bulk-publish top-level Studio JS and CSS assets.');
-}
+if (!workflowUsesBulkStudioPublication(workflow)) fail('Pages workflow must bulk-publish top-level Studio JS and CSS assets.');
 
 const htmlAssets = [
   ...[...html.matchAll(/href=["']\/([^"']+\.css)["']/g)].map(match => match[1]),
   ...[...html.matchAll(/src=["']\/([^"']+\.js)["']/g)].map(match => match[1])
 ];
-
 for (const asset of htmlAssets) {
   if (!workflowPublishesStudioAsset(workflow, asset)) fail(`Pages workflow does not publish root HTML asset: ${asset}`);
   const absolute = asset.endsWith('.css') ? `href="/${asset}"` : `src="/${asset}"`;
@@ -32,33 +29,22 @@ for (const asset of htmlAssets) {
 
 const roots = ['library.js', 'sidebar.js', 'case-ui.js'];
 const visited = new Set();
-
 async function visit(modulePath, parent = null) {
   const clean = normalize(modulePath).replace(/\\/g, '/').replace(/^\.\//, '');
   if (visited.has(clean)) return;
   visited.add(clean);
-  if (!workflowPublishesStudioAsset(workflow, clean)) {
-    fail(`Pages workflow does not publish browser module${parent ? ` imported by ${parent}` : ''}: ${clean}`);
-  }
-
+  if (!workflowPublishesStudioAsset(workflow, clean)) fail(`Pages workflow does not publish browser module${parent ? ` imported by ${parent}` : ''}: ${clean}`);
   let source;
-  try {
-    source = await readFile(join('studio', clean), 'utf8');
-  } catch {
-    fail(`Browser module is referenced but missing from studio/: ${clean}`);
-    return;
-  }
-
+  try { source = await readFile(join('studio', clean), 'utf8'); }
+  catch { fail(`Browser module is referenced but missing from studio/: ${clean}`); return; }
   const staticImports = [...source.matchAll(/(?:import\s+(?:[^'";]*?\s+from\s+)?|export\s+[^'";]*?\s+from\s+)["'](\.\.?\/[^"']+)["']/g)].map(match => match[1]);
   const sideEffectImports = [...source.matchAll(/import\s*["'](\.\.?\/[^"']+)["']/g)].map(match => match[1]);
   const dynamicImports = [...source.matchAll(/import\(\s*["'](\.\.?\/[^"']+)["']\s*\)/g)].map(match => match[1]);
-
   for (const specifier of [...new Set([...staticImports, ...sideEffectImports, ...dynamicImports])]) {
     const resolved = posix.normalize(posix.join(posix.dirname(clean), specifier));
     if (resolved.endsWith('.js')) await visit(resolved, clean);
   }
 }
-
 for (const root of roots) await visit(root);
 
 const criticalAssets = [
@@ -71,6 +57,8 @@ const criticalAssets = [
   'prompt-studio-v4.css','prompt-studio-v4-bootstrap.js','prompt-studio-v4-ui.js','prompt-studio-v4-workflow-guard.js','prompt-studio-storyboard.js','prompt-studio-variants.js','prompt-studio-generation-handoff.js',
   'prompt-studio-v5.css','prompt-studio-v5-bootstrap.js','prompt-studio-v5-ui.js','prompt-studio-v5-workflow-guard.js','prompt-studio-repair.js','prompt-studio-blueprints.js','prompt-studio-seedance-adapter.js',
   'prompt-studio-v6.css','prompt-studio-v6-bootstrap.js','prompt-studio-v6-audio-ui.js',
+  'prompt-studio-v7.css','prompt-studio-v7-bootstrap.js','prompt-studio-v7-results-ui.js','prompt-studio-generation-results.js',
+  'prompt-studio-v8.css','prompt-studio-v8-bootstrap.js','prompt-studio-v8-batch-ui.js','prompt-studio-generation-batch.js',
   'command-palette.css','command-palette-bootstrap.js','command-palette-engine.js','command-palette-ui.js',
   'workspace-bundle.css','workspace-bundle-bootstrap.js','workspace-bundle-engine.js','workspace-bundle-ui.js',
   'case-corpus-ui.js','case-corpus.css',
@@ -82,7 +70,6 @@ const criticalAssets = [
   'source-health-bootstrap.js','source-health-ui.js','source-health.css',
   'unified-curated-ui.js','multi-source-index.js'
 ];
-
 for (const asset of criticalAssets) {
   try { await access(join('studio', asset)); }
   catch { fail(`Critical Studio asset is missing from source tree: ${asset}`); continue; }
@@ -93,62 +80,25 @@ if (!workflow.includes('npm run case:refresh')) fail('Pages build must attempt t
 if (!workflow.includes('continue-on-error: true')) fail('External research generation must not take the curated live site down when an upstream source is unavailable.');
 if (!workflowPublishesResearchSnapshots(workflow)) fail('Pages workflow must publish candidates, strategic queue, coverage plan and source-health snapshots when generated.');
 if (!workflow.includes('npm run validate:render')) fail('Pages build must run the protected exact-100 browser renderer before deploy.');
+if (workflow.includes('npm run validate:seedance-batch') || workflow.includes('seedance-modelark-batch.mjs')) fail('Pages must never execute the external paid ModelArk Batch Runner.');
 
 const validators = [
-  'validate-deep-review-workspace.mjs',
-  'validate-review-player.mjs',
-  'validate-promotion-workspace.mjs',
-  'validate-coverage-planner.mjs',
-  'validate-source-adapters.mjs',
-  'validate-operations-command-center.mjs',
-  'validate-operations-production.mjs',
-  'validate-command-palette.mjs',
-  'validate-command-palette-production.mjs',
-  'validate-workspace-bundles.mjs',
-  'validate-workspace-bundles-production.mjs',
-  'validate-rotation-planner.mjs',
-  'validate-rotation-production.mjs',
-  'validate-prompt-studio.mjs',
-  'validate-prompt-studio-production.mjs',
-  'validate-prompt-studio-v2-rule-packs.mjs',
-  'validate-prompt-studio-v2-production.mjs',
-  'validate-prompt-studio-production-tools.mjs',
-  'validate-prompt-studio-ingredient-library.mjs',
-  'validate-prompt-studio-v3-persistence.mjs',
-  'validate-prompt-studio-v3-production.mjs',
-  'validate-prompt-studio-v4-engines.mjs',
-  'validate-prompt-studio-v4-workflow-guard.mjs',
-  'validate-prompt-studio-v4-production.mjs',
-  'validate-prompt-studio-v5-engines.mjs',
-  'validate-prompt-studio-v5-workflow-guard.mjs',
-  'validate-prompt-studio-v5-production.mjs',
-  'validate-prompt-studio-v6-audio.mjs',
-  'validate-prompt-studio-v6-audio-ui.mjs',
-  'validate-prompt-studio-v6-production.mjs'
+  'validate-deep-review-workspace.mjs','validate-review-player.mjs','validate-promotion-workspace.mjs','validate-coverage-planner.mjs','validate-source-adapters.mjs',
+  'validate-operations-command-center.mjs','validate-operations-production.mjs','validate-command-palette.mjs','validate-command-palette-production.mjs',
+  'validate-workspace-bundles.mjs','validate-workspace-bundles-production.mjs','validate-rotation-planner.mjs','validate-rotation-production.mjs',
+  'validate-prompt-studio.mjs','validate-prompt-studio-production.mjs','validate-prompt-studio-v2-rule-packs.mjs','validate-prompt-studio-v2-production.mjs',
+  'validate-prompt-studio-production-tools.mjs','validate-prompt-studio-ingredient-library.mjs','validate-prompt-studio-v3-persistence.mjs','validate-prompt-studio-v3-production.mjs',
+  'validate-prompt-studio-v4-engines.mjs','validate-prompt-studio-v4-workflow-guard.mjs','validate-prompt-studio-v4-production.mjs',
+  'validate-prompt-studio-v5-engines.mjs','validate-prompt-studio-v5-workflow-guard.mjs','validate-prompt-studio-v5-production.mjs',
+  'validate-prompt-studio-v6-audio.mjs','validate-prompt-studio-v6-audio-ui.mjs','validate-prompt-studio-v6-production.mjs',
+  'validate-prompt-studio-v7-generation-results.mjs','validate-prompt-studio-v7-ui.mjs','validate-prompt-studio-v7-production.mjs',
+  'validate-prompt-studio-v8-batch.mjs','validate-prompt-studio-v8-ui.mjs','validate-prompt-studio-v8-production.mjs'
 ];
-for (const validator of validators) {
-  if (!workflowRunsValidator(workflow, validator)) fail(`Pages build must run ${validator} before deployment.`);
-}
+for (const validator of validators) if (!workflowRunsValidator(workflow, validator)) fail(`Pages build must run ${validator} before deployment.`);
 
-for (const builtAsset of ['sidebar.js','prompt-studio-ui.js','prompt-studio.css','prompt-studio-rule-packs-bootstrap.js','prompt-studio-production-tools-bootstrap.js','prompt-studio-v4-bootstrap.js','prompt-studio-v4.css','prompt-studio-v5-bootstrap.js','prompt-studio-v5.css','prompt-studio-v6-bootstrap.js','prompt-studio-v6.css']) {
+for (const builtAsset of ['sidebar.js','prompt-studio-ui.js','prompt-studio.css','prompt-studio-rule-packs-bootstrap.js','prompt-studio-production-tools-bootstrap.js','prompt-studio-v4-bootstrap.js','prompt-studio-v4.css','prompt-studio-v5-bootstrap.js','prompt-studio-v5.css','prompt-studio-v6-bootstrap.js','prompt-studio-v6.css','prompt-studio-v7-bootstrap.js','prompt-studio-v7.css','prompt-studio-v8-bootstrap.js','prompt-studio-v8.css']) {
   if (!workflow.includes(`test -f _site/${builtAsset}`)) fail(`Pages preparation must assert built artifact exists: ${builtAsset}`);
 }
 
-if (failures.length) {
-  console.error('GitHub Pages production contract failed:\n' + failures.map(item => `- ${item}`).join('\n'));
-  process.exit(1);
-}
-
-console.log(JSON.stringify({
-  ok:true,
-  publicationMode:'bulk top-level Studio JS/CSS',
-  browserModulesInGraph:visited.size,
-  criticalAssets:criticalAssets.length,
-  htmlAssets,
-  validators:validators.length,
-  researchSnapshotBuild:'best-effort',
-  machineReadableSnapshots:['case-candidates.json','case-review-queue.json','coverage-plan.json','source-health.json'],
-  exact100Render:'predeploy-required',
-  promptStudio:'v1+v2+v3+v4+v5+v6 production-critical + staged-workflow-guarded + multimodal-provider-export-only',
-  curatedSiteFailureMode:'deploy remains available if external research generation fails'
-},null,2));
+if (failures.length) { console.error('GitHub Pages production contract failed:\n' + failures.map(item => `- ${item}`).join('\n')); process.exit(1); }
+console.log(JSON.stringify({ok:true,publicationMode:'bulk top-level Studio JS/CSS',browserModulesInGraph:visited.size,criticalAssets:criticalAssets.length,htmlAssets,validators:validators.length,researchSnapshotBuild:'best-effort',machineReadableSnapshots:['case-candidates.json','case-review-queue.json','coverage-plan.json','source-health.json'],exact100Render:'predeploy-required',promptStudio:'v1+v2+v3+v4+v5+v6+v7+v8 production-critical',externalBatchRunner:'server-only; never executed by Pages',curatedSiteFailureMode:'deploy remains available if external research generation fails'},null,2));
