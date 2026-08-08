@@ -389,12 +389,17 @@ export function applyPromptStudioPatch(project, patch, options = {}) {
   const validation = validatePromptStudioPatch(project, patch);
   if (!validation.ok) throw new Error(validation.errors.join(' '));
   const next = normalizeProject(project);
-  for (const change of validation.patch.changes) setSectionContent(next.sections, change.sectionId, change.content);
+  const auditChanges = validation.patch.changes.map(change => ({
+    ...change,
+    before:sectionValue(next, change.sectionId),
+    after:String(change.content || '')
+  }));
+  for (const change of auditChanges) setSectionContent(next.sections, change.sectionId, change.after);
   next.lastPatch = {
     appliedAt:new Date(options.now || Date.now()).toISOString(),
-    backend:String(options.backend || 'manual'),
+    backend:String(options.backend || options.source || 'manual'),
     summary:validation.patch.summary,
-    changes:validation.patch.changes,
+    changes:auditChanges,
     warnings:validation.patch.warnings
   };
   return refreshCompiled(next, next.lastPatch.appliedAt);
@@ -485,7 +490,7 @@ export function inferReferencesFromPrompt(rawPrompt, roleHints = []) {
       locked:/exact|preserve|lock|identity|geometry|first frame|last frame/i.test(context),
       uri:'',
       localAssetKey:'',
-      notes:`Imported from ${match[0]}`,
+      notes:`Imported legacy ${match[1]} ${legacyNumber} reference`,
       enabled:true,
       legacyNumber
     });
