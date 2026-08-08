@@ -7,6 +7,17 @@ if (!existing) {
   document.head.appendChild(link);
 }
 
+// `scrollIntoView` is optional in limited DOM/embedded environments (including
+// our JSDOM production smoke test). Palette navigation must keep working even
+// when animated scrolling is unavailable.
+if (typeof Element !== 'undefined' && typeof Element.prototype.scrollIntoView !== 'function') {
+  Object.defineProperty(Element.prototype, 'scrollIntoView', {
+    configurable:true,
+    writable:true,
+    value() {}
+  });
+}
+
 await import('./command-palette-ui.js');
 
 document.addEventListener('click', event => {
