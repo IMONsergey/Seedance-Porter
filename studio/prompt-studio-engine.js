@@ -378,55 +378,54 @@ export function validatePromptStudioPatch(project, patch) {
   for (const change of value.changes || []) {
     const sectionId = String(change?.sectionId || '');
     if (!SECTION_IDS.has(sectionId)) { errors.push(`Unknown sectionId: ${sectionId || '(empty)'}.`); continue; }
-    if (seen.has(sectionId)) { errors.push(`Duplicate section change: ${sectionId}.`); continue; }
+    if (seen.has(sectionId)) { errors.push(`Duplicate section patch: ${sectionId}.`); continue; }
     seen.add(sectionId);
-    const content = String(change?.content ?? '');
-    if (content.length > 12000) errors.push(`Section ${sectionId} exceeds the 12,000-character patch limit.`);
-    changes.push({ sectionId, content, reason:String(change?.reason || '').trim() });
+    changes.push({ sectionId, content:String(change?.content || ''), reason:String(change?.reason || '') });
   }
-  return {
-    ok:errors.length === 0,
-    errors,
-    patch:{ summary:String(value.summary || '').trim(), changes, warnings:uniqueStrings(value.warnings || []) }
-  };
+  return { ok:errors.length===0, errors, patch:{ summary:String(value.summary || ''), changes, warnings:uniqueStrings(value.warnings || []) } };
 }
 
 export function applyPromptStudioPatch(project, patch, options = {}) {
   const validation = validatePromptStudioPatch(project, patch);
-  if (!validation.ok) throw new Error(`Invalid Prompt Studio patch: ${validation.errors.join('; ')}`);
+  if (!validation.ok) throw new Error(validation.errors.join(' '));
   const next = normalizeProject(project);
-  const before = Object.fromEntries(next.sections.map(section => [section.id, section.content]));
-  for (const change of validation.patch.changes) setSectionContent(next.sections, change.sectionId, change.content);
-  next.updatedAt = new Date(options.now || Date.now()).toISOString();
+  const auditChanges = validation.patch.changes.map(change => ({
+    ...change,
+    before:sectionValue(next, change.sectionId),
+    after:String(change.content || '')
+  }));
+  for (const change of auditChanges) setSectionContent(next.sections, change.sectionId, change.after);
   next.lastPatch = {
-    appliedAt:next.updatedAt,
-    source:String(options.source || 'manual-patch'),
+    appliedAt:new Date(options.now || Date.now()).toISOString(),
+    backend:String(options.backend || options.source || 'manual'),
     summary:validation.patch.summary,
-    changes:validation.patch.changes.map(change => ({ ...change, before:before[change.sectionId] || '' })),
+    changes:auditChanges,
     warnings:validation.patch.warnings
   };
-  return refreshCompiled(next, next.updatedAt);
+  return refreshCompiled(next, next.lastPatch.appliedAt);
 }
 
-export function buildDeterministicStudioPatch(project, preset) {
+export function buildDeterministicStudioPatch(project, preset = 'tighten') {
   const p = normalizeProject(project);
-  const id = String(preset || 'tighten');
   const changes = [];
   const change = (sectionId, content, reason) => {
-    if (String(content || '').trim() === sectionValue(p, sectionId).trim()) return;
-    changes.push({ sectionId, content:String(content || '').trim(), reason });
+    const current = sectionValue(p, sectionId).trim();
+    const next = String(content || '').trim();
+    if (!next || next === current) return;
+    changes.push({ sectionId, content:next, reason });
   };
 
+  const id = String(preset || '').toLowerCase();
   if (id === 'tighten' || id === 'shorten') {
     for (const section of p.sections) {
-      if (!section.content.trim()) continue;
+      if (!section.enabled || !section.content.trim()) continue;
       const tightened = tightenText(section.content, id === 'shorten' ? 2 : 5);
-      change(section.id, tightened, id === 'shorten' ? 'Reduce prose while preserving the production instruction.' : 'Remove repetition and generic filler while keeping observable controls.');
+      change(section.id, tightened, id === 'shorten' ? 'Reduce verbosity while preserving the production instruction.' : 'Remove repetition and low-information adjectives.');
     }
   } else if (id === 'continuity') {
-    const identityRefs = p.references.filter(ref => ref.enabled !== false && ['identity','geometry','first-frame','last-frame'].includes(ref.role));
-    const refText = identityRefs.length ? ` Preserve ${identityRefs.map(ref => `${ref.token} ${ref.role}`).join(', ')} across every beat unless an explicit transformation is requested.` : '';
-    change('continuity', joinNonDuplicate(sectionValue(p,'continuity'), `Keep subject identity, geometry, scale, material response, spatial relationships and lighting direction stable across the full clip.${refText}`), 'Strengthen continuity and exact-reference locks.');
+    const refs = p.references.filter(ref => ref.enabled !== false && ['identity','geometry','first-frame','last-frame'].includes(ref.role));
+    const lock = refs.length ? ` Lock ${refs.map(ref => `${ref.token} ${ref.role}`).join(', ')} across the complete clip.` : '';
+    change('continuity', joinNonDuplicate(sectionValue(p,'continuity'), `Preserve identity, geometry, material response, lighting direction and spatial relationships across every beat.${lock}`), 'Make cross-shot continuity explicit.');
   } else if (id === 'reference-locks') {
     const lockLines = p.references.filter(ref => ref.enabled !== false).map(ref => `${ref.token}: ${referenceJob(ref)}`);
     if (lockLines.length) {
@@ -491,7 +490,7 @@ export function inferReferencesFromPrompt(rawPrompt, roleHints = []) {
       locked:/exact|preserve|lock|identity|geometry|first frame|last frame/i.test(context),
       uri:'',
       localAssetKey:'',
-      notes:`Imported from ${match[0]}`,
+      notes:`Imported legacy ${match[1]} ${legacyNumber} reference`,
       enabled:true,
       legacyNumber
     });
@@ -501,7 +500,11 @@ export function inferReferencesFromPrompt(rawPrompt, roleHints = []) {
     if (refs.some(ref => ref.token.toLowerCase() === token)) continue;
     refs.push({ id:`ref-${randomId()}`, token, name:token, mediaType:'unknown', role:'other', locked:false, uri:'', localAssetKey:'', notes:'Imported Studio reference token', enabled:true });
   }
-  return normalizeReferences(refs);
+  const normalized=normalizeReferences(refs);
+  return normalized.map((ref,index)=>{
+    const original=refs[index];
+    return original?.legacyNumber ? {...ref,legacyNumber:original.legacyNumber} : ref;
+  });
 }
 
 export function normalizeMode(value) {

@@ -1,0 +1,97 @@
+name: Prompt Studio v3 Production Tools CI
+
+on:
+  pull_request:
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/source-universe.js'
+      - 'studio/sidebar.js'
+      - 'schemas/prompt-studio-production-tools.schema.json'
+      - 'scripts/validate-prompt-studio.mjs'
+      - 'scripts/validate-prompt-studio-regressions.mjs'
+      - 'scripts/validate-prompt-studio-v3-engine-audit.mjs'
+      - 'scripts/validate-prompt-studio-production-tools.mjs'
+      - 'scripts/validate-prompt-studio-ingredient-library.mjs'
+      - 'scripts/validate-prompt-studio-v3-persistence.mjs'
+      - 'scripts/validate-prompt-studio-v3-production.mjs'
+      - 'scripts/validate-command-palette-production.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v3-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/source-universe.js'
+      - 'studio/sidebar.js'
+      - 'schemas/prompt-studio-production-tools.schema.json'
+      - 'scripts/validate-prompt-studio.mjs'
+      - 'scripts/validate-prompt-studio-regressions.mjs'
+      - 'scripts/validate-prompt-studio-v3-engine-audit.mjs'
+      - 'scripts/validate-prompt-studio-production-tools.mjs'
+      - 'scripts/validate-prompt-studio-ingredient-library.mjs'
+      - 'scripts/validate-prompt-studio-v3-persistence.mjs'
+      - 'scripts/validate-prompt-studio-v3-production.mjs'
+      - 'scripts/validate-command-palette-production.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v3-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  production-tools:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20,22,24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate Prompt Studio v1 baseline
+        run: node scripts/validate-prompt-studio.mjs
+      - name: Validate Prompt Studio regression suite
+        run: node scripts/validate-prompt-studio-regressions.mjs
+      - name: Validate Prompt Studio engine audit regression
+        run: node scripts/validate-prompt-studio-v3-engine-audit.mjs
+      - name: Validate Prompt Studio v2 Rule Pack baseline
+        run: node scripts/validate-prompt-studio-v2-rule-packs.mjs
+      - name: Validate Variables Ingredients and Timeline engines
+        run: node scripts/validate-prompt-studio-production-tools.mjs
+      - name: Validate Shared Ingredient Library storage behavior
+        run: node scripts/validate-prompt-studio-ingredient-library.mjs
+      - name: Validate Prompt Studio v3 extension persistence
+        run: node scripts/validate-prompt-studio-v3-persistence.mjs
+      - name: Validate Production Tools wiring and staged mutation boundary
+        run: node scripts/validate-prompt-studio-v3-production.mjs
+      - name: Validate Source Universe / Command Palette runtime contract
+        run: node scripts/validate-command-palette-production.mjs
+      - name: Validate generalized Pages/module graph
+        run: node scripts/validate-pages-contract.mjs
+      - name: Validate protected exact-100 renderer
+        run: npm run validate:render
+      - name: Syntax-check v3 modules
+        run: |
+          node --check studio/prompt-studio-engine.js
+          node --check studio/prompt-studio-store.js
+          node --check studio/prompt-studio-ingredients.js
+          node --check studio/prompt-studio-timeline.js
+          node --check studio/prompt-studio-ingredient-library.js
+          node --check studio/prompt-studio-production-tools.js
+          node --check studio/prompt-studio-variable-key-guard.js
+          node --check studio/prompt-studio-production-tools-bootstrap.js
+          node --check studio/source-universe.js
+          node --check scripts/validate-prompt-studio-regressions.mjs
+          node --check scripts/validate-prompt-studio-v3-engine-audit.mjs
+          node --check scripts/validate-prompt-studio-production-tools.mjs
+          node --check scripts/validate-prompt-studio-ingredient-library.mjs
+          node --check scripts/validate-prompt-studio-v3-persistence.mjs
+          node --check scripts/validate-prompt-studio-v3-production.mjs
+          node --check scripts/validate-command-palette-production.mjs

@@ -88,6 +88,24 @@ jobs:
       - name: Validate Prompt Studio production wiring
         run: node scripts/validate-prompt-studio-production.mjs
 
+      - name: Validate Prompt Studio v2 Rule Packs
+        run: node scripts/validate-prompt-studio-v2-rule-packs.mjs
+
+      - name: Validate Prompt Studio v2 production wiring
+        run: node scripts/validate-prompt-studio-v2-production.mjs
+
+      - name: Validate Prompt Studio v3 Variables Ingredients and Timeline
+        run: node scripts/validate-prompt-studio-production-tools.mjs
+
+      - name: Validate Prompt Studio v3 Shared Ingredient Library
+        run: node scripts/validate-prompt-studio-ingredient-library.mjs
+
+      - name: Validate Prompt Studio v3 extension persistence
+        run: node scripts/validate-prompt-studio-v3-persistence.mjs
+
+      - name: Validate Prompt Studio v3 production wiring
+        run: node scripts/validate-prompt-studio-v3-production.mjs
+
       - name: Validate protected exact-100 browser render
         run: npm run validate:render
 
@@ -132,6 +150,8 @@ jobs:
           test -f _site/sidebar.js
           test -f _site/prompt-studio-ui.js
           test -f _site/prompt-studio.css
+          test -f _site/prompt-studio-rule-packs-bootstrap.js
+          test -f _site/prompt-studio-production-tools-bootstrap.js
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

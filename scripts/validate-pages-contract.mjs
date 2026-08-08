@@ -66,6 +66,8 @@ const criticalAssets = [
   'operations.css','operations-bootstrap.js','operations-engine.js','operations-ui.js',
   'prompt-studio.css','prompt-studio-bridge.css','prompt-studio-preview.css',
   'prompt-studio-bootstrap.js','prompt-studio-engine.js','prompt-studio-store.js','prompt-studio-assets.js','prompt-studio-asset-lifecycle.js','prompt-studio-ai.js','prompt-studio-source-catalog.js','prompt-studio-source-bridge.js','prompt-studio-reference-preview.js','prompt-studio-ui.js',
+  'prompt-studio-rule-packs.css','prompt-studio-rule-packs-bootstrap.js','prompt-studio-profiles.js','prompt-studio-profile-panel.js',
+  'prompt-studio-production-tools.css','prompt-studio-production-tools-bootstrap.js','prompt-studio-production-tools.js','prompt-studio-variable-key-guard.js','prompt-studio-ingredients.js','prompt-studio-timeline.js','prompt-studio-ingredient-library.js',
   'command-palette.css','command-palette-bootstrap.js','command-palette-engine.js','command-palette-ui.js',
   'workspace-bundle.css','workspace-bundle-bootstrap.js','workspace-bundle-engine.js','workspace-bundle-ui.js',
   'case-corpus-ui.js','case-corpus.css',
@@ -104,14 +106,20 @@ const validators = [
   'validate-rotation-planner.mjs',
   'validate-rotation-production.mjs',
   'validate-prompt-studio.mjs',
-  'validate-prompt-studio-production.mjs'
+  'validate-prompt-studio-production.mjs',
+  'validate-prompt-studio-v2-rule-packs.mjs',
+  'validate-prompt-studio-v2-production.mjs',
+  'validate-prompt-studio-production-tools.mjs',
+  'validate-prompt-studio-ingredient-library.mjs',
+  'validate-prompt-studio-v3-persistence.mjs',
+  'validate-prompt-studio-v3-production.mjs'
 ];
 for (const validator of validators) {
   if (!workflowRunsValidator(workflow, validator)) fail(`Pages build must run ${validator} before deployment.`);
 }
 
-if (!workflow.includes('test -f _site/sidebar.js') || !workflow.includes('test -f _site/prompt-studio-ui.js')) {
-  fail('Pages preparation must assert critical built artifact files exist before upload.');
+for (const builtAsset of ['sidebar.js','prompt-studio-ui.js','prompt-studio.css','prompt-studio-rule-packs-bootstrap.js','prompt-studio-production-tools-bootstrap.js']) {
+  if (!workflow.includes(`test -f _site/${builtAsset}`)) fail(`Pages preparation must assert built artifact exists: ${builtAsset}`);
 }
 
 if (failures.length) {
@@ -129,6 +137,6 @@ console.log(JSON.stringify({
   researchSnapshotBuild:'best-effort',
   machineReadableSnapshots:['case-candidates.json','case-review-queue.json','coverage-plan.json','source-health.json'],
   exact100Render:'predeploy-required',
-  promptStudio:'production-critical',
+  promptStudio:'v1+v2+v3 production-critical + extension-persistence-safe',
   curatedSiteFailureMode:'deploy remains available if external research generation fails'
 },null,2));

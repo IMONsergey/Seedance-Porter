@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { INDUSTRY_DIGEST } from '../studio/digest-data.js';
 import { getCaseLocale } from '../studio/case-locales.js';
+import { workflowPublishesStudioAsset } from './pages-publish-policy.mjs';
 
 const fail = (message) => {
   console.error(`experience validation failed: ${message}`);
@@ -21,7 +22,7 @@ for (const required of ['ru:', 'en:', "'nav.digest'", "'media.play'", "'case.use
 if (!files.sidebar.includes("import './experience.js'")) fail('sidebar does not bootstrap experience.js');
 if (!files.sidebar.includes("import './case-translation-runtime.js'")) fail('sidebar does not bootstrap bilingual case analysis');
 for (const name of ['experience.js','experience.css','i18n.js','media-embed.js','case-locales.js','case-translation-runtime.js']) {
-  if (!files.pages.includes(`studio/${name}`)) fail(`Pages workflow does not publish ${name}`);
+  if (!workflowPublishesStudioAsset(files.pages,name)) fail(`Pages workflow does not publish ${name}`);
 }
 if (!files.media.includes('cloudflarestream.com')) fail('Cloudflare Stream iframe resolver missing');
 if (!files.media.includes('platform.twitter.com/embed/Tweet.html')) fail('X embedded-post iframe resolver missing');
@@ -52,6 +53,7 @@ if (!process.exitCode) {
     cloudflareStreamEmbeds: cloudflare,
     xEmbeddedPostFallbacks: x,
     languages: ['ru','en'],
-    promptsRemainSourceLanguage: true
+    promptsRemainSourceLanguage: true,
+    publicationPolicy:'shared'
   }, null, 2));
 }
