@@ -1,0 +1,68 @@
+name: Prompt Studio v4 Storyboard Variants Handoff CI
+
+on:
+  pull_request:
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'schemas/prompt-studio*.json'
+      - 'scripts/validate-prompt-studio*.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v4-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'studio/prompt-studio-*.js'
+      - 'studio/prompt-studio*.css'
+      - 'studio/sidebar.js'
+      - 'schemas/prompt-studio*.json'
+      - 'scripts/validate-prompt-studio*.mjs'
+      - 'scripts/validate-pages-contract.mjs'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/prompt-studio-v4-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  v4:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20,22,24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Validate Prompt Studio v1 baseline
+        run: node scripts/validate-prompt-studio.mjs
+      - name: Validate Prompt Studio v2 baseline
+        run: node scripts/validate-prompt-studio-v2-rule-packs.mjs
+      - name: Validate Prompt Studio v3 persistence baseline
+        run: node scripts/validate-prompt-studio-v3-persistence.mjs
+      - name: Validate Prompt Studio v4 engines
+        run: node scripts/validate-prompt-studio-v4-engines.mjs
+      - name: Validate Prompt Studio v4 workflow guard behavior
+        run: node scripts/validate-prompt-studio-v4-workflow-guard.mjs
+      - name: Validate Prompt Studio v4 production wiring
+        run: node scripts/validate-prompt-studio-v4-production.mjs
+      - name: Validate generalized Pages/module graph
+        run: node scripts/validate-pages-contract.mjs
+      - name: Validate protected exact-100 renderer
+        run: npm run validate:render
+      - name: Syntax-check v4 modules
+        run: |
+          node --check studio/prompt-studio-storyboard.js
+          node --check studio/prompt-studio-variants.js
+          node --check studio/prompt-studio-generation-handoff.js
+          node --check studio/prompt-studio-v4-workflow-guard.js
+          node --check studio/prompt-studio-v4-ui.js
+          node --check studio/prompt-studio-v4-bootstrap.js
+          node --check scripts/validate-prompt-studio-v4-engines.mjs
+          node --check scripts/validate-prompt-studio-v4-workflow-guard.mjs
+          node --check scripts/validate-prompt-studio-v4-production.mjs

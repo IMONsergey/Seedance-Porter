@@ -1,0 +1,29 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"Seedance Porter Prompt Studio v4 Extensions",
+  "type":"object",
+  "properties":{
+    "storyboard":{
+      "type":"object",
+      "required":["schemaVersion","cards","updatedAt","timelineFingerprint"],
+      "properties":{
+        "schemaVersion":{"const":1},
+        "cards":{"type":"array","maxItems":40,"items":{"type":"object","required":["id","beatId","enabled","label","frameRole","frameIntent","composition","actionState","continuity","referenceTokens","notes","createdAt","updatedAt"],"properties":{"id":{"type":"string","minLength":1},"beatId":{"type":"string"},"enabled":{"type":"boolean"},"label":{"type":"string"},"frameRole":{"enum":["keyframe","start","middle","end","transition"]},"frameIntent":{"type":"string"},"composition":{"type":"string"},"actionState":{"type":"string"},"continuity":{"type":"string"},"referenceTokens":{"type":"array","items":{"type":"string","pattern":"^@ref[0-9]{2,}$"}},"notes":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},
+        "updatedAt":{"type":"string"},
+        "timelineFingerprint":{"type":"string"}
+      }
+    },
+    "variants":{
+      "type":"object",
+      "required":["schemaVersion","base","items","activeId","winnerId","updatedAt"],
+      "properties":{
+        "schemaVersion":{"const":1},
+        "base":{"type":"object","required":["capturedAt","fingerprint","projection"],"properties":{"capturedAt":{"type":"string"},"fingerprint":{"type":"string"},"projection":{"type":"object"}}},
+        "items":{"type":"array","maxItems":20,"items":{"type":"object","required":["id","label","createdAt","updatedAt","status","notes","delta"],"properties":{"id":{"type":"string","minLength":1},"label":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"status":{"enum":["base","draft","candidate","winner"]},"notes":{"type":"string"},"delta":{"type":"object"}}}},
+        "activeId":{"type":"string"},
+        "winnerId":{"type":"string"},
+        "updatedAt":{"type":"string"}
+      }
+    }
+  }
+}
